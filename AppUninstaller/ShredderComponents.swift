@@ -153,7 +153,7 @@ struct ShredderSelectionView: View {
                         // service.items.remove(atOffsets: indexSet) // Need to implement delete in service
                     }
                 }
-                .scrollContentBackground(.hidden)
+                .compatibleScrollContentBackgroundHidden()
                 .frame(maxWidth: .infinity)
                 
                 Spacer()

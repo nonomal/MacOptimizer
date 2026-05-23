@@ -109,7 +109,6 @@ struct NavigationSidebar: View {
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(.white.opacity(0.4))
                                 .textCase(.uppercase)
-                                .tracking(0.5)
                                 .padding(.leading, 16)
                                 .padding(.top, section == .cleanup ? 8 : 16)
                                 .padding(.bottom, 4)
@@ -164,7 +163,7 @@ struct NavigationSidebar: View {
                 }
                 
                 HStack(spacing: 6) {
-                    Text("v4.0.6")
+                    Text("v4.0.7")
                         .font(.system(size: 10))
                         .foregroundColor(.white.opacity(0.3))
                     Text("Pro Version")
@@ -294,5 +293,3 @@ struct SidebarMenuItem: View {
         }
     }
 }
-
-

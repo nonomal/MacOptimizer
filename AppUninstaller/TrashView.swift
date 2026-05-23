@@ -436,21 +436,14 @@ struct TrashView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                switch scanState {
-                case .initial:
-                    initialPage
-                case .scanning:
-                    scanningPage
-                case .completed:
-                    resultsPage
-                case .clean:
-                    cleanPage
-                case .cleaning:
-                    cleaningPage
-                case .finished:
-                    finishedPage
+        Group {
+            if #available(macOS 13.0, *) {
+                NavigationStack {
+                    content
+                }
+            } else {
+                NavigationView {
+                    content
                 }
             }
         }
@@ -464,6 +457,25 @@ struct TrashView: View {
             Button(loc.L("cancel"), role: .cancel) {}
         } message: {
             Text(loc.currentLanguage == .chinese ? "此操作不可撤销，所有文件将被永久删除。" : "This cannot be undone. All files will be permanently deleted.")
+        }
+    }
+    
+    private var content: some View {
+        ZStack {
+            switch scanState {
+            case .initial:
+                initialPage
+            case .scanning:
+                scanningPage
+            case .completed:
+                resultsPage
+            case .clean:
+                cleanPage
+            case .cleaning:
+                cleaningPage
+            case .finished:
+                finishedPage
+            }
         }
     }
     
@@ -1000,7 +1012,11 @@ struct TrashView: View {
                     .foregroundColor(.white)
                 
                 Spacer()
-                GridRow { Text("      ") } // Placeholder
+                if #available(macOS 13.0, *) {
+                    GridRow { Text("      ") } // Placeholder
+                } else {
+                    Text("      ")
+                }
             }
             .padding(.horizontal, 24)
             .padding(.top, 20)
@@ -1063,12 +1079,12 @@ struct TrashDirectoryView: View {
                     itemRow(for: item)
                         .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
                         .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
+                        .compatibleListRowSeparatorHidden()
                 }
             }
         }
         .listStyle(.plain)
-        .scrollContentBackground(.hidden)
+        .compatibleScrollContentBackgroundHidden()
         .background(Color.mainBackground)
         .navigationTitle(url.lastPathComponent)
         .onAppear {

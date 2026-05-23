@@ -555,7 +555,7 @@ struct PrivacyView: View {
                     .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
             }
             .listStyle(.plain)
-            .scrollContentBackground(.hidden)
+            .compatibleScrollContentBackgroundHidden()
         }
     }
     

@@ -198,11 +198,11 @@ struct LargeFileDetailsSplitView: View {
                         }
                         .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
                         .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
+                        .compatibleListRowSeparatorHidden()
                     }
                 }
                 .listStyle(.plain)
-                .scrollContentBackground(.hidden)
+                .compatibleScrollContentBackgroundHidden()
                 
                 // Bottom Bar
                 HStack(spacing: 20) {

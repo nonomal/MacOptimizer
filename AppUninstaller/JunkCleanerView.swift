@@ -475,6 +475,17 @@ struct JunkCleanerView: View {
                             .foregroundColor(.white.opacity(0.6))
                     }
                     
+                    if cleaner.isAnalyzingRecommendations {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                                .scaleEffect(0.55)
+                                .tint(.white)
+                            Text(loc.currentLanguage == .chinese ? "正在判断哪些项目适合清理" : "Checking what is safe to clean")
+                                .font(.system(size: 12))
+                                .foregroundColor(.white.opacity(0.6))
+                        }
+                    }
+                    
                     // 动态显示已选中的分类列表
                     VStack(alignment: .leading, spacing: 6) {
                         Text(loc.currentLanguage == .chinese ? "包括" : "Includes")
@@ -938,6 +949,17 @@ struct JunkDetailContentView: View {
                         .font(.system(size: 14))
                         .foregroundColor(.white.opacity(0.8)) // Brighter description
                         .lineSpacing(4)
+                    
+                    if cleaner.isAnalyzingRecommendations {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                                .scaleEffect(0.55)
+                                .tint(.white)
+                            Text(loc.currentLanguage == .chinese ? "正在生成清理建议..." : "Generating cleanup advice...")
+                                .font(.system(size: 12))
+                                .foregroundColor(.white.opacity(0.6))
+                        }
+                    }
                 }
                 .padding(.horizontal, 30)
                 .padding(.vertical, 24)
@@ -1203,12 +1225,31 @@ struct JunkItemRow: View {
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 28, height: 28)
             
-            // Name
-            Text(item.name)
-                .font(.system(size: 14))
-                .foregroundColor(.white)
-                .lineLimit(1)
-                .truncationMode(.middle)
+            VStack(alignment: .leading, spacing: 5) {
+                Text(item.name)
+                    .font(.system(size: 14))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                
+                if let recommendation = item.cleanupRecommendation {
+                    HStack(spacing: 6) {
+                        Text(recommendation.summary)
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundColor(cleanupAdviceColor(recommendation.decision))
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 2)
+                            .background(cleanupAdviceColor(recommendation.decision).opacity(0.16))
+                            .cornerRadius(6)
+                        
+                        Text(recommendation.reason)
+                            .font(.system(size: 11))
+                            .foregroundColor(.white.opacity(0.48))
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                    }
+                }
+            }
             
             Spacer()
             
@@ -1261,6 +1302,19 @@ struct JunkItemRow: View {
                     systemImage: "eye"
                 )
             }
+        }
+    }
+    
+    private func cleanupAdviceColor(_ decision: CleanupAdviceDecision) -> Color {
+        switch decision {
+        case .recommended:
+            return Color(hex: "40C4FF")
+        case .caution:
+            return .yellow
+        case .keep:
+            return .orange
+        case .unknown:
+            return .white.opacity(0.62)
         }
     }
     

@@ -145,6 +145,10 @@ struct MemoryMonitorSettingsView: View {
     }
 }
 
-#Preview {
-    MemoryMonitorSettingsView(systemMonitor: SystemMonitorService())
+#if DEBUG
+struct MemoryMonitorSettingsView_Previews: PreviewProvider {
+    static var previews: some View {
+        MemoryMonitorSettingsView(systemMonitor: SystemMonitorService())
+    }
 }
+#endif

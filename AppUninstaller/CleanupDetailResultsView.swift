@@ -409,32 +409,36 @@ struct FailedFileInfo: Identifiable {
     }
 }
 
-#Preview {
-    CleanupDetailResultsView(
-        cleanedSize: 2_645_000_000,
-        cleanedCount: 45,
-        failedFiles: [
-            FailedFileInfo(
-                fileName: "Google Chrome",
-                filePath: "/Users/dudianlong/Library/Application Support/Google/Chrome",
-                fileSize: 500_000_000,
-                errorReason: "应用正在运行，无法删除"
-            ),
-            FailedFileInfo(
-                fileName: "Kuro Cache",
-                filePath: "/Users/dudianlong/Library/Caches/Kuro",
-                fileSize: 300_000_000,
-                errorReason: "权限不足"
-            ),
-            FailedFileInfo(
-                fileName: "com.google.Chrome",
-                filePath: "/Users/dudianlong/Library/Application Support/com.google.Chrome",
-                fileSize: 200_000_000,
-                errorReason: "文件被占用"
-            )
-        ],
-        failedCount: 3,
-        totalAttempted: 48,
-        onDismiss: {}
-    )
+#if DEBUG
+struct CleanupDetailResultsView_Previews: PreviewProvider {
+    static var previews: some View {
+        CleanupDetailResultsView(
+            cleanedSize: 2_645_000_000,
+            cleanedCount: 45,
+            failedFiles: [
+                FailedFileInfo(
+                    fileName: "Google Chrome",
+                    filePath: "/Users/dudianlong/Library/Application Support/Google/Chrome",
+                    fileSize: 500_000_000,
+                    errorReason: "应用正在运行，无法删除"
+                ),
+                FailedFileInfo(
+                    fileName: "Kuro Cache",
+                    filePath: "/Users/dudianlong/Library/Caches/Kuro",
+                    fileSize: 300_000_000,
+                    errorReason: "权限不足"
+                ),
+                FailedFileInfo(
+                    fileName: "com.google.Chrome",
+                    filePath: "/Users/dudianlong/Library/Application Support/com.google.Chrome",
+                    fileSize: 200_000_000,
+                    errorReason: "文件被占用"
+                )
+            ],
+            failedCount: 3,
+            totalAttempted: 48,
+            onDismiss: {}
+        )
+    }
 }
+#endif

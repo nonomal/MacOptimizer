@@ -17,7 +17,6 @@ struct AppUninstallerApp: App {
                 }
         }
         .windowStyle(.hiddenTitleBar)
-        .defaultSize(width: 1100, height: 750)
         
         // MenuBarExtra removed. Manager logic runs on init.
     }

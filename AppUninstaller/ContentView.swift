@@ -275,10 +275,10 @@ struct AppListView: View {
                         }
                         .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
                         .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
+                        .compatibleListRowSeparatorHidden()
                 }
                 .listStyle(.plain)
-                .scrollContentBackground(.hidden)
+                .compatibleScrollContentBackgroundHidden()
             }
             
             // 底部统计

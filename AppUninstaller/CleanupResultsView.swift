@@ -194,17 +194,21 @@ struct CleanupRecommendation {
     let priority: Int // 1-3, higher = more important
 }
 
-#Preview {
-    CleanupResultsView(
-        cleanedSize: 2_645_000_000,
-        cleanedCount: 2,
-        recommendations: [
-            CleanupRecommendation(
-                title: "深度扫描",
-                description: "发现更多垃圾文件",
-                priority: 1
-            )
-        ],
-        onDismiss: {}
-    )
+#if DEBUG
+struct CleanupResultsView_Previews: PreviewProvider {
+    static var previews: some View {
+        CleanupResultsView(
+            cleanedSize: 2_645_000_000,
+            cleanedCount: 2,
+            recommendations: [
+                CleanupRecommendation(
+                    title: "深度扫描",
+                    description: "发现更多垃圾文件",
+                    priority: 1
+                )
+            ],
+            onDismiss: {}
+        )
+    }
 }
+#endif

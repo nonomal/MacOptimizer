@@ -263,17 +263,17 @@ struct ConsoleAppManagerView: View {
                     .font(.caption)
                     .foregroundColor(.secondaryText)
                     .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
+                    .compatibleListRowSeparatorHidden()
                     
                     ForEach(filteredApps) { app in
                         AppManagerRow(app: app, processService: processService, appScanner: appScanner, loc: loc)
                             .listRowBackground(Color.white.opacity(0.02))
-                            .listRowSeparator(.hidden)
+                            .compatibleListRowSeparatorHidden()
                             .listRowInsets(EdgeInsets(top: 2, leading: 0, bottom: 2, trailing: 0))
                     }
                 }
                 .listStyle(.plain)
-                .scrollContentBackground(.hidden)
+                .compatibleScrollContentBackgroundHidden()
                 .padding(.horizontal, 16)
             }
         }
@@ -600,9 +600,9 @@ struct ConsolePortManagerView: View {
                                     .foregroundColor(.white.opacity(0.7))
                                 
                                 Text(port.portString)
+                                    .font(.system(size: 14, weight: .medium))
                                     .frame(width: 80, alignment: .leading)
                                     .foregroundColor(.cyan)
-                                    .fontWeight(.medium)
                                 
                                 Text(port.protocol)
                                     .frame(width: 60, alignment: .leading)

@@ -134,7 +134,7 @@ struct AppUninstallerView: View {
                 }
 
                 .listStyle(.plain)
-                .scrollContentBackground(.hidden)
+                .compatibleScrollContentBackgroundHidden()
             }
             .frame(width: 250)
             // Left panel background removed for unification

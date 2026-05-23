@@ -343,10 +343,10 @@ struct FileExplorerView: View {
                     ? Color.blue.opacity(0.3)
                     : Color.clear
             )
-            .listRowSeparator(.hidden)
+            .compatibleListRowSeparatorHidden()
         }
         .listStyle(.plain)
-        .scrollContentBackground(.hidden)
+        .compatibleScrollContentBackgroundHidden()
     }
     
     @ViewBuilder

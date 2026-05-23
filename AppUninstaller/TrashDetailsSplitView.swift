@@ -153,11 +153,11 @@ struct TrashDetailsSplitView: View {
                              TrashDetailRow(item: item, scanner: scanner)
                                 .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20))
                                 .listRowBackground(Color.clear)
-                                .listRowSeparator(.hidden)
+                                .compatibleListRowSeparatorHidden()
                         }
                     }
                     .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
+                    .compatibleScrollContentBackgroundHidden()
                     
                     // 底部留白，给浮动按钮
                     Spacer().frame(height: 100)

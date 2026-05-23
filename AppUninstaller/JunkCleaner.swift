@@ -249,6 +249,7 @@ class JunkItem: Identifiable, ObservableObject, @unchecked Sendable {
     let customName: String? // Optional custom display name
     let size: Int64
     @Published var isSelected: Bool = true
+    @Published var cleanupRecommendation: CleanupAdvice? = nil
     
     init(type: JunkType, path: URL, size: Int64, contextPath: URL? = nil, customName: String? = nil) {
         self.type = type
@@ -267,6 +268,7 @@ class JunkItem: Identifiable, ObservableObject, @unchecked Sendable {
 class JunkCleaner: ObservableObject {
     @Published var junkItems: [JunkItem] = []
     @Published var isScanning: Bool = false
+    @Published var isAnalyzingRecommendations: Bool = false
     @Published var isCleaning: Bool = false  // 添加清理状态
     @Published var scanProgress: Double = 0
     @Published var hasPermissionErrors: Bool = false
@@ -304,6 +306,7 @@ class JunkCleaner: ObservableObject {
     func reset() {
         junkItems.removeAll()
         isScanning = false
+        isAnalyzingRecommendations = false
         isCleaning = false
         scanProgress = 0
         hasPermissionErrors = false
@@ -329,6 +332,7 @@ class JunkCleaner: ObservableObject {
     func scanJunk() async {
         await MainActor.run {
             isScanning = true
+            isAnalyzingRecommendations = false
             junkItems.removeAll()
             scanProgress = 0
             hasPermissionErrors = false // Reset errors
@@ -390,6 +394,34 @@ class JunkCleaner: ObservableObject {
 
         await MainActor.run {
             isScanning = false
+        }
+        
+        await analyzeCleanupRecommendations()
+    }
+    
+    private func analyzeCleanupRecommendations() async {
+        let items = await MainActor.run { self.junkItems }
+        guard !items.isEmpty else { return }
+        
+        await MainActor.run {
+            self.isAnalyzingRecommendations = true
+            for item in self.junkItems {
+                item.cleanupRecommendation = .pending
+            }
+        }
+        
+        let recommendations = await CleanupAdvisorService.shared.analyze(items: items)
+        
+        await MainActor.run {
+            for item in self.junkItems {
+                guard let recommendation = recommendations[item.id] else { continue }
+                item.cleanupRecommendation = recommendation
+                if recommendation.decision == .keep {
+                    item.isSelected = false
+                }
+            }
+            self.isAnalyzingRecommendations = false
+            self.objectWillChange.send()
         }
     }
     

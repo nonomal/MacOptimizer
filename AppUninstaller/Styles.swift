@@ -380,6 +380,26 @@ struct BackgroundStyles {
     )
 }
 
+extension View {
+    @ViewBuilder
+    func compatibleScrollContentBackgroundHidden() -> some View {
+        if #available(macOS 13.0, *) {
+            self.scrollContentBackground(.hidden)
+        } else {
+            self
+        }
+    }
+    
+    @ViewBuilder
+    func compatibleListRowSeparatorHidden() -> some View {
+        if #available(macOS 13.0, *) {
+            self.listRowSeparator(.hidden)
+        } else {
+            self
+        }
+    }
+}
+
 // MARK: - 模块枚举
 enum AppModule: String, CaseIterable, Identifiable {
     case monitor = "控制台"
