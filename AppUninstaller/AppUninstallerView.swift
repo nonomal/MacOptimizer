@@ -82,7 +82,14 @@ struct AppUninstallerView: View {
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    Text(loc.currentLanguage == .chinese ? "卸载器" : "Uninstaller")
+                    Text(loc.text(
+    simplifiedChinese: "卸载器",
+    traditionalChinese: "解除安裝器",
+    english: "Uninstaller",
+    japanese: "アンインストーラー",
+    korean: "제거 프로그램",
+    russian: "Удалитель"
+))
                         .font(.headline)
                         .foregroundColor(.white)
                     Spacer()
@@ -112,7 +119,14 @@ struct AppUninstallerView: View {
                     SidebarRow(category: .leftovers, count: 0, isSelected: selectedCategory == .leftovers)
                         .onTapGesture { selectedCategory = .leftovers }
                     
-                    Text(loc.currentLanguage == .chinese ? "商店" : "Store")
+                    Text(loc.text(
+    simplifiedChinese: "商店",
+    traditionalChinese: "商店",
+    english: "Store",
+    japanese: "ストア",
+    korean: "스토어",
+    russian: "эт."
+))
                         .font(.caption)
                         .foregroundColor(.white.opacity(0.5))
                         .padding(.top, 10)
@@ -121,7 +135,14 @@ struct AppUninstallerView: View {
                     SidebarRow(category: .appStore, count: appScanner.apps.filter { $0.isAppStore }.count, isSelected: selectedCategory == .appStore)
                         .onTapGesture { selectedCategory = .appStore }
                     
-                    Text(loc.currentLanguage == .chinese ? "供应商" : "Vendors")
+                    Text(loc.text(
+    simplifiedChinese: "供应商",
+    traditionalChinese: "供應商",
+    english: "Vendors",
+    japanese: "ベンダー",
+    korean: "Vendors",
+    russian: "Поставщики"
+))
                         .font(.caption)
                         .foregroundColor(.white.opacity(0.5))
                         .padding(.top, 10)
@@ -153,7 +174,14 @@ struct AppUninstallerView: View {
                             }) {
                                 HStack(spacing: 4) {
                                     Image(systemName: "chevron.left")
-                                    Text(loc.currentLanguage == .chinese ? "返回" : "Back")
+                                    Text(loc.text(
+    simplifiedChinese: "返回",
+    traditionalChinese: "返回",
+    english: "Back",
+    japanese: "戻る",
+    korean: "뒤로",
+    russian: "Назад"
+))
                                 }
                                 .foregroundColor(.secondaryText)
                             }
@@ -183,7 +211,14 @@ struct AppUninstallerView: View {
                                 .foregroundColor(.white)
                             Spacer()
                             
-                            Text(loc.currentLanguage == .chinese ? "排序方式按 名称" : "Sort by Name")
+                            Text(loc.text(
+    simplifiedChinese: "排序方式按 名称",
+    traditionalChinese: "排序方式按名稱",
+    english: "Sort by Name",
+    japanese: "名前でソート",
+    korean: "이름으로 정렬",
+    russian: "Сортировать по имени"
+))
                                 .font(.caption)
                                 .foregroundColor(.white.opacity(0.6))
                         }
@@ -192,7 +227,14 @@ struct AppUninstallerView: View {
                         if appScanner.isScanning {
                              Spacer()
                              ProgressView()
-                             Text(loc.currentLanguage == .chinese ? "正在扫描应用..." : "Scanning Apps...")
+                             Text(loc.text(
+    simplifiedChinese: "正在扫描应用...",
+    traditionalChinese: "正在掃描應用程式...",
+    english: "Scanning Apps...",
+    japanese: "アプリをスキャンしています...",
+    korean: "앱 검사 중...",
+    russian: "Сканирование приложений..."
+))
                                 .padding(.top)
                              Spacer()
                         } else {
@@ -234,7 +276,14 @@ struct AppUninstallerView: View {
                                                 )
                                             
                                             VStack {
-                                                Text(loc.currentLanguage == .chinese ? "卸载" : "Uninstall")
+                                                Text(loc.text(
+    simplifiedChinese: "卸载",
+    traditionalChinese: "卸載",
+    english: "Uninstall",
+    japanese: "アンインストール",
+    korean: "제거",
+    russian: "Деинсталлировать"
+))
                                                     .foregroundColor(.white)
                                                     .fontWeight(.medium)
                                                 Text(ByteCountFormatter.string(fromByteCount: totalSelectedSize, countStyle: .file))
@@ -266,17 +315,36 @@ struct AppUninstallerView: View {
              }
         }
         // 确认卸载对话框
-        .alert(loc.currentLanguage == .chinese ? "确认卸载?" : "Confirm Uninstall?", isPresented: $showingDeleteConfirmation) {
-            Button(loc.currentLanguage == .chinese ? "完全卸载" : "Complete Uninstall", role: .destructive) {
+        .alert(loc.text(
+    simplifiedChinese: "确认卸载?",
+    traditionalChinese: "確認卸載?",
+    english: "Confirm Uninstall?",
+    japanese: "アンインストールの確認",
+    korean: "제거를 확인하시겠습니까?",
+    russian: "Подтвердить удаление"
+), isPresented: $showingDeleteConfirmation) {
+            Button(loc.text(
+    simplifiedChinese: "完全卸载",
+    traditionalChinese: "完全卸載",
+    english: "Complete Uninstall",
+    japanese: "アンインストール完了",
+    korean: "제거 완료",
+    russian: "Полное удаление"
+), role: .destructive) {
                 Task {
                     await performUninstall()
                 }
             }
             Button(loc.L("cancel"), role: .cancel) {}
         } message: {
-            Text(loc.currentLanguage == .chinese ?
-                 "将删除选中的 \(selectedAppIds.count) 个应用及其所有关联文件（配置、缓存、日志等）。此操作将把文件移至废纸篓，可从废纸篓恢复。" :
-                 "This will remove \(selectedAppIds.count) selected app(s) and all associated files (preferences, caches, logs, etc.). Files will be moved to Trash and can be recovered.")
+            Text(loc.text(
+    simplifiedChinese: "将删除选中的 \(selectedAppIds.count) 个应用及其所有关联文件（配置、缓存、日志等）。此操作将把文件移至废纸篓，可从废纸篓恢复。",
+    traditionalChinese: "將刪除選取的\(selectedAppIds.count)個應用程式及其所有關聯檔案（配置、快取、日誌等）。此操作將把文件移至廢紙簍，可從廢紙簍恢復。",
+    english: "This will remove \(selectedAppIds.count) selected app(s) and all associated files (preferences, caches, logs, etc.). Files will be moved to Trash and can be recovered.",
+    japanese: "これにより、\(selectedAppIds.count)選択したアプリと関連するすべてのファイル（環境設定、キャッシュ、ログなど）が削除されます。ファイルはゴミ箱に移動され、復元できます。",
+    korean: "이렇게 하면 \(selectedAppIds.count) 선택한 앱과 모든 관련 파일 (환경 설정, 캐시, 로그 등) 이 제거됩니다. 파일이 휴지통으로 이동되며 복구할 수 있습니다.",
+    russian: "Это приведет к удалению \(selectedAppIds.count) выбранных приложений и всех связанных файлов (предпочтений, кэшей, журналов и т. д.). Файлы будут перемещены в корзину и могут быть восстановлены."
+))
         }
         // 卸载进度指示器
         .overlay {
@@ -290,7 +358,14 @@ struct AppUninstallerView: View {
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .scaleEffect(1.5)
                         
-                        Text(loc.currentLanguage == .chinese ? "正在卸载..." : "Uninstalling...")
+                        Text(loc.text(
+    simplifiedChinese: "正在卸载...",
+    traditionalChinese: "正在卸載...",
+    english: "Uninstalling...",
+    japanese: "アンインストールしています。",
+    korean: "제거 중...",
+    russian: "Удаление..."
+))
                             .font(.headline)
                             .foregroundColor(.white)
                         
@@ -308,7 +383,14 @@ struct AppUninstallerView: View {
             }
         }
         // 卸载结果对话框
-        .alert(loc.currentLanguage == .chinese ? "卸载完成" : "Uninstall Complete", isPresented: $showingResults) {
+        .alert(loc.text(
+    simplifiedChinese: "卸载完成",
+    traditionalChinese: "卸載完成",
+    english: "Uninstall Complete",
+    japanese: "アンインストールが完了しました",
+    korean: "제거 완료",
+    russian: "Удаление завершено"
+), isPresented: $showingResults) {
             Button("OK") {
                 showingResults = false
             }
@@ -328,7 +410,14 @@ struct AppUninstallerView: View {
         
         await MainActor.run {
             isUninstalling = true
-            uninstallProgress = loc.currentLanguage == .chinese ? "准备中..." : "Preparing..."
+            uninstallProgress = loc.text(
+    simplifiedChinese: "准备中...",
+    traditionalChinese: "準備中...",
+    english: "Preparing...",
+    japanese: "処理中…",
+    korean: "준비 중...",
+    russian: "Подготовка..."
+)
             totalRemovedSize = 0
             totalSuccessCount = 0
             totalFailedCount = 0
@@ -338,15 +427,27 @@ struct AppUninstallerView: View {
         for app in appsToUninstall {
             // 更新进度
             await MainActor.run {
-                uninstallProgress = loc.currentLanguage == .chinese ?
-                    "正在处理: \(app.name)" : "Processing: \(app.name)"
+                uninstallProgress = loc.text(
+    simplifiedChinese: "正在处理: \(app.name)",
+    traditionalChinese: "正在處理:\(app.name)",
+    english: "Processing: \(app.name)",
+    japanese: "処理：",
+    korean: "처리 중: \(app.name)",
+    russian: "Обработка: \(app.name)"
+)
             }
             
             // 检查应用是否正在运行
             if fileRemover.isAppRunning(app) {
                 await MainActor.run {
-                    uninstallProgress = loc.currentLanguage == .chinese ?
-                        "正在关闭: \(app.name)" : "Closing: \(app.name)"
+                    uninstallProgress = loc.text(
+    simplifiedChinese: "正在关闭: \(app.name)",
+    traditionalChinese: "正在關閉:\(app.name)",
+    english: "Closing: \(app.name)",
+    japanese: "結びの言葉：",
+    korean: "마무리: \(app.name)",
+    russian: "Закрытие: \(app.name)"
+)
                 }
                 // 尝试终止应用
                 let _ = fileRemover.terminateApp(app)
@@ -362,15 +463,27 @@ struct AppUninstallerView: View {
             
             // 扫描残留文件
             await MainActor.run {
-                uninstallProgress = loc.currentLanguage == .chinese ?
-                    "正在扫描残留文件: \(app.name)" : "Scanning residual files: \(app.name)"
+                uninstallProgress = loc.text(
+    simplifiedChinese: "正在扫描残留文件: \(app.name)",
+    traditionalChinese: "正在掃描殘留檔案:\(app.name)",
+    english: "Scanning residual files: \(app.name)",
+    japanese: "残留ファイルのスキャン： \(app.name)",
+    korean: "잔여 파일 검색: \(app.name)",
+    russian: "Сканирование остаточных файлов: \(app.name)"
+)
             }
             await appScanner.scanResidualFiles(for: app)
             
             // 执行删除
             await MainActor.run {
-                uninstallProgress = loc.currentLanguage == .chinese ?
-                    "正在删除: \(app.name)" : "Deleting: \(app.name)"
+                uninstallProgress = loc.text(
+    simplifiedChinese: "正在删除: \(app.name)",
+    traditionalChinese: "正在刪除:\(app.name)",
+    english: "Deleting: \(app.name)",
+    japanese: "削除中",
+    korean: "삭제 중: \(app.name)",
+    russian: "Удаление: \(app.name)"
+)
             }
             
             let result = await fileRemover.removeApp(app, includeApp: true, moveToTrash: true)
@@ -399,8 +512,14 @@ struct AppUninstallerView: View {
     private func performSingleAppUninstall(app: InstalledApp, includeApp: Bool, moveToTrash: Bool) async {
         await MainActor.run {
             isUninstalling = true
-            uninstallProgress = loc.currentLanguage == .chinese ?
-                "正在处理: \(app.name)" : "Processing: \(app.name)"
+            uninstallProgress = loc.text(
+    simplifiedChinese: "正在处理: \(app.name)",
+    traditionalChinese: "正在處理:\(app.name)",
+    english: "Processing: \(app.name)",
+    japanese: "処理：",
+    korean: "처리 중: \(app.name)",
+    russian: "Обработка: \(app.name)"
+)
             totalRemovedSize = 0
             totalSuccessCount = 0
             totalFailedCount = 0
@@ -409,8 +528,14 @@ struct AppUninstallerView: View {
         // 检查应用是否正在运行
         if includeApp && fileRemover.isAppRunning(app) {
             await MainActor.run {
-                uninstallProgress = loc.currentLanguage == .chinese ?
-                    "正在关闭: \(app.name)" : "Closing: \(app.name)"
+                uninstallProgress = loc.text(
+    simplifiedChinese: "正在关闭: \(app.name)",
+    traditionalChinese: "正在關閉:\(app.name)",
+    english: "Closing: \(app.name)",
+    japanese: "結びの言葉：",
+    korean: "마무리: \(app.name)",
+    russian: "Закрытие: \(app.name)"
+)
             }
             let _ = fileRemover.terminateApp(app)
             try? await Task.sleep(nanoseconds: 1_000_000_000)
@@ -423,8 +548,14 @@ struct AppUninstallerView: View {
         
         // 执行删除
         await MainActor.run {
-            uninstallProgress = loc.currentLanguage == .chinese ?
-                "正在删除: \(app.name)" : "Deleting: \(app.name)"
+            uninstallProgress = loc.text(
+    simplifiedChinese: "正在删除: \(app.name)",
+    traditionalChinese: "正在刪除:\(app.name)",
+    english: "Deleting: \(app.name)",
+    japanese: "削除中",
+    korean: "삭제 중: \(app.name)",
+    russian: "Удаление: \(app.name)"
+)
         }
         
         let result = await fileRemover.removeApp(app, includeApp: includeApp, moveToTrash: moveToTrash)

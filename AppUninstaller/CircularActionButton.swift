@@ -17,41 +17,16 @@ struct CircularActionButton: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            ZStack {
-                // Progress Ring
-                if showProgress {
-                    Circle()
-                        .stroke(Color.white.opacity(0.1), lineWidth: 3)
-                        .frame(width: 70, height: 70)
-                    
-                    Circle()
-                        .trim(from: 0, to: CGFloat(progress ?? 0))
-                        .stroke(Color(hex: "E0B0FF"), style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                        .frame(width: 70, height: 70)
-                        .rotationEffect(.degrees(-90))
-                        .animation(.linear(duration: 0.5), value: progress)
-                }
-                
-                // Button Background
-                Button(action: action) {
-                    ZStack {
-                        Circle()
-                            .fill(gradient ?? Self.blueGradient)
-                            // Add a subtle border/glow
-                            .overlay(
-                                Circle()
-                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                            )
-                        
-                        Text(title)
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.white)
-                    }
-                    .frame(width: 60, height: 60)
-                }
-                .buttonStyle(.plain)
-                .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
+            Button(action: action) {
+                CleanMyMacActionOrb(
+                    title: title,
+                    gradient: gradient ?? CircularActionButton.grayGradient,
+                    glowColor: .cyan,
+                    ringColor: Color.cyan.opacity(0.92),
+                    progress: showProgress ? progress : nil
+                )
             }
+            .buttonStyle(.plain)
             
             // Scan Size Text (only for Stop button usually)
             if let size = scanSize {

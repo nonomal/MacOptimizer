@@ -10,6 +10,9 @@ struct ProcessItem: Identifiable {
     let isApp: Bool // true for GUI Apps, false for background processes
     let validationPath: String? // For apps, the bundle path
     let memoryUsage: Int64 // 内存使用量（字节）
+    let cpuUsage: Double
+    let user: String
+    let commandPath: String
     
     var formattedPID: String {
         String(pid)
@@ -24,9 +27,11 @@ struct ProcessItem: Identifiable {
 class ProcessService: ObservableObject {
     @Published var processes: [ProcessItem] = []
     @Published var isScanning = false
+    @Published var lastError: String?
     
     // 缓存 PID 到内存使用量的映射 - 使用 Set 进行高效查找
     private var memoryCache: [Int32: Int64] = [:]
+    private var cpuCache: [Int32: Double] = [:]
     private var processIdSet: Set<Int32> = []
     
     // UI Update Batching
@@ -34,6 +39,7 @@ class ProcessService: ObservableObject {
     func scanProcesses(showApps: Bool) async {
         await uiUpdater.batch {
             self.isScanning = true
+            self.lastError = nil
         }
         
         // 首先获取所有进程的内存使用量
@@ -56,7 +62,10 @@ class ProcessService: ObservableObject {
                     icon: app.icon,
                     isApp: true,
                     validationPath: app.bundleURL?.path,
-                    memoryUsage: memory
+                    memoryUsage: memory,
+                    cpuUsage: cpuCache[app.processIdentifier] ?? 0,
+                    user: NSUserName(),
+                    commandPath: app.executableURL?.path ?? app.bundleURL?.path ?? ""
                 )
                 items.append(item)
             }
@@ -65,7 +74,7 @@ class ProcessService: ObservableObject {
             // We focus on user processes to avoid listing thousands of system kernel threads
             let task = Process()
             task.launchPath = "/bin/ps"
-            task.arguments = ["-x", "-o", "pid,rss,comm"] // List processes owned by user, PID, RSS (memory) and Command
+            task.arguments = ["-x", "-o", "pid,%cpu,rss,user,comm"]
             
             let pipe = Pipe()
             task.standardOutput = pipe
@@ -80,12 +89,14 @@ class ProcessService: ObservableObject {
                         if index == 0 || line.isEmpty { continue }
                         
                         let parts = line.trimmingCharacters(in: .whitespaces).components(separatedBy: .whitespaces).filter { !$0.isEmpty }
-                        guard parts.count >= 3,
+                        guard parts.count >= 5,
                               let pid = Int32(parts[0]),
-                              let rssKB = Int64(parts[1]) else { continue }
+                              let cpu = Double(parts[1]),
+                              let rssKB = Int64(parts[2]) else { continue }
                         
                         // Extract name (everything after PID and RSS)
-                        let cmdParts = parts.dropFirst(2)
+                        let user = parts[3]
+                        let cmdParts = parts.dropFirst(4)
                         // Determine name from path (e.g. /usr/sbin/distnoted -> distnoted)
                         let fullPath = cmdParts.joined(separator: " ")
                         let name = URL(fileURLWithPath: fullPath).lastPathComponent
@@ -102,13 +113,19 @@ class ProcessService: ObservableObject {
                             icon: nil,
                             isApp: false,
                             validationPath: nil,
-                            memoryUsage: memoryBytes
+                            memoryUsage: memoryBytes,
+                            cpuUsage: cpu,
+                            user: user,
+                            commandPath: fullPath
                         )
                         items.append(item)
                     }
                 }
             } catch {
                 print("Error scanning background processes: \(error)")
+                await uiUpdater.batch {
+                    self.lastError = error.localizedDescription
+                }
             }
         }
         
@@ -135,7 +152,7 @@ class ProcessService: ObservableObject {
     private func fetchMemoryUsage() async {
         let task = Process()
         task.launchPath = "/bin/ps"
-        task.arguments = ["-ax", "-o", "pid,rss"] // 所有进程的 PID 和 RSS (内存, KB)
+        task.arguments = ["-ax", "-o", "pid,%cpu,rss"]
         
         let pipe = Pipe()
         task.standardOutput = pipe
@@ -145,22 +162,29 @@ class ProcessService: ObservableObject {
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
             if let output = String(data: data, encoding: .utf8) {
                 var cache: [Int32: Int64] = [:]
+                var cpuValues: [Int32: Double] = [:]
                 let lines = output.components(separatedBy: "\n")
                 for (index, line) in lines.enumerated() {
                     if index == 0 || line.isEmpty { continue }
                     
                     let parts = line.trimmingCharacters(in: .whitespaces).components(separatedBy: .whitespaces).filter { !$0.isEmpty }
-                    guard parts.count >= 2,
+                    guard parts.count >= 3,
                           let pid = Int32(parts[0]),
-                          let rssKB = Int64(parts[1]) else { continue }
+                          let cpu = Double(parts[1]),
+                          let rssKB = Int64(parts[2]) else { continue }
                     
                     // RSS is in KB, convert to bytes
                     cache[pid] = rssKB * 1024
+                    cpuValues[pid] = cpu
                 }
                 memoryCache = cache
+                cpuCache = cpuValues
             }
         } catch {
             print("Error fetching memory usage: \(error)")
+            await uiUpdater.batch {
+                self.lastError = error.localizedDescription
+            }
         }
     }
     

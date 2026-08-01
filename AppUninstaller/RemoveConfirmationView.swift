@@ -20,11 +20,11 @@ struct RemoveConfirmationView: View {
                 // Header
                 HStack {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text(loc.currentLanguage == .chinese ? "您将移除文件!" : "You will remove files!")
+                        Text(loc.text("您将移除文件!", "You will remove files!"))
                             .font(.system(size: 20, weight: .bold)) // Larger bold font
                             .foregroundColor(.white)
                         
-                        Text(loc.currentLanguage == .chinese ? "请注意，所选文件移除后将永久消失。仔细查看一下。" : "Note: Selected files will be gone forever. Check carefully.")
+                        Text(loc.text("请注意，所选文件移除后将永久消失。仔细查看一下。", "Note: Selected files will be gone forever. Check carefully."))
                             .font(.system(size: 14))
                             .foregroundColor(.white.opacity(0.8))
                             .lineLimit(2)
@@ -80,7 +80,7 @@ struct RemoveConfirmationView: View {
                 // Actions
                 HStack(spacing: 20) {
                     Button(action: onCancel) {
-                        Text(loc.currentLanguage == .chinese ? "取消" : "Cancel")
+                        Text(loc.text("取消", "Cancel"))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.white.opacity(0.9))
                             .frame(maxWidth: .infinity)
@@ -91,7 +91,7 @@ struct RemoveConfirmationView: View {
                     .buttonStyle(.plain)
                     
                     Button(action: onConfirm) {
-                        Text(loc.currentLanguage == .chinese ? "移除" : "Remove")
+                        Text(loc.text("移除", "Remove"))
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity)

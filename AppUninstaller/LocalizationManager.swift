@@ -1,22 +1,60 @@
 import SwiftUI
+import AppKit
 
 // MARK: - 语言枚举
-enum AppLanguage: String, CaseIterable {
-    case chinese = "zh"
+enum AppLanguage: String, CaseIterable, Identifiable {
+    case chinese = "zh-Hans"
+    case traditionalChinese = "zh-Hant"
     case english = "en"
+    case japanese = "ja"
+    case korean = "ko"
+    case russian = "ru"
+
+    var id: String { rawValue }
     
     var displayName: String {
         switch self {
-        case .chinese: return "中文"
+        case .chinese: return "简体中文"
+        case .traditionalChinese: return "繁體中文"
         case .english: return "English"
+        case .japanese: return "日本語"
+        case .korean: return "한국어"
+        case .russian: return "Русский"
         }
     }
     
     var flag: String {
         switch self {
         case .chinese: return "🇨🇳"
+        case .traditionalChinese: return "🌐"
         case .english: return "🇺🇸"
+        case .japanese: return "🇯🇵"
+        case .korean: return "🇰🇷"
+        case .russian: return "🇷🇺"
         }
+    }
+
+    var localeIdentifier: String { rawValue }
+
+    var productName: String {
+        switch self {
+        case .chinese: return "Mac优化大师"
+        case .traditionalChinese: return "Mac最佳化大師"
+        case .english: return "MacOptimizer"
+        case .japanese: return "Macオプティマイザー"
+        case .korean: return "Mac 최적화 도구"
+        case .russian: return "MacOptimizer"
+        }
+    }
+
+    static var suggested: AppLanguage {
+        let preferred = Locale.preferredLanguages.first?.lowercased() ?? "en"
+        if preferred.hasPrefix("zh-hant") || preferred.hasPrefix("zh-tw") || preferred.hasPrefix("zh-hk") { return .traditionalChinese }
+        if preferred.hasPrefix("zh") { return .chinese }
+        if preferred.hasPrefix("ja") { return .japanese }
+        if preferred.hasPrefix("ko") { return .korean }
+        if preferred.hasPrefix("ru") { return .russian }
+        return .english
     }
 }
 
@@ -24,29 +62,79 @@ enum AppLanguage: String, CaseIterable {
 class LocalizationManager: ObservableObject {
     static let shared = LocalizationManager()
     
-    @AppStorage("app_language") private var languageCode: String = "zh"
+    @AppStorage("app_language") private var languageCode: String = ""
     
-    @Published var currentLanguage: AppLanguage = .chinese
+    @Published var currentLanguage: AppLanguage = .english
+    @Published private(set) var hasSelectedLanguage: Bool = false
     
     init() {
-        currentLanguage = AppLanguage(rawValue: languageCode) ?? .chinese
+        let stored = languageCode == "zh" ? AppLanguage.chinese : AppLanguage(rawValue: languageCode)
+        currentLanguage = stored ?? AppLanguage.suggested
+        hasSelectedLanguage = UserDefaults.standard.bool(forKey: "has_selected_app_language")
     }
     
     func setLanguage(_ language: AppLanguage) {
         languageCode = language.rawValue
         currentLanguage = language
+        hasSelectedLanguage = true
+        UserDefaults.standard.set(true, forKey: "has_selected_app_language")
+        // AppKit/TCC-owned strings are resolved from the per-application
+        // AppleLanguages preference on the next launch. Application-owned
+        // SwiftUI copy updates immediately through `currentLanguage`.
+        UserDefaults.standard.set([language.rawValue], forKey: "AppleLanguages")
+        AppMenuLocalizer.apply(language)
         objectWillChange.send()
     }
     
     func toggleLanguage() {
-        let newLanguage: AppLanguage = currentLanguage == .chinese ? .english : .chinese
+        let newLanguage: AppLanguage = currentLanguage == .english ? .chinese : .english
         setLanguage(newLanguage)
+    }
+
+    /// Product-wide localization entry point for legacy Chinese/English pairs.
+    /// Japanese, Korean and Russian never fall back to Simplified Chinese.
+    func text(_ simplifiedChinese: String, _ english: String) -> String {
+        switch currentLanguage {
+        case .chinese:
+            return simplifiedChinese
+        case .traditionalChinese:
+            return phraseTranslations[english]?[.traditionalChinese]
+                ?? simplifiedChinese.applyingTransform(StringTransform("Hans-Hant"), reverse: false)
+                ?? simplifiedChinese
+        case .english:
+            return english
+        case .japanese, .korean, .russian:
+            return phraseTranslations[english]?[currentLanguage] ?? english
+        }
+    }
+
+    func text(
+        simplifiedChinese: String,
+        traditionalChinese: String,
+        english: String,
+        japanese: String,
+        korean: String,
+        russian: String
+    ) -> String {
+        switch currentLanguage {
+        case .chinese: return simplifiedChinese
+        case .traditionalChinese: return traditionalChinese
+        case .english: return english
+        case .japanese: return japanese
+        case .korean: return korean
+        case .russian: return russian
+        }
     }
     
     // MARK: - 翻译函数
     func L(_ key: String) -> String {
-        return translations[key]?[currentLanguage] ?? key
+        guard let values = translations[key] else { return key }
+        let chinese = values[.chinese] ?? key
+        let english = values[.english] ?? key
+        return text(chinese, english)
     }
+
+    private let phraseTranslations: [String: [AppLanguage: String]] = ConsolePhraseTranslations.values
     
     // MARK: - 翻译字典
     private let translations: [String: [AppLanguage: String]] = [
@@ -186,7 +274,7 @@ class LocalizationManager: ObservableObject {
         "secure_erase": [.chinese: "安全擦除敏感数据", .english: "Securely Erase Sensitive Data"],
         "secure_erase_desc": [.chinese: "确保您擦除的文件不可通过安全擦除功能来恢复。", .english: "Ensure deleted files cannot be recovered with secure erase."],
         "resolve_finder_errors": [.chinese: "解决各种访达错误", .english: "Resolve Finder Errors"],
-        "resolve_finder_errors_desc": [.chinese: "轻松移除被正在运行的进程锁定的项目，且不会出现任何访达错误。", .english: "Easily remove items locked by running processes without Finder errors."],
+        "resolve_finder_errors_desc": [.chinese: "轻松移除被正在运行的进程锁定的项目，且不会出现任何“访达”错误。", .english: "Easily remove items locked by running processes without Finder errors."],
         "select_files": [.chinese: "选择文件...", .english: "Select Files..."],
         "restart": [.chinese: "重新开始", .english: "Restart"],
         "assistant": [.chinese: "助手", .english: "Assistant"],

@@ -39,10 +39,8 @@ struct DeepCleanView: View {
             }
             
             // Fixed Bottom Action Button Overlay
-            VStack {
-                Spacer()
+            CleanMyMacBottomActionSlot {
                 mainActionButton
-                    .padding(.bottom, 40)
             }
         }
         .onAppear {
@@ -71,7 +69,14 @@ struct DeepCleanView: View {
             DeepCleanDetailView(scanner: scanner, category: selectedCategoryForDetails, isPresented: $showingDetails)
         }
         .confirmationDialog(loc.L("confirm_clean"), isPresented: $showCleanConfirmation) {
-            Button(loc.currentLanguage == .chinese ? "开始清理" : "Start Cleaning", role: .destructive) {
+            Button(loc.text(
+    simplifiedChinese: "开始清理",
+    traditionalChinese: "開始清理",
+    english: "Start Cleaning",
+    japanese: "清掃を開始",
+    korean: "청소 시작",
+    russian: "Начало уборки"
+), role: .destructive) {
                 Task { @MainActor in
                     let result = await scanner.cleanSelected()
                     cleanResult = result
@@ -79,9 +84,14 @@ struct DeepCleanView: View {
             }
             Button(loc.L("cancel"), role: .cancel) {}
         } message: {
-            Text(loc.currentLanguage == .chinese ? 
-                 "确定要清理选中的 \(scanner.selectedCount) 个项目吗？总大小 \(ByteCountFormatter.string(fromByteCount: scanner.selectedSize, countStyle: .file))" :
-                 "Are you sure you want to clean \(scanner.selectedCount) selected items? Total size: \(ByteCountFormatter.string(fromByteCount: scanner.selectedSize, countStyle: .file))")
+            Text(loc.text(
+    simplifiedChinese: "确定要清理选中的 \(scanner.selectedCount) 个项目吗？总大小 \(ByteCountFormatter.string(fromByteCount: scanner.selectedSize, countStyle: .file))",
+    traditionalChinese: "確定要清理選取的\(scanner.selectedCount)個項目嗎？總大小\(ByteCountFormatter.string(fromByteCount: scanner.selectedSize, countStyle: .file))",
+    english: "Are you sure you want to clean \(scanner.selectedCount) selected items? Total size: \(ByteCountFormatter.string(fromByteCount: scanner.selectedSize, countStyle: .file))",
+    japanese: "\(scanner.selectedCount) 選択したアイテムをクリーニングしてもよろしいですか？合計サイズ： \(ByteCountFormatter.string(fromByteCount: scanner.selectedSize, countStyle: .file))",
+    korean: "\(scanner.selectedCount) 선택한 품목을 청소하시겠습니까? 총 크기: \(ByteCountFormatter.string(fromByteCount: scanner.selectedSize, countStyle: .file))",
+    russian: "Вы уверены, что хотите очистить \(scanner.selectedCount) выбранные элементы? Общий размер: \(ByteCountFormatter.string(fromByteCount: scanner.selectedSize, countStyle: .file))"
+))
         }
     }
     
@@ -90,117 +100,68 @@ struct DeepCleanView: View {
     private var mainActionButton: some View {
         switch viewState {
         case .initial:
-            Button(action: {
+            deepCleanOrb(
+                title: loc.text(
+    simplifiedChinese: "扫描",
+    traditionalChinese: "掃描",
+    english: "Scan",
+    japanese: "スキャン",
+    korean: "스캔",
+    russian: "Сканировать"
+),
+                colors: [Color(hex: "007AFF"), Color(hex: "0055D4")],
+                glow: Color(hex: "0A84FF"),
+                ring: Color.white.opacity(0.60)
+            ) {
                 Task { await scanner.startScan() }
-            }) {
-                ZStack {
-                    // 1. Soft Glow
-                    Circle()
-                        .fill(Color(hex: "0A84FF").opacity(0.4))
-                        .frame(width: 50, height: 50)
-                        .blur(radius: 10)
-                    
-                    // 2. Main Button
-                    Circle()
-                        .fill(LinearGradient(colors: [Color(hex: "007AFF"), Color(hex: "0055D4")], startPoint: .top, endPoint: .bottom))
-                        .frame(width: 50, height: 50)
-                        .shadow(color: .black.opacity(0.2), radius: 5, y: 2)
-                    
-                    // 3. Border
-                    Circle()
-                        .stroke(LinearGradient(colors: [.white.opacity(0.6), .white.opacity(0.1)], startPoint: .top, endPoint: .bottom), lineWidth: 1)
-                        .frame(width: 50, height: 50)
-
-                    Text(loc.currentLanguage == .chinese ? "扫描" : "Scan")
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
-                        .foregroundColor(.white)
-                }
-                .frame(width: 60, height: 60)
-                .background(
-                     Circle()
-                        .stroke(LinearGradient(colors: [.white.opacity(0.3), .white.opacity(0.05)], startPoint: .top, endPoint: .bottom), lineWidth: 2)
-                        .background(Circle().fill(Color.white.opacity(0.05)))
-                )
             }
-            .buttonStyle(.plain)
             .transition(.scale.combined(with: .opacity))
             
         case .scanning:
-            HStack(spacing: 20) {
-                Button(action: {
+            CleanMyMacBottomActionCluster {
+                deepCleanOrb(
+                    title: loc.text(
+    simplifiedChinese: "停止",
+    traditionalChinese: "停止",
+    english: "Stop",
+    japanese: "停止",
+    korean: "정지",
+    russian: "Остановить"
+),
+                    colors: [Color(hex: "5E5CE6"), Color(hex: "3A3A8A")],
+                    glow: Color(hex: "7D7AFF"),
+                    ring: Color.white.opacity(0.62),
+                    progress: scanner.scanProgress
+                ) {
                     scanner.stopScan()
                     viewState = .initial
-                }) {
-                    ZStack {
-                         // Outer
-                        Circle()
-                            .stroke(Color.white.opacity(0.1), lineWidth: 3)
-                            .frame(width: 60, height: 60)
-                        
-                        // Ring
-                        Circle()
-                            .trim(from: 0, to: max(0.01, scanner.scanProgress))
-                            .stroke(
-                                LinearGradient(colors: [.white, .white.opacity(0.5)], startPoint: .top, endPoint: .trailing),
-                                style: StrokeStyle(lineWidth: 3, lineCap: .round)
-                            )
-                            .frame(width: 60, height: 60)
-                            .rotationEffect(Angle(degrees: -90))
-                            .animation(.linear(duration: 0.2), value: scanner.scanProgress)
-                        
-                        // Inner
-                        Circle()
-                            .fill(Color.white.opacity(0.1))
-                            .frame(width: 48, height: 48)
-                        
-                        Text(loc.currentLanguage == .chinese ? "停止" : "Stop")
-                            .font(.system(size: 11))
-                            .foregroundColor(.white)
-                    }
                 }
-                .buttonStyle(.plain)
-                
-                // Real-time Size
+            } accessory: {
                 Text(ByteCountFormatter.string(fromByteCount: scanner.totalSize, countStyle: .file))
-                    .font(.system(size: 24, weight: .light))
+                    .font(.system(size: 18, weight: .light))
                     .foregroundColor(.white)
                     .shadow(color: Color.black.opacity(0.2), radius: 2, y: 1)
             }
             
         case .results:
-            HStack(spacing: 20) {
-                Button(action: {
-                    if scanner.selectedCount > 0 {
-                        showCleanConfirmation = true
-                    }
-                }) {
-                    ZStack {
-                        // Glow
-                        Circle()
-                           .fill(Color.green.opacity(0.4))
-                           .frame(width: 50, height: 50)
-                           .blur(radius: 10)
-                        
-                        // Button Body
-                        Circle()
-                           .fill(LinearGradient(colors: [Color(hex: "34C759"), Color(hex: "248A3D")], startPoint: .top, endPoint: .bottom))
-                           .frame(width: 50, height: 50)
-                           .shadow(color: .black.opacity(0.2), radius: 5, y: 2)
-                        
-                        // Border
-                        Circle()
-                           .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                           .frame(width: 50, height: 50)
-                           
-                        Text(loc.currentLanguage == .chinese ? "清理" : "Clean")
-                           .font(.system(size: 12, weight: .semibold, design: .rounded))
-                           .foregroundColor(.white)
-                    }
-                    .frame(width: 60, height: 60)
+            CleanMyMacBottomActionCluster {
+                deepCleanOrb(
+                    title: loc.text(
+    simplifiedChinese: "清理",
+    traditionalChinese: "清理",
+    english: "Clean",
+    japanese: "洗う",
+    korean: "지우기",
+    russian: "Очистить"
+),
+                    colors: [Color(hex: "34C759"), Color(hex: "248A3D")],
+                    glow: Color(hex: "34C759"),
+                    ring: Color.white.opacity(0.46),
+                    disabled: scanner.selectedCount == 0
+                ) {
+                    showCleanConfirmation = true
                 }
-                .buttonStyle(.plain)
-                
-                // Size Display (只显示大小数字)
+            } accessory: {
                 if scanner.selectedCount > 0 {
                     Text(ByteCountFormatter.string(fromByteCount: scanner.selectedSize, countStyle: .file))
                         .font(.system(size: 18, weight: .semibold))
@@ -209,25 +170,52 @@ struct DeepCleanView: View {
             }
             
         case .finished:
-            Button(action: {
+            deepCleanOrb(
+                title: loc.text(
+    simplifiedChinese: "完成",
+    traditionalChinese: "完成",
+    english: "Done",
+    japanese: "完了",
+    korean: "완료",
+    russian: "Готово"
+),
+                colors: [Color(hex: "34C759"), Color(hex: "248A3D")],
+                glow: Color(hex: "34C759"),
+                ring: Color.white.opacity(0.46)
+            ) {
                 withAnimation {
                     viewState = .initial
                     scanner.reset()
                     cleanResult = nil
                 }
-            }) {
-                Text(loc.currentLanguage == .chinese ? "完成" : "Done")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(.white)
-                    .frame(width: 160, height: 50)
-                    .background(Color.green)
-                    .cornerRadius(25)
             }
-            .buttonStyle(.plain)
             
         default:
             EmptyView()
         }
+    }
+
+    private func deepCleanOrb(
+        title: String,
+        colors: [Color],
+        glow: Color,
+        ring: Color,
+        disabled: Bool = false,
+        progress: Double? = nil,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            CleanMyMacActionOrb(
+                title: title,
+                gradient: LinearGradient(colors: colors, startPoint: .top, endPoint: .bottom),
+                glowColor: glow,
+                ringColor: ring,
+                disabled: disabled,
+                progress: progress
+            )
+        }
+        .buttonStyle(.plain)
+        .disabled(disabled)
     }
     
     // MARK: - 1. Initial View (初始化页面)
@@ -237,22 +225,41 @@ struct DeepCleanView: View {
             VStack(alignment: .leading, spacing: 30) {
                 // Branding Header
                 HStack(spacing: 8) {
-                    Text(loc.currentLanguage == .chinese ? "深度系统清理" : "Deep System Clean")
+                    Text(loc.text(
+    simplifiedChinese: "深度系统清理",
+    traditionalChinese: "深度系統清理",
+    english: "Deep System Clean",
+    japanese: "ディープシステムクリーン",
+    korean: "딥 시스템 클린",
+    russian: "Глубокая очистка системы"
+))
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.white)
                     
                     // Magnifying Glass Icon
                     HStack(spacing: 4) {
                         Image(systemName: "magnifyingglass.circle.fill")
-                        Text(loc.currentLanguage == .chinese ? "全面扫描" : "Full Scan")
+                        Text(loc.text(
+    simplifiedChinese: "全面扫描",
+    traditionalChinese: "全面掃描",
+    english: "Full Scan",
+    japanese: "フルスキャン",
+    korean: "전체 스캔",
+    russian: "Full Scan"
+))
                             .font(.system(size: 20, weight: .heavy))
                     }
                     .foregroundColor(.white)
                 }
                 
-                Text(loc.currentLanguage == .chinese ? 
-                     "扫描整个 Mac 的大文件、垃圾文件、缓存、日志及应用残留。\n上次扫描时间：从未" :
-                     "Scan your entire Mac for large files, junk, caches, logs, and leftovers.\nLast scan: Never")
+                Text(loc.text(
+    simplifiedChinese: "扫描整个 Mac 的大文件、垃圾文件、缓存、日志及应用残留。\n上次扫描时间：从未",
+    traditionalChinese: "掃描整個Mac 的大檔案、垃圾檔案、快取、日誌及應用殘留。\n上次掃描時間：從未",
+    english: "Scan your entire Mac for large files, junk, caches, logs, and leftovers.\nLast scan: Never",
+    japanese: "Mac全体をスキャンして、大きなファイル、ジャンク、キャッシュ、ログ、残り物を探します。\n前回のスキャン：なし",
+    korean: "Mac 전체에서 대용량 파일, 정크, 캐시, 로그 및 남은 파일을 검사합니다.\n마지막 스캔: 없음",
+    russian: "Сканируйте весь Mac на наличие больших файлов, ненужных файлов, кэшей, журналов и остатков.\nПоследнее сканирование: Никогда"
+))
                     .font(.system(size: 13))
                     .foregroundColor(.white.opacity(0.7))
                     .lineSpacing(4)
@@ -261,26 +268,75 @@ struct DeepCleanView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     featureRow(
                         icon: "doc.text.magnifyingglass",
-                        title: loc.currentLanguage == .chinese ? "查找大文件" : "Find Large Files",
-                        desc: loc.currentLanguage == .chinese ? "快速定位占用空间的大文件和旧文件。" : "Quickly locate large and old files taking up space."
+                        title: loc.text(
+    simplifiedChinese: "查找大文件",
+    traditionalChinese: "查找大文件",
+    english: "Find Large Files",
+    japanese: "巨大化ファイル",
+    korean: "대용량 파일",
+    russian: "Найти большие файлы"
+),
+                        desc: loc.text(
+    simplifiedChinese: "快速定位占用空间的大文件和旧文件。",
+    traditionalChinese: "快速定位佔用空間的大文件和舊文件。",
+    english: "Quickly locate large and old files taking up space.",
+    japanese: "スペースを占有している大きなファイルや古いファイルをすばやく見つけます。",
+    korean: "공간을 차지하는 크고 오래된 파일을 빠르게 찾을 수 있습니다.",
+    russian: "Быстро находите большие и старые файлы, занимающие место."
+)
                     )
                     
                     featureRow(
                         icon: "trash.circle",
-                        title: loc.currentLanguage == .chinese ? "清理系统垃圾" : "Clean System Junk",
-                        desc: loc.currentLanguage == .chinese ? "移除缓存、日志和临时文件释放空间。" : "Remove caches, logs and temp files to free up space."
+                        title: loc.text(
+    simplifiedChinese: "清理系统垃圾",
+    traditionalChinese: "清理系統垃圾",
+    english: "Clean System Junk",
+    japanese: "クリーンなシステムのジャンク",
+    korean: "시스템을 청소하십시오.",
+    russian: "чистая установка"
+),
+                        desc: loc.text(
+    simplifiedChinese: "移除缓存、日志和临时文件释放空间。",
+    traditionalChinese: "移除快取、日誌和臨時檔案釋放空間。",
+    english: "Remove caches, logs and temp files to free up space.",
+    japanese: "キャッシュ、ログ、一時ファイルを削除して、スペースを解放します。",
+    korean: "캐시, 로그 및 임시 파일을 제거하여 공간을 확보하십시오.",
+    russian: "Удалите кэши, журналы и временные файлы, чтобы освободить место."
+)
                     )
                     
                     featureRow(
                         icon: "app.badge",
-                        title: loc.currentLanguage == .chinese ? "检测应用残留" : "Detect App Residuals",
-                        desc: loc.currentLanguage == .chinese ? "查找已卸载应用遗留的文件和数据。" : "Find files and data left behind by uninstalled apps."
+                        title: loc.text(
+    simplifiedChinese: "检测应用残留",
+    traditionalChinese: "檢測應用殘留",
+    english: "Detect App Residuals",
+    japanese: "アプリの残留物を検出する",
+    korean: "앱 잔여 감지",
+    russian: "Обнаружение остатков приложения"
+),
+                        desc: loc.text(
+    simplifiedChinese: "查找已卸载应用遗留的文件和数据。",
+    traditionalChinese: "尋找已卸載應用程式遺留的檔案和資料。",
+    english: "Find files and data left behind by uninstalled apps.",
+    japanese: "アンインストールされたアプリによって残されたファイルやデータを見つけます。",
+    korean: "제거된 앱이 남긴 파일과 데이터를 찾으세요.",
+    russian: "Поиск файлов и данных, оставленных удаленными приложениями."
+)
                     )
                 }
                 
                 // Configure Button (Cyan)
                 Button(action: {}) {
-                    Text(loc.currentLanguage == .chinese ? "配置扫描选项..." : "Configure Scan Options...")
+                    Text(loc.text(
+    simplifiedChinese: "配置扫描选项...",
+    traditionalChinese: "配置掃描選項...",
+    english: "Configure Scan Options...",
+    japanese: "スキャンオプションの設定...",
+    korean: "스캔 옵션 구성...",
+    russian: "Настроить параметры сканирования..."
+))
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.black)
                         .padding(.horizontal, 16)
@@ -482,12 +538,26 @@ struct DeepCleanView: View {
                             .shadow(color: Color.black.opacity(0.3), radius: 2, x: 0, y: 1)
                         
                         let itemCount = categoryItems.count
-                        Text(loc.currentLanguage == .chinese ? "\(itemCount) 项" : "\(itemCount) items")
+                        Text(loc.text(
+    simplifiedChinese: "\(itemCount) 项",
+    traditionalChinese: "\(itemCount)項",
+    english: "\(itemCount) items",
+    japanese: "項目",
+    korean: "\(itemCount) 항목",
+    russian: "\(itemCount) items"
+))
                             .font(.system(size: 14))
                             .foregroundColor(.white.opacity(0.85))
                             .shadow(color: Color.black.opacity(0.3), radius: 2, x: 0, y: 1)
                     } else if isCurrent {
-                        Text(loc.currentLanguage == .chinese ? "扫描中..." : "Scanning...")
+                        Text(loc.text(
+    simplifiedChinese: "扫描中...",
+    traditionalChinese: "掃描中...",
+    english: "Scanning...",
+    japanese: "実行中…",
+    korean: "스캔 중...",
+    russian: "Сканирование..."
+))
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(.white.opacity(0.9))
                             .shadow(color: Color.black.opacity(0.3), radius: 2, x: 0, y: 1)
@@ -502,7 +572,14 @@ struct DeepCleanView: View {
                                 .shadow(color: Color.black.opacity(0.3), radius: 2, x: 0, y: 1)
                         }
                     } else {
-                        Text(loc.currentLanguage == .chinese ? "等待中..." : "Waiting...")
+                        Text(loc.text(
+    simplifiedChinese: "等待中...",
+    traditionalChinese: "等待中...",
+    english: "Waiting...",
+    japanese: "待機中…",
+    korean: "기다리는 중...",
+    russian: "Ожидание..."
+))
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(.white.opacity(0.7))
                             .shadow(color: Color.black.opacity(0.3), radius: 2, x: 0, y: 1)
@@ -635,7 +712,14 @@ struct DeepCleanView: View {
                                 .foregroundColor(.white)
                                 .shadow(color: Color.black.opacity(0.3), radius: 2, x: 0, y: 1)
                             
-                            Text(loc.currentLanguage == .chinese ? "\(items.count) 项" : "\(items.count) items")
+                            Text(loc.text(
+    simplifiedChinese: "\(items.count) 项",
+    traditionalChinese: "\(items.count)項",
+    english: "\(items.count) items",
+    japanese: "項目",
+    korean: "\(items.count) 항목",
+    russian: "\(items.count) items"
+))
                                 .font(.system(size: 14))
                                 .foregroundColor(.white.opacity(0.85))
                                 .shadow(color: Color.black.opacity(0.3), radius: 2, x: 0, y: 1)
@@ -648,7 +732,14 @@ struct DeepCleanView: View {
                             selectedCategoryForDetails = category
                             showingDetails = true
                         }) {
-                            Text(loc.currentLanguage == .chinese ? "查看详情" : "View Details")
+                            Text(loc.text(
+    simplifiedChinese: "查看详情",
+    traditionalChinese: "查看詳情",
+    english: "View Details",
+    japanese: "詳細を表示",
+    korean: "세부 정보 보기",
+    russian: "Посмотреть детали"
+))
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 16)
@@ -710,11 +801,25 @@ struct DeepCleanView: View {
                 // Right: Text & Task List
                 VStack(alignment: .leading, spacing: 30) {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(loc.currentLanguage == .chinese ? "正在清理系统..." : "Cleaning System...")
+                        Text(loc.text(
+    simplifiedChinese: "正在清理系统...",
+    traditionalChinese: "正在清理系統...",
+    english: "Cleaning System...",
+    japanese: "システムのクリーニング",
+    korean: "세척 시스템(cleaning system)",
+    russian: "Процедура уборки"
+))
                             .font(.system(size: 32, weight: .bold))
                             .foregroundColor(.white)
                         
-                        Text(loc.currentLanguage == .chinese ? "正在移除不需要的文件，优化您的 Mac。" : "Removing unwanted files and optimizing your Mac.")
+                        Text(loc.text(
+    simplifiedChinese: "正在移除不需要的文件，优化您的 Mac。",
+    traditionalChinese: "正在移除不需要的文件，優化您的Mac。",
+    english: "Removing unwanted files and optimizing your Mac.",
+    japanese: "不要なファイルを削除し、Macを最適化します。",
+    korean: "원치 않는 파일을 제거하고 Mac을 최적화합니다.",
+    russian: "Удаление нежелательных файлов и оптимизация Mac."
+))
                             .font(.system(size: 14))
                             .foregroundColor(.white.opacity(0.6))
                     }
@@ -801,10 +906,24 @@ struct DeepCleanView: View {
                 // Right: Results
                 VStack(alignment: .leading, spacing: 30) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(loc.currentLanguage == .chinese ? "做得不错！" : "Well done!")
+                        Text(loc.text(
+    simplifiedChinese: "做得不错！",
+    traditionalChinese: "做得很好！",
+    english: "Well done!",
+    japanese: "お疲れさまです！",
+    korean: "잘하셨어요!",
+    russian: "Отличный результат!"
+))
                             .font(.system(size: 36, weight: .bold))
                             .foregroundColor(.white)
-                        Text(loc.currentLanguage == .chinese ? "您的 Mac 状态很好。" : "Your Mac is in good shape.")
+                        Text(loc.text(
+    simplifiedChinese: "您的 Mac 状态很好。",
+    traditionalChinese: "您的Mac 狀態很好。",
+    english: "Your Mac is in good shape.",
+    japanese: "お使いのMacは良好な状態です。",
+    korean: "Mac의 상태가 양호합니다.",
+    russian: "Ваш Mac в хорошей форме."
+))
                             .font(.system(size: 16))
                             .foregroundColor(.white.opacity(0.6))
                     }
@@ -813,8 +932,22 @@ struct DeepCleanView: View {
                         // 1. Deep Cleanup Result
                         DeepCleanResultRow(
                             icon: getCategoryImageName(.junkFiles) ?? "system_clean",
-                            title: loc.currentLanguage == .chinese ? "深度清理" : "Deep Clean",
-                            subtitle: loc.currentLanguage == .chinese ? "不需要的文件已移除" : "Files removed",
+                            title: loc.text(
+    simplifiedChinese: "深度清理",
+    traditionalChinese: "深度清理",
+    english: "Deep Clean",
+    japanese: "ディープクリーン",
+    korean: "철저한 세척",
+    russian: "Глубокая очистка"
+),
+                            subtitle: loc.text(
+    simplifiedChinese: "不需要的文件已移除",
+    traditionalChinese: "不需要的文件已移除",
+    english: "Files removed",
+    japanese: "削除されたファイル",
+    korean: "파일 제거됨",
+    russian: "Файлов удалено"
+),
                             stat: ByteCountFormatter.string(fromByteCount: scanner.cleanedSize, countStyle: .file)
                         )
                         
@@ -822,9 +955,30 @@ struct DeepCleanView: View {
                         if let result = cleanResult {
                             DeepCleanResultRow(
                                 icon: "trash.fill",
-                                title: loc.currentLanguage == .chinese ? "清理项目" : "Items Cleaned",
-                                subtitle: loc.currentLanguage == .chinese ? "已成功清理" : "Successfully cleaned",
-                                stat: "\(result.count) " + (loc.currentLanguage == .chinese ? "个项目" : "items")
+                                title: loc.text(
+    simplifiedChinese: "清理项目",
+    traditionalChinese: "清理項目",
+    english: "Items Cleaned",
+    japanese: "掃除されたアイテム",
+    korean: "청소한 물품",
+    russian: "Элементы очищены"
+),
+                                subtitle: loc.text(
+    simplifiedChinese: "已成功清理",
+    traditionalChinese: "已成功清理",
+    english: "Successfully cleaned",
+    japanese: "正常にクリーニングされました",
+    korean: "성공적으로 청소 완료",
+    russian: "успешно очищен!"
+),
+                                stat: "\(result.count) " + (loc.text(
+    simplifiedChinese: "个项目",
+    traditionalChinese: "個項目",
+    english: "items",
+    japanese: "項目数",
+    korean: "아이템",
+    russian: "Объявления"
+))
                             )
                         }
                     }
@@ -906,7 +1060,7 @@ struct DeepCleanDetailView: View {
                     Image(systemName: "arrow.left")
                         .font(.system(size: 48))
                         .foregroundColor(.secondaryText.opacity(0.5))
-                    Text(loc.currentLanguage == .chinese ? "选择左侧分类查看详情" : "Select a category to view details")
+                    Text(loc.text("选择左侧分类查看详情", "Select a category to view details"))
                         .font(.title3)
                         .foregroundColor(.secondaryText)
                     Spacer()
@@ -934,7 +1088,7 @@ struct DeepCleanDetailView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 14, weight: .semibold))
-                        Text(loc.currentLanguage == .chinese ? "返回概要" : "Back to Overview")
+                        Text(loc.text("返回概要", "Back to Overview"))
                             .font(.system(size: 15, weight: .medium))
                     }
                     .foregroundColor(.white)
@@ -944,7 +1098,14 @@ struct DeepCleanDetailView: View {
                 Spacer()
                 
                 Button(action: selectAllItems) {
-                    Text(loc.currentLanguage == .chinese ? "全选" : "Select All")
+                    Text(loc.text(
+    simplifiedChinese: "全选",
+    traditionalChinese: "全選",
+    english: "Select All",
+    japanese: "すべてを選択",
+    korean: "전체선택",
+    russian: "Выбрать все"
+))
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(Color(hex: "40C4FF"))
                 }
@@ -1092,7 +1253,7 @@ struct DeepCleanDetailView: View {
                 // 修改：只计算选中项的大小和数量
                 let selectedItems = items.filter { $0.isSelected }
                 let totalSize = selectedItems.reduce(0) { $0 + $1.size }
-                Text("\(selectedItems.count) \(loc.currentLanguage == .chinese ? "个选定项目" : "selected items"), \(ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file))")
+                Text("\(selectedItems.count) \(loc.text("个选定项目", "selected items")), \(ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file))")
                     .font(.system(size: 12))
                     .foregroundColor(.secondaryText)
             }
@@ -1108,7 +1269,7 @@ struct DeepCleanDetailView: View {
                     Image(systemName: "checkmark.circle")
                         .font(.system(size: 60))
                         .foregroundColor(.green)
-                    Text(loc.currentLanguage == .chinese ? "该分类暂无项目" : "No items in this category")
+                    Text(loc.text("该分类暂无项目", "No items in this category"))
                         .font(.title3)
                         .foregroundColor(.secondaryText)
                     Spacer()
@@ -1224,6 +1385,16 @@ struct DeepCleanItemRow: View {
         .onHover { hovering in
             isHovering = hovering
         }
+        .scanResultContextMenu(
+            isSelected: item.isSelected,
+            displayName: item.name,
+            url: item.url,
+            onToggleSelection: { scanner.toggleSelection(for: item) },
+            onIgnore: {
+                scanner.items.removeAll { $0.id == item.id }
+                scanner.totalSize = scanner.items.reduce(0) { $0 + $1.size }
+            }
+        )
     }
 }
 

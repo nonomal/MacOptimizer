@@ -40,9 +40,16 @@ class SystemMonitorService: ObservableObject {
     // Battery Monitoring
     @Published var batteryLevel: Double = 1.0
     @Published var isCharging: Bool = false
-    @Published var batteryState: String = "Unknown" 
+    @Published var batteryState: String = "Unknown"
+    @Published var batteryTimeRemaining: String = ""
     
     private var timer: Timer?
+    private let monitorQueue = DispatchQueue(
+        label: "com.macoptimizer.system-monitor",
+        qos: .utility
+    )
+    private var isUpdateInFlight = false
+    private var updateCycle = 0
     
     // UI Update Batching
     private let uiUpdater = BatchedUIUpdater(debounceDelay: 0.05)
@@ -227,7 +234,10 @@ class SystemMonitorService: ObservableObject {
         snoozedUntil = Date().addingTimeInterval(30)
         
         loadIgnoredApps()
-        startMonitoring()
+    }
+
+    deinit {
+        timer?.invalidate()
     }
     
     /// 从UserDefaults加载永久忽略的应用列表
@@ -243,15 +253,37 @@ class SystemMonitorService: ObservableObject {
     }
     
     func startMonitoring() {
-        updateStats()
-        timer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
-            self?.updateStats()
+        guard timer == nil else { return }
+
+        scheduleUpdate()
+
+        let timer = Timer(timeInterval: 2, repeats: true) { [weak self] _ in
+            self?.scheduleUpdate()
         }
+        self.timer = timer
+        RunLoop.main.add(timer, forMode: .common)
     }
     
     func stopMonitoring() {
         timer?.invalidate()
         timer = nil
+    }
+
+    private func scheduleUpdate() {
+        guard !isUpdateInFlight else { return }
+
+        isUpdateInFlight = true
+        let cycle = updateCycle
+        updateCycle += 1
+
+        monitorQueue.async { [weak self] in
+            guard let self else { return }
+            self.updateStats(cycle: cycle)
+
+            DispatchQueue.main.async { [weak self] in
+                self?.isUpdateInFlight = false
+            }
+        }
     }
     
     // 格式化网络速度
@@ -267,9 +299,14 @@ class SystemMonitorService: ObservableObject {
         }
     }
     
-    private func updateStats() {
-        checkHighMemoryApps()
-        fetchUserProcesses()
+    private func updateStats(cycle: Int) {
+        let shouldRefreshApplications = cycle.isMultiple(of: 5)
+        let shouldRefreshBatteryDetails = cycle.isMultiple(of: 30)
+
+        if shouldRefreshApplications {
+            checkHighMemoryApps()
+            fetchUserProcesses()
+        }
         
         // CPU Usage (Simplified using top for now to avoid complex Mach calls issues in pure Swift script context initially, 
         // but robust implementation would use host_processor_info. Let's try to parse top -l 1 output specifically designed for machine reading if possible, 
@@ -384,13 +421,22 @@ class SystemMonitorService: ObservableObject {
                 }
                 
                 // For detailed breakdown, use raw page counts
-                self.updateDetailedStats(pagesActive: pagesActive + pagesInactive + pagesSpeculative, pagesWired: pagesWired, pagesCompressed: pagesCompressed, pageSize: pageSize, totalRAM: totalRAM)
+                self.updateDetailedStats(
+                    pagesActive: pagesActive + pagesInactive + pagesSpeculative,
+                    pagesWired: pagesWired,
+                    pagesCompressed: pagesCompressed,
+                    pageSize: pageSize,
+                    totalRAM: totalRAM,
+                    includePressureAndSwap: shouldRefreshApplications
+                )
             }
         } catch {
             print("Memory Scan Error: \(error)")
         }
         
-        updateBatteryDetails() // Call new battery details
+        if shouldRefreshBatteryDetails {
+            updateBatteryDetails()
+        }
         
         // Network Speed - 使用 netstat 获取网络流量
         // 找到 en0 接口中有实际流量的行（第7列 Ibytes > 0）
@@ -452,9 +498,11 @@ class SystemMonitorService: ObservableObject {
             print("Network Scan Error: \(error)")
         }
         
-        fetchWiFiInfo()
+        if shouldRefreshApplications {
+            fetchWiFiInfo()
+            updateBatteryStatus()
+        }
         updateConnectionDuration()
-        updateBatteryStatus()
     }
     
     // Fetch WiFi Info using airport utility
@@ -528,6 +576,7 @@ class SystemMonitorService: ObservableObject {
                     var batteryLevelValue: Double = 1.0
                     var isChargingValue = false
                     var batteryStateValue = "Unknown"
+                    var batteryTimeRemainingValue = ""
                     
                     if let range = statusLine.range(of: "\\d+%", options: .regularExpression) {
                         let percentString = String(statusLine[range]).dropLast()
@@ -547,6 +596,17 @@ class SystemMonitorService: ObservableObject {
                     } else {
                         isChargingValue = false
                         batteryStateValue = "使用电池"
+
+                        if let range = statusLine.range(of: "\\d+:\\d+ remaining", options: .regularExpression) {
+                            let duration = statusLine[range]
+                                .replacingOccurrences(of: " remaining", with: "")
+                                .split(separator: ":")
+                            if duration.count == 2,
+                               let hours = Int(duration[0]),
+                               let minutes = Int(duration[1]) {
+                                batteryTimeRemainingValue = "剩余 \(hours)小时 \(minutes)分钟"
+                            }
+                        }
                     }
                     
                     // Batch battery status update
@@ -555,6 +615,7 @@ class SystemMonitorService: ObservableObject {
                             self.batteryLevel = batteryLevelValue
                             self.isCharging = isChargingValue
                             self.batteryState = batteryStateValue
+                            self.batteryTimeRemaining = batteryTimeRemainingValue
                         }
                     }
                 }
@@ -773,7 +834,14 @@ class SystemMonitorService: ObservableObject {
     }
     
     // Add logic to updateStats
-    private func updateDetailedStats(pagesActive: UInt64, pagesWired: UInt64, pagesCompressed: UInt64, pageSize: UInt64, totalRAM: UInt64) {
+    private func updateDetailedStats(
+        pagesActive: UInt64,
+        pagesWired: UInt64,
+        pagesCompressed: UInt64,
+        pageSize: UInt64,
+        totalRAM: UInt64,
+        includePressureAndSwap: Bool
+    ) {
         let memoryAppValue = Double(pagesActive * pageSize) / Double(totalRAM)
         let memoryWiredValue = Double(pagesWired * pageSize) / Double(totalRAM)
         let memoryCompressedValue = Double(pagesCompressed * pageSize) / Double(totalRAM)
@@ -797,7 +865,9 @@ class SystemMonitorService: ObservableObject {
             }
         }
         
-        updateMemoryPressureAndSwap()
+        if includePressureAndSwap {
+            updateMemoryPressureAndSwap()
+        }
     }
     
     private func updateMemoryPressureAndSwap() {

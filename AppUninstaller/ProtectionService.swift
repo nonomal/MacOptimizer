@@ -13,6 +13,7 @@ class ProtectionService: ObservableObject {
     }
     @Published var threatHistory: [DetectedThreat] = []
     @Published var blockedAds: [BlockedAd] = []
+    @Published private(set) var contentBlockerConnected = false
     
     struct BlockedAd: Identifiable {
         let id = UUID()
@@ -37,14 +38,12 @@ class ProtectionService: ObservableObject {
         print("Starting Protection Service...")
         isMonitoring = true
         monitorDownloads()
-        startAdBlockSimulation()
     }
     
     func stopMonitoring() {
         print("Stopping Protection Service...")
         isMonitoring = false
         stopDownloadsMonitor()
-        stopAdBlockSimulation()
     }
     
     // MARK: - Download Monitoring

@@ -24,7 +24,14 @@ struct TrashDetailsSplitView: View {
                         }) {
                             HStack(spacing: 4) {
                                 Image(systemName: "chevron.left")
-                                Text(loc.currentLanguage == .chinese ? "返回" : "Back")
+                                Text(loc.text(
+    simplifiedChinese: "返回",
+    traditionalChinese: "返回",
+    english: "Back",
+    japanese: "戻る",
+    korean: "뒤로",
+    russian: "Назад"
+))
                             }
                             .foregroundColor(.white.opacity(0.8))
                         }
@@ -40,8 +47,15 @@ struct TrashDetailsSplitView: View {
                             scanner.toggleAllSelection(!allSelected)
                         }) {
                             Text(scanner.items.allSatisfy { $0.isSelected } ? 
-                                 (loc.currentLanguage == .chinese ? "取消全选" : "Deselect All") : 
-                                 (loc.currentLanguage == .chinese ? "全选" : "Select All"))
+                                 (loc.text("取消全选", "Deselect All")) : 
+                                 (loc.text(
+    simplifiedChinese: "全选",
+    traditionalChinese: "全選",
+    english: "Select All",
+    japanese: "すべてを選択",
+    korean: "전체선택",
+    russian: "Выбрать все"
+)))
                         }
                         .font(.caption)
                         .foregroundColor(.white.opacity(0.8))
@@ -49,7 +63,7 @@ struct TrashDetailsSplitView: View {
                         Spacer()
                         
                         HStack(spacing: 2) {
-                            Text(loc.currentLanguage == .chinese ? "排序方式按 大小" : "Sort by Size")
+                            Text(loc.text("排序方式按 大小", "Sort by Size"))
                             Image(systemName: "chevron.down")
                             .font(.system(size: 8))
                         }
@@ -63,7 +77,7 @@ struct TrashDetailsSplitView: View {
                     ScrollView {
                         VStack(spacing: 2) {
                             ForEach(categories, id: \.self) { category in
-                                categoryRow(title: loc.currentLanguage == .chinese ? "mac 上的废纸篓" : "Trash on mac", size: scanner.formattedSelectedSize, isSelected: selectedCategory == category)
+                                categoryRow(title: loc.text("mac 上的废纸篓", "Trash on mac"), size: scanner.formattedSelectedSize, isSelected: selectedCategory == category)
                                     .onTapGesture {
                                         selectedCategory = category
                                     }
@@ -81,7 +95,7 @@ struct TrashDetailsSplitView: View {
                     HStack {
                         Spacer()
                         
-                        Text(loc.currentLanguage == .chinese ? "废纸篓" : "Trash")
+                        Text(loc.text("废纸篓", "Trash"))
                             .font(.headline)
                             .foregroundColor(.white)
                             .padding(.leading, 40) // Balance
@@ -93,7 +107,14 @@ struct TrashDetailsSplitView: View {
                             Image(systemName: "magnifyingglass")
                             // ...
                             .foregroundColor(.white.opacity(0.6))
-                            TextField(loc.currentLanguage == .chinese ? "搜索" : "Search", text: $searchText)
+                            TextField(loc.text(
+    simplifiedChinese: "搜索",
+    traditionalChinese: "搜尋",
+    english: "Search",
+    japanese: "検索する",
+    korean: "검색",
+    russian: "Поиск"
+), text: $searchText)
                                 .textFieldStyle(.plain)
                                 .foregroundColor(.white)
                         }
@@ -106,7 +127,14 @@ struct TrashDetailsSplitView: View {
                         Button(action: {}) {
                             HStack(spacing: 4) {
                                 Circle().fill(Color.white).frame(width: 6, height: 6)
-                                Text(loc.currentLanguage == .chinese ? "助手" : "Assistant")
+                                Text(loc.text(
+    simplifiedChinese: "助手",
+    traditionalChinese: "助理",
+    english: "Assistant",
+    japanese: "アシスタント",
+    korean: "협조자",
+    russian: "Ассистент"
+))
                             }
                             .font(.caption)
                             .foregroundColor(.white)
@@ -121,11 +149,11 @@ struct TrashDetailsSplitView: View {
                     
                     // 列表标题区域
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(loc.currentLanguage == .chinese ? "mac 上的废纸篓" : "mac Trash")
+                        Text(loc.text("mac 上的废纸篓", "mac Trash"))
                             .font(.system(size: 28, weight: .bold)) // Large Title
                             .foregroundColor(.white)
                         
-                        Text(loc.currentLanguage == .chinese ? "系统废纸篓文件夹存储先前删除的项目，但是它们仍然占用磁盘空间。" : "System Trash folder stores deleted items which still take up space.")
+                        Text(loc.text("系统废纸篓文件夹存储先前删除的项目，但是它们仍然占用磁盘空间。", "System Trash folder stores deleted items which still take up space."))
                             .font(.system(size: 13))
                             .foregroundColor(.white.opacity(0.8))
                     }
@@ -136,7 +164,7 @@ struct TrashDetailsSplitView: View {
                     // 排序栏
                     HStack {
                         Spacer()
-                        Text(loc.currentLanguage == .chinese ? "排序方式按 大小" : "Sort by Size")
+                        Text(loc.text("排序方式按 大小", "Sort by Size"))
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.7))
                         Image(systemName: "triangle.fill")
@@ -184,7 +212,7 @@ struct TrashDetailsSplitView: View {
                                 .shadow(color: Color.black.opacity(0.2), radius: 10, y: 5)
                             
                             VStack(spacing: 2) {
-                                Text(loc.currentLanguage == .chinese ? "清倒" : "Clean")
+                                Text(loc.text("清倒", "Clean"))
                                     .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(scanner.selectedSize > 0 ? .white : .white.opacity(0.5))
                             }
@@ -210,7 +238,7 @@ struct TrashDetailsSplitView: View {
             }
             Button(loc.L("cancel"), role: .cancel) {}
         } message: {
-            Text(loc.currentLanguage == .chinese ? "此操作不可撤销，所有文件将被永久删除。" : "This cannot be undone.")
+            Text(loc.text("此操作不可撤销，所有文件将被永久删除。", "This cannot be undone."))
         }
     }
     
@@ -307,5 +335,15 @@ struct TrashDetailRow: View {
         .onTapGesture {
             scanner.toggleSelection(item)
         }
+        .scanResultContextMenu(
+            isSelected: item.isSelected,
+            displayName: item.name,
+            url: item.url,
+            onToggleSelection: { scanner.toggleSelection(item) },
+            onIgnore: {
+                scanner.items.removeAll { $0.id == item.id }
+                scanner.totalSize = scanner.items.reduce(0) { $0 + $1.size }
+            }
+        )
     }
 }

@@ -104,7 +104,7 @@ struct MainCategoryRow: View {
                 
                 VStack(alignment: .trailing, spacing: 1) {
                     if [.virus, .startupItems, .performanceApps, .appUpdates].contains(mainCategory) {
-                        Text("\(totalItems) " + (loc.currentLanguage == .chinese ? "个" : "items"))
+                        Text("\(totalItems) " + (loc.text("个", "items")))
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(.white)
                     } else {
@@ -177,7 +177,7 @@ struct SubCategoryRow: View {
                 
                 VStack(alignment: .trailing, spacing: 1) {
                     if [.virus, .startupItems, .performanceApps, .appUpdates].contains(subcategory) {
-                        Text("\(fileCount) " + (loc.currentLanguage == .chinese ? "个" : "items"))
+                        Text("\(fileCount) " + (loc.text("个", "items")))
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(.white)
                     } else {
@@ -209,7 +209,7 @@ struct MainCategoryListView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             // 标题
-            Text(loc.currentLanguage == .chinese ? "扫描结果" : "Scan Results")
+            Text(loc.text("扫描结果", "Scan Results"))
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(.white)
                 .padding(.horizontal, 12)
@@ -260,7 +260,7 @@ struct SubCategoryListView: View {
                 Spacer()
                 
                 // 排序方式
-                Text(loc.currentLanguage == .chinese ? "按大小 ▼" : "By Size ▼")
+                Text(loc.text("按大小 ▼", "By Size ▼"))
                     .font(.system(size: 12))
                     .foregroundColor(.secondaryText)
             }

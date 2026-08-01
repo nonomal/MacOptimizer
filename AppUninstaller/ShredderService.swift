@@ -28,6 +28,9 @@ class ShredderService: ObservableObject {
     @Published var currentItemName: String = ""
     @Published var totalSizeCleared: Int64 = 0
     @Published var errorMessage: String?
+    @Published private(set) var isStopping = false
+
+    private var stopRequested = false
     
     // Add files via NSOpenPanel
     @MainActor
@@ -61,6 +64,10 @@ class ShredderService: ObservableObject {
     func removeItem(id: UUID) {
         items.removeAll { $0.id == id }
     }
+
+    func removeItems(at offsets: IndexSet) {
+        items.remove(atOffsets: offsets)
+    }
     
     func reset() {
         items = []
@@ -69,12 +76,16 @@ class ShredderService: ObservableObject {
         currentItemName = ""
         totalSizeCleared = 0
         errorMessage = nil
+        isStopping = false
+        stopRequested = false
     }
     
     // MARK: - Shredding Logic
     func startShredding() async {
         await MainActor.run {
             isProcessing = true
+            isStopping = false
+            stopRequested = false
             progress = 0.0
             totalSizeCleared = 0
         }
@@ -83,6 +94,8 @@ class ShredderService: ObservableObject {
         var processedCount = 0
         
         for index in items.indices {
+            if stopRequested { break }
+
             let item = items[index]
             
             await MainActor.run {
@@ -111,8 +124,16 @@ class ShredderService: ObservableObject {
         
         await MainActor.run {
             isProcessing = false
+            isStopping = false
             currentItemName = ""
         }
+    }
+
+    /// Stops after the current file finishes so an overwrite is never left half complete.
+    func stopShredding() {
+        guard isProcessing else { return }
+        stopRequested = true
+        isStopping = true
     }
     
     private func secureDelete(url: URL) async -> Bool {
@@ -202,21 +223,39 @@ class ShredderService: ObservableObject {
     
     private func calculateSize(of url: URL) -> Int64 {
         var size: Int64 = 0
-        let resourceKeys: [URLResourceKey] = [.fileSizeKey, .isDirectoryKey]
+        let resourceKeys: Set<URLResourceKey> = [
+            .fileSizeKey,
+            .fileAllocatedSizeKey,
+            .totalFileAllocatedSizeKey,
+            .isDirectoryKey
+        ]
         
         // If it's a file
-        if let resources = try? url.resourceValues(forKeys: Set(resourceKeys)) {
+        if let resources = try? url.resourceValues(forKeys: resourceKeys) {
             if resources.isDirectory == false {
-                return Int64(resources.fileSize ?? 0)
+                return Int64(
+                    resources.totalFileAllocatedSize ??
+                    resources.fileAllocatedSize ??
+                    resources.fileSize ??
+                    0
+                )
             }
         }
         
         // If it's a directory (or calculate recursive)
-        if let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: resourceKeys) {
+        if let enumerator = FileManager.default.enumerator(
+            at: url,
+            includingPropertiesForKeys: Array(resourceKeys)
+        ) {
             while let fileURL = enumerator.nextObject() as? URL {
-                if let resources = try? fileURL.resourceValues(forKeys: Set(resourceKeys)),
-                   let fileSize = resources.fileSize {
-                    size += Int64(fileSize)
+                if let resources = try? fileURL.resourceValues(forKeys: resourceKeys),
+                   resources.isDirectory == false {
+                    size += Int64(
+                        resources.totalFileAllocatedSize ??
+                        resources.fileAllocatedSize ??
+                        resources.fileSize ??
+                        0
+                    )
                 }
             }
         }

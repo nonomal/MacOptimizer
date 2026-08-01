@@ -167,7 +167,9 @@ enum JunkType: String, CaseIterable, Identifiable {
             return [
                 "~/Library/Containers/com.apple.mail/Data/Library/Mail Downloads",
                 "~/Library/Mail Downloads",
-                "~/Library/Caches/com.apple.mail"
+                "~/Library/Caches/com.apple.mail",
+                "~/Library/Group Containers/UBF8T346G9.Office/Outlook/Outlook 15 Profiles/Main Profile/Data/Attachments",
+                "~/Library/Containers/com.readdle.smartemail-Mac/Data/Library/Application Support/Spark Desktop/attachments"
             ]
         case .crashReports:
             // Removed /Library paths - only user crash reports
@@ -268,8 +270,16 @@ class JunkItem: Identifiable, ObservableObject, @unchecked Sendable {
 class JunkCleaner: ObservableObject {
     @Published var junkItems: [JunkItem] = []
     @Published var isScanning: Bool = false
+    @Published var isScanningMailAttachments: Bool = false
+    @Published var hasScannedMailAttachments: Bool = false
+    @Published var mailScanProgress: Double = 0
+    @Published var mailAttachmentsHavePermissionError: Bool = false
+    @Published var isCleaningMailAttachments: Bool = false
+    @Published var mailCleaningProgress: Double = 0
+    @Published var mailCleanedSize: Int64 = 0
     @Published var isAnalyzingRecommendations: Bool = false
     @Published var isCleaning: Bool = false  // 添加清理状态
+    @Published var stopCleaningRequested: Bool = false
     @Published var scanProgress: Double = 0
     @Published var hasPermissionErrors: Bool = false
     @Published var currentScanningPath: String = "" // Add path tracking
@@ -292,6 +302,8 @@ class JunkCleaner: ObservableObject {
     }
     
     private let fileManager = FileManager.default
+    private var mailScanGeneration = UUID()
+    private var stopMailCleaningRequested = false
     
     var totalSize: Int64 {
         junkItems.reduce(0) { $0 + $1.size }
@@ -308,6 +320,7 @@ class JunkCleaner: ObservableObject {
         isScanning = false
         isAnalyzingRecommendations = false
         isCleaning = false
+        stopCleaningRequested = false
         scanProgress = 0
         hasPermissionErrors = false
         currentScanningPath = ""
@@ -318,6 +331,120 @@ class JunkCleaner: ObservableObject {
         categoryCleaningStatus.removeAll()
         categoryCleanedSize.removeAll()
     }
+
+    /// Reset only the Mail Attachments module without discarding System Junk results.
+    @MainActor
+    func resetMailAttachments() {
+        mailScanGeneration = UUID()
+        junkItems.removeAll { $0.type == .mailAttachments }
+        isScanningMailAttachments = false
+        hasScannedMailAttachments = false
+        mailScanProgress = 0
+        mailAttachmentsHavePermissionError = false
+        isCleaningMailAttachments = false
+        mailCleaningProgress = 0
+        mailCleanedSize = 0
+        stopMailCleaningRequested = false
+    }
+
+    /// Scan only locally recoverable mail downloads. This state is deliberately
+    /// independent from the broader System Junk scan.
+    func scanMailAttachments() async {
+        let generation = await MainActor.run { () -> UUID in
+            let value = UUID()
+            mailScanGeneration = value
+            junkItems.removeAll { $0.type == .mailAttachments }
+            isScanningMailAttachments = true
+            hasScannedMailAttachments = false
+            mailScanProgress = 0.08
+            mailAttachmentsHavePermissionError = false
+            mailCleanedSize = 0
+            return value
+        }
+
+        let startedAt = Date()
+        let (items, permissionError) = await scanTypeConcurrent(.mailAttachments)
+
+        await MainActor.run {
+            guard mailScanGeneration == generation else { return }
+            mailScanProgress = 0.82
+        }
+
+        let elapsed = Date().timeIntervalSince(startedAt)
+        if elapsed < 1.15 {
+            try? await Task.sleep(nanoseconds: UInt64((1.15 - elapsed) * 1_000_000_000))
+        }
+
+        await MainActor.run {
+            guard mailScanGeneration == generation else { return }
+            items.forEach { $0.isSelected = true }
+            junkItems.append(contentsOf: items.sorted { $0.size > $1.size })
+            mailAttachmentsHavePermissionError = permissionError
+            mailScanProgress = 1
+            hasScannedMailAttachments = true
+            isScanningMailAttachments = false
+        }
+    }
+
+    @MainActor
+    func stopMailAttachmentsScan() {
+        mailScanGeneration = UUID()
+        isScanningMailAttachments = false
+        hasScannedMailAttachments = true
+        mailScanProgress = 0
+    }
+
+    /// Clean only selected mail attachments, keeping all unrelated module
+    /// selections untouched.
+    func cleanSelectedMailAttachments() async -> (cleaned: Int64, failed: Int64) {
+        let selectedItems = await MainActor.run {
+            junkItems.filter { $0.type == .mailAttachments && $0.isSelected }
+        }
+
+        await MainActor.run {
+            stopMailCleaningRequested = false
+            isCleaningMailAttachments = true
+            mailCleaningProgress = 0
+            mailCleanedSize = 0
+        }
+
+        var cleaned: Int64 = 0
+        var failed: Int64 = 0
+        var cleanedIDs = Set<UUID>()
+
+        for (index, item) in selectedItems.enumerated() {
+            if await MainActor.run(body: { stopMailCleaningRequested }) { break }
+
+            if await deleteItem(item) {
+                cleaned += item.size
+                cleanedIDs.insert(item.id)
+            } else {
+                failed += item.size
+            }
+
+            let progress = selectedItems.isEmpty ? 1 : Double(index + 1) / Double(selectedItems.count)
+            let currentCleaned = cleaned
+            await MainActor.run {
+                mailCleaningProgress = progress
+                mailCleanedSize = currentCleaned
+            }
+        }
+
+        let completedIDs = cleanedIDs
+        await MainActor.run {
+            junkItems.removeAll { completedIDs.contains($0.id) }
+            isCleaningMailAttachments = false
+            DiskSpaceManager.shared.updateDiskSpace()
+        }
+
+        return (cleaned, failed)
+    }
+
+    @MainActor
+    func stopMailAttachmentsCleaning() {
+        stopMailCleaningRequested = true
+        isCleaningMailAttachments = false
+    }
     
     /// 停止扫描
     @MainActor
@@ -327,13 +454,22 @@ class JunkCleaner: ObservableObject {
         currentScanningPath = ""
         currentScanningCategory = ""
     }
+
+    /// 请求在当前文件处理完成后停止清理，并保留尚未处理的项目。
+    @MainActor
+    func stopCleaning() {
+        stopCleaningRequested = true
+        isCleaning = false
+    }
     
     /// 扫描所有垃圾 - 使用多线程并发扫描优化
     func scanJunk() async {
         await MainActor.run {
             isScanning = true
+            isCleaning = false
             isAnalyzingRecommendations = false
             junkItems.removeAll()
+            categoryCleanedSize.removeAll()
             scanProgress = 0
             hasPermissionErrors = false // Reset errors
         }
@@ -368,7 +504,7 @@ class JunkCleaner: ObservableObject {
                         for item in typeItems {
                             item.isSelected = true
                         }
-                        self.junkItems.append(contentsOf: typeItems)
+                        self.junkItems.append(contentsOf: typeItems.filter { ScanResultIgnoreStore.shouldInclude($0.path) })
                     }
                 }
                 
@@ -657,7 +793,7 @@ class JunkCleaner: ObservableObject {
             }
         }
         
-        return (allItems, hasError)
+        return (allItems.filter { ScanResultIgnoreStore.shouldInclude($0.path) }, hasError)
     }
     
     // MARK: - 辅助分析方法
@@ -845,6 +981,11 @@ class JunkCleaner: ObservableObject {
         var totalCleanedSize: Int64 = 0
         var totalFailedSize: Int64 = 0
         var needsAdmin = false
+        var cleanedItemIDs = Set<UUID>()
+
+        await MainActor.run {
+            self.stopCleaningRequested = false
+        }
         
         // 1. 获取所有有选中项目的分类（按大小降序排列）
         let selectedItems = junkItems.filter { $0.isSelected }
@@ -864,6 +1005,8 @@ class JunkCleaner: ObservableObject {
         
         // 3. 逐个分类清理
         for category in sortedCategories {
+            if await MainActor.run(body: { self.stopCleaningRequested }) { break }
+
             await MainActor.run {
                 self.currentCleaningCategory = category
                 self.categoryCleaningStatus[category] = .cleaning
@@ -876,10 +1019,13 @@ class JunkCleaner: ObservableObject {
             
             // 清理该分类的所有文件
             for item in categoryItems {
+                if await MainActor.run(body: { self.stopCleaningRequested }) { break }
+
                 let success = await deleteItem(item)
                 if success {
                     categoryCleanedSize += item.size
                     totalCleanedSize += item.size
+                    cleanedItemIDs.insert(item.id)
                 } else {
                     totalFailedSize += item.size
                     categoryFailedItems.append(item)
@@ -893,7 +1039,8 @@ class JunkCleaner: ObservableObject {
             }
             
             // 尝试使用管理员权限删除失败的文件
-            if !categoryFailedItems.isEmpty {
+            let wasStopped = await MainActor.run { self.stopCleaningRequested }
+            if !wasStopped && !categoryFailedItems.isEmpty {
                 let failedPaths = categoryFailedItems.map { $0.path.path }
                 let (sudoCleanedSize, sudoSuccess) = await cleanWithAdminPrivileges(paths: failedPaths, items: categoryFailedItems)
                 if sudoSuccess {
@@ -920,9 +1067,10 @@ class JunkCleaner: ObservableObject {
         }
         
         // 4. 从 junkItems 中移除已清理的项目
+        let completedItemIDs = cleanedItemIDs
         await MainActor.run {
             self.junkItems.removeAll { item in
-                selectedItems.contains { $0.id == item.id }
+                completedItemIDs.contains(item.id)
             }
             self.currentCleaningCategory = nil
             DiskSpaceManager.shared.updateDiskSpace()

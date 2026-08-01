@@ -97,7 +97,14 @@ struct LargeFileDetailsSplitView: View {
                     }) {
                         HStack(spacing: 4) {
                             Image(systemName: "chevron.left")
-                            Text(loc.currentLanguage == .chinese ? "返回" : "Back")
+                            Text(loc.text(
+    simplifiedChinese: "返回",
+    traditionalChinese: "返回",
+    english: "Back",
+    japanese: "戻る",
+    korean: "뒤로",
+    russian: "Назад"
+))
                         }
                         .foregroundColor(.white.opacity(0.8))
                     }
@@ -161,7 +168,7 @@ struct LargeFileDetailsSplitView: View {
                         Button("Date") { sortOption = .date }
                     } label: {
                         HStack(spacing: 4) {
-                            Text(loc.currentLanguage == .chinese ? "排序方式按" : "Sort by")
+                            Text(loc.text("排序方式按", "Sort by"))
                             Text(sortOptionString)
                             Image(systemName: "chevron.down")
                         }
@@ -174,7 +181,14 @@ struct LargeFileDetailsSplitView: View {
                     HStack {
                         Image(systemName: "magnifyingglass")
                             .foregroundColor(.secondaryText)
-                        TextField(loc.currentLanguage == .chinese ? "搜索" : "Search", text: $searchText)
+                        TextField(loc.text(
+    simplifiedChinese: "搜索",
+    traditionalChinese: "搜尋",
+    english: "Search",
+    japanese: "検索する",
+    korean: "검색",
+    russian: "Поиск"
+), text: $searchText)
                             .textFieldStyle(.plain)
                             .foregroundColor(.white)
                     }
@@ -189,13 +203,17 @@ struct LargeFileDetailsSplitView: View {
                 // File List
                 List {
                     ForEach(filteredFiles) { file in
-                        LargeFileItemRow(file: file, isSelected: scanner.selectedFiles.contains(file.id)) {
+                        LargeFileItemRow(file: file, isSelected: scanner.selectedFiles.contains(file.id), onToggle: {
                             if scanner.selectedFiles.contains(file.id) {
                                 scanner.selectedFiles.remove(file.id)
                             } else {
                                 scanner.selectedFiles.insert(file.id)
                             }
-                        }
+                        }, onIgnore: {
+                            scanner.foundFiles.removeAll { $0.id == file.id }
+                            scanner.selectedFiles.remove(file.id)
+                            scanner.totalSize = scanner.foundFiles.reduce(0) { $0 + $1.size }
+                        })
                         .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
                         .listRowBackground(Color.clear)
                         .compatibleListRowSeparatorHidden()
@@ -213,12 +231,12 @@ struct LargeFileDetailsSplitView: View {
                         Button(loc.L("selectAll")) {
                             scanner.selectedFiles = Set(filteredFiles.map { $0.id })
                         }
-                        Button(loc.currentLanguage == .chinese ? "取消选择" : "Deselect All") {
+                        Button(loc.text("取消选择", "Deselect All")) {
                             scanner.selectedFiles.removeAll()
                         }
                     } label: {
                         HStack(spacing: 4) {
-                            Text(loc.currentLanguage == .chinese ? "立即移除" : "Remove Immediately")
+                            Text(loc.text("立即移除", "Remove Immediately"))
                             Image(systemName: "chevron.up")
                         }
                         .foregroundColor(.secondaryText)
@@ -240,7 +258,7 @@ struct LargeFileDetailsSplitView: View {
                                 )
                             
                             VStack(spacing: 4) {
-                                Text(loc.currentLanguage == .chinese ? "移除" : "Remove")
+                                Text(loc.text("移除", "Remove"))
                                     .font(.system(size: 14, weight: .medium))
                                     .foregroundColor(.white)
                                 Text(ByteCountFormatter.string(fromByteCount: scanner.totalSelectedSize, countStyle: .file))
@@ -251,30 +269,30 @@ struct LargeFileDetailsSplitView: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(scanner.selectedFiles.isEmpty)
-                    .alert(loc.currentLanguage == .chinese ? "确认删除" : "Confirm Deletion", isPresented: $showDeleteConfirmation) {
-                        Button(loc.currentLanguage == .chinese ? "取消" : "Cancel", role: .cancel) { }
-                        Button(loc.currentLanguage == .chinese ? "删除" : "Delete", role: .destructive) {
+                    .alert(loc.text("确认删除", "Confirm Deletion"), isPresented: $showDeleteConfirmation) {
+                        Button(loc.text("取消", "Cancel"), role: .cancel) { }
+                        Button(loc.text("删除", "Delete"), role: .destructive) {
                             Task {
                                 let result = await scanner.deleteItems(scanner.selectedFiles)
                                 if result.isSuccessful {
-                                    successMessage = String(format: loc.currentLanguage == .chinese ? "已删除 %d 个文件，释放了 %@" : "Deleted %d files, freed %@", result.successCount, ByteCountFormatter.string(fromByteCount: result.recoveredSize, countStyle: .file))
+                                    successMessage = String(format: loc.text("已删除 %d 个文件，释放了 %@", "Deleted %d files, freed %@"), result.successCount, ByteCountFormatter.string(fromByteCount: result.recoveredSize, countStyle: .file))
                                     showDeleteSuccess = true
                                 } else {
                                     let failedList = result.failedFiles.prefix(5).joined(separator: "\n")
-                                    let moreCount = result.failedFiles.count > 5 ? "\n..." + String(format: loc.currentLanguage == .chinese ? "还有 %d 个文件失败" : "and %d more files failed", result.failedFiles.count - 5) : ""
-                                    deleteErrorMessage = String(format: loc.currentLanguage == .chinese ? "删除 %d 个文件失败:\n%s%s" : "Failed to delete %d files:\n%s%s", result.failedCount, failedList, moreCount)
+                                    let moreCount = result.failedFiles.count > 5 ? "\n..." + String(format: loc.text("还有 %d 个文件失败", "and %d more files failed"), result.failedFiles.count - 5) : ""
+                                    deleteErrorMessage = String(format: loc.text("删除 %d 个文件失败:\n%s%s", "Failed to delete %d files:\n%s%s"), result.failedCount, failedList, moreCount)
                                     showDeleteError = true
                                 }
                             }
                         }
                     } message: {
-                        Text(String(format: loc.currentLanguage == .chinese ? "确定要删除 %d 个文件吗？" : "Are you sure you want to delete %d files?", scanner.selectedFiles.count))
+                        Text(String(format: loc.text("确定要删除 %d 个文件吗？", "Are you sure you want to delete %d files?"), scanner.selectedFiles.count))
                     }
                     
                     // Right Side: Hidden balancer
                     Menu { } label: {
                         HStack(spacing: 4) {
-                            Text(loc.currentLanguage == .chinese ? "立即移除" : "Remove Immediately")
+                            Text(loc.text("立即移除", "Remove Immediately"))
                             Image(systemName: "chevron.up") 
                         }
                     }
@@ -289,12 +307,12 @@ struct LargeFileDetailsSplitView: View {
                 .padding(.bottom, 20)
             }
         }
-        .alert(loc.currentLanguage == .chinese ? "删除失败" : "Deletion Failed", isPresented: $showDeleteError) {
+        .alert(loc.text("删除失败", "Deletion Failed"), isPresented: $showDeleteError) {
             Button("OK") { }
         } message: {
             Text(deleteErrorMessage)
         }
-        .alert(loc.currentLanguage == .chinese ? "删除成功" : "Deletion Successful", isPresented: $showDeleteSuccess) {
+        .alert(loc.text("删除成功", "Deletion Successful"), isPresented: $showDeleteSuccess) {
             Button("OK") { }
         } message: {
             Text(successMessage)
@@ -303,9 +321,9 @@ struct LargeFileDetailsSplitView: View {
     
     private var sortOptionString: String {
         switch sortOption {
-        case .size: return loc.currentLanguage == .chinese ? "大小" : "Size"
-        case .name: return loc.currentLanguage == .chinese ? "名称" : "Name"
-        case .date: return loc.currentLanguage == .chinese ? "日期" : "Date"
+        case .size: return loc.text("大小", "Size")
+        case .name: return loc.text("名称", "Name")
+        case .date: return loc.text("日期", "Date")
         }
     }
     
@@ -386,6 +404,7 @@ struct LargeFileItemRow: View {
     let file: FileItem
     let isSelected: Bool
     let onToggle: () -> Void
+    let onIgnore: () -> Void
     
     @State private var isHovering = false
     
@@ -430,5 +449,12 @@ struct LargeFileItemRow: View {
         .onHover { hovering in
             isHovering = hovering
         }
+        .scanResultContextMenu(
+            isSelected: isSelected,
+            displayName: file.name,
+            url: file.url,
+            onToggleSelection: onToggle,
+            onIgnore: onIgnore
+        )
     }
 }

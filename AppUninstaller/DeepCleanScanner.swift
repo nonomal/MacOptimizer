@@ -156,9 +156,10 @@ class DeepCleanScanner: ObservableObject {
             }
             
             // Update Results
+             let visibleItems = newItems.filter { ScanResultIgnoreStore.shouldInclude($0.url) }
              await MainActor.run {
-                self.items.append(contentsOf: newItems)
-                self.totalSize += newItems.reduce(0) { $0 + $1.size }
+                self.items.append(contentsOf: visibleItems)
+                self.totalSize += visibleItems.reduce(0) { $0 + $1.size }
                 self.completedCategories.insert(category)
                 self.items.sort { $0.size > $1.size } // Keep sorted
                 
@@ -216,6 +217,12 @@ class DeepCleanScanner: ObservableObject {
     
     func sizeFor(category: DeepCleanCategory) -> Int64 {
         return items.filter { $0.category == category && $0.isSelected }.reduce(0) { $0 + $1.size }
+    }
+
+    /// Reuses the production orphan-detection rules for the Uninstaller's
+    /// dedicated "Leftovers" category without starting an unrelated full-disk scan.
+    func scanUninstallerResiduals() async -> [DeepCleanItem] {
+        await scanResiduals()
     }
     
     func stopScan() {
@@ -1110,4 +1117,3 @@ class DeepCleanScanner: ObservableObject {
         }
     }
 }
-

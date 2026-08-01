@@ -88,7 +88,7 @@ struct ScanResultStat: View {
             // Details Button
             if let action = detailsAction {
                 Button(action: action) {
-                    Text(loc.currentLanguage == .chinese ? "查看详情..." : "See Details...")
+                    Text(loc.text("查看详情...", "See Details..."))
                         .font(.system(size: 12))
                         .foregroundColor(.white.opacity(0.6))
                         .padding(.horizontal, 12)
@@ -98,7 +98,7 @@ struct ScanResultStat: View {
                 }
                 .buttonStyle(.plain)
             } else {
-                Text(loc.currentLanguage == .chinese ? "好" : "Good") // "好" matches design
+                Text(loc.text("好", "Good")) // "好" matches design
                     .font(.system(size: 30, weight: .regular))
                     .foregroundColor(.green)
             }

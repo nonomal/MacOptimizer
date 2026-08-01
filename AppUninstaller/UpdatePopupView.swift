@@ -19,7 +19,7 @@ struct UpdatePopupView: View {
                         )
                     )
                 
-                Text(loc.currentLanguage == .chinese ? "发现新版本" : "New Version Available")
+                Text(loc.text("发现新版本", "New Version Available"))
                     .font(.title2)
                     .bold()
                 
@@ -53,7 +53,7 @@ struct UpdatePopupView: View {
                 Button(action: {
                     presentationMode.wrappedValue.dismiss()
                 }) {
-                    Text(loc.currentLanguage == .chinese ? "稍后" : "Later")
+                    Text(loc.text("稍后", "Later"))
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
@@ -66,7 +66,7 @@ struct UpdatePopupView: View {
                         presentationMode.wrappedValue.dismiss()
                     }
                 }) {
-                    Text(loc.currentLanguage == .chinese ? "立即更新" : "Update Now")
+                    Text(loc.text("立即更新", "Update Now"))
                         .fontWeight(.semibold)
                         .padding(.horizontal, 24)
                         .padding(.vertical, 10)

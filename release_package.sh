@@ -95,6 +95,9 @@ create_app_bundle() {
     
     # 复制资源文件
     cp "${SOURCE_DIR}/Info.plist" "${OUTPUT_DIR}/${BUNDLE_NAME}/Contents/"
+    if [ -d "${SOURCE_DIR}/Localizations" ]; then
+        cp -R "${SOURCE_DIR}/Localizations/"*.lproj "${OUTPUT_DIR}/${BUNDLE_NAME}/Contents/Resources/"
+    fi
     if [ -f "${SOURCE_DIR}/AppIcon.icns" ]; then
         cp "${SOURCE_DIR}/AppIcon.icns" "${OUTPUT_DIR}/${BUNDLE_NAME}/Contents/Resources/"
     fi

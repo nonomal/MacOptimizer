@@ -37,8 +37,13 @@ class ResidualFileScanner {
             residualFiles.append(contentsOf: self.scanLaunchAgents(appName: appName, bundleId: bundleId))
             residualFiles.append(contentsOf: self.scanCrashReports(appName: appName, bundleId: bundleId))
             residualFiles.append(contentsOf: self.scanDeveloper(appName: appName, bundleId: bundleId))
+            residualFiles.append(contentsOf: self.scanKnownApplicationData(bundleId: bundleId))
             
-            return residualFiles
+            var seenPaths = Set<String>()
+            return residualFiles.filter {
+                seenPaths.insert($0.path.standardizedFileURL.path).inserted &&
+                ScanResultIgnoreStore.shouldInclude($0.path)
+            }
         }
         
         // Cache the results
@@ -241,13 +246,14 @@ class ResidualFileScanner {
             for batch in contents.chunked(into: batchSize) {
                 for url in batch {
                     let fileName = url.lastPathComponent.lowercased()
+                    let fileStem = url.deletingPathExtension().lastPathComponent.lowercased()
                     let appNameLower = appName.lowercased()
                     let bundleIdLower = bundleId?.lowercased() ?? ""
                     
                     var matches = false
                     
                     // 匹配应用名称
-                    if fileName.contains(appNameLower) {
+                    if fileName == appNameLower || fileStem == appNameLower {
                         matches = true
                     }
                     
@@ -272,6 +278,42 @@ class ResidualFileScanner {
         
         return files
     }
+
+    /// Some Electron/Chromium apps keep their largest user data in a vendor or
+    /// CLI directory whose name is not the app bundle name. CleanMyMac includes
+    /// these paths in the installed app's total, so keep the mapping narrow and
+    /// bundle-ID based to avoid claiming unrelated folders.
+    private func scanKnownApplicationData(bundleId: String?) -> [ResidualFile] {
+        guard let bundleId = bundleId?.lowercased() else { return [] }
+        let paths: [(URL, FileType)]
+
+        switch bundleId {
+        case "com.google.chrome":
+            paths = [
+                (homeDirectory.appendingPathComponent("Library/Application Support/Google"), .applicationSupport),
+                (homeDirectory.appendingPathComponent("Library/Caches/Google"), .caches),
+                (homeDirectory.appendingPathComponent("Library/HTTPStorages/com.google.Chrome"), .caches)
+            ]
+        case "com.openai.codex":
+            paths = [
+                (homeDirectory.appendingPathComponent("Library/Application Support/Codex"), .applicationSupport),
+                (homeDirectory.appendingPathComponent("Library/Caches/Codex"), .caches),
+                (homeDirectory.appendingPathComponent(".codex"), .applicationSupport)
+            ]
+        case "com.todesktop.230313mzl4w4u92":
+            paths = [
+                (homeDirectory.appendingPathComponent("Library/Application Support/Cursor"), .applicationSupport),
+                (homeDirectory.appendingPathComponent(".cursor"), .applicationSupport)
+            ]
+        default:
+            paths = []
+        }
+
+        return paths.compactMap { url, type in
+            guard fileManager.fileExists(atPath: url.path) else { return nil }
+            return ResidualFile(path: url, type: type, size: calculateSize(at: url))
+        }
+    }
     
     // MARK: - 计算大小
     private func calculateSize(at url: URL) -> Int64 {
@@ -280,17 +322,22 @@ class ResidualFileScanner {
         var isDirectory: ObjCBool = false
         if fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory) {
             if isDirectory.boolValue {
+                let keys: [URLResourceKey] = [.fileSizeKey, .fileAllocatedSizeKey, .totalFileAllocatedSizeKey]
                 let enumerator = fileManager.enumerator(
                     at: url,
-                    includingPropertiesForKeys: [.fileSizeKey],
+                    includingPropertiesForKeys: keys,
                     options: [.skipsHiddenFiles],
                     errorHandler: nil
                 )
                 
                 while let fileURL = enumerator?.nextObject() as? URL {
                     do {
-                        let resourceValues = try fileURL.resourceValues(forKeys: [.fileSizeKey])
-                        totalSize += Int64(resourceValues.fileSize ?? 0)
+                        let resourceValues = try fileURL.resourceValues(forKeys: Set(keys))
+                        totalSize += Int64(
+                            resourceValues.totalFileAllocatedSize ??
+                            resourceValues.fileAllocatedSize ??
+                            resourceValues.fileSize ?? 0
+                        )
                     } catch {
                         continue
                     }

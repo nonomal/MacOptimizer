@@ -169,8 +169,9 @@ class MaintenanceService: ObservableObject {
     static let shared = MaintenanceService()
     
     @Published var selectedTask: MaintenanceTask = .freeRam
-    @Published var selectedTasks: Set<MaintenanceTask> = Set(MaintenanceTask.allCases)
+    @Published var selectedTasks: Set<MaintenanceTask> = []
     @Published var isRunning = false
+    @Published private(set) var runWasCancelled = false
     @Published var currentRunningTask: MaintenanceTask?
     @Published var completedTasks: Set<MaintenanceTask> = []
     @Published var taskResults: [TaskResult] = []
@@ -243,11 +244,13 @@ class MaintenanceService: ObservableObject {
     func runSelectedTasks() async {
         await MainActor.run {
             isRunning = true
+            runWasCancelled = false
             completedTasks = []
             taskResults = []
         }
         
         for task in MaintenanceTask.allCases {
+            if runWasCancelled || Task.isCancelled { break }
             if selectedTasks.contains(task) {
                 await MainActor.run { currentRunningTask = task }
                 
@@ -278,6 +281,8 @@ class MaintenanceService: ObservableObject {
                 
                 // 执行任务
                 let result = await executeTask(task)
+
+                if runWasCancelled || Task.isCancelled { break }
                 
                 await MainActor.run {
                     completedTasks.insert(task)
@@ -291,6 +296,11 @@ class MaintenanceService: ObservableObject {
             currentRunningTask = nil
             isRunning = false
         }
+    }
+
+    func stopRunningTasks() {
+        runWasCancelled = true
+        showConfirmDialog = false
     }
     
     // 检查任务是否需要用户确认
@@ -912,7 +922,7 @@ struct MaintenanceView: View {
                         .fixedSize(horizontal: false, vertical: true)
                     
                     // Recommendations
-                    Text(loc.currentLanguage == .chinese ? "使用推荐：" : "Recommended for:")
+                    Text(loc.text("使用推荐：", "Recommended for:"))
                         .font(.system(size: 11))
                         .foregroundColor(.white.opacity(0.5))
                         .padding(.bottom, 8)
@@ -934,9 +944,7 @@ struct MaintenanceView: View {
                     // Footer: Last Run Date only (button moved to left panel)
                     HStack {
                         Spacer()
-                        Text(loc.currentLanguage == .chinese
-                             ? "上次运行：\(service.getLastRunDate(for: service.selectedTask, chinese: true))"
-                             : "Last ran: \(service.getLastRunDate(for: service.selectedTask, chinese: false))")
+                        Text(loc.text("上次运行：\(service.getLastRunDate(for: service.selectedTask, chinese: true))", "Last ran: \(service.getLastRunDate(for: service.selectedTask, chinese: false))"))
                             .font(.system(size: 11))
                             .foregroundColor(.white.opacity(0.4))
                         Spacer()
@@ -980,7 +988,7 @@ struct MaintenanceView: View {
                     )
                     .frame(width: 58, height: 58)
                 
-                Text(loc.currentLanguage == .chinese ? "运行" : "Run")
+                Text(loc.text("运行", "Run"))
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(.white)
             }
@@ -1054,7 +1062,7 @@ struct MaintenanceView: View {
             Spacer()
             
             // 标题
-            Text(loc.currentLanguage == .chinese ? "正在执行维护任务..." : "Running maintenance tasks...")
+            Text(loc.text("正在执行维护任务...", "Running maintenance tasks..."))
                 .font(.title2)
                 .foregroundColor(.white)
             
@@ -1127,14 +1135,12 @@ struct MaintenanceView: View {
             }
             .padding(.bottom, 20)
             
-            Text(loc.currentLanguage == .chinese ? "维护完成！" : "Maintenance Complete!")
+            Text(loc.text("维护完成！", "Maintenance Complete!"))
                 .font(.system(size: 28, weight: .bold))
                 .foregroundColor(.white)
                 .padding(.bottom, 10)
             
-            Text(loc.currentLanguage == .chinese
-                 ? "\(service.completedTasks.count) 个任务已执行"
-                 : "\(service.completedTasks.count) tasks executed")
+            Text(loc.text("\(service.completedTasks.count) 个任务已执行", "\(service.completedTasks.count) tasks executed"))
                 .font(.system(size: 14))
                 .foregroundColor(.white.opacity(0.7))
                 .padding(.bottom, 30)
@@ -1215,7 +1221,14 @@ struct MaintenanceView: View {
                 service.taskResults.removeAll()
                 viewState = 0 
             }) {
-                Text(loc.currentLanguage == .chinese ? "完成" : "Done")
+                Text(loc.text(
+    simplifiedChinese: "完成",
+    traditionalChinese: "完成",
+    english: "Done",
+    japanese: "完了",
+    korean: "완료",
+    russian: "Готово"
+))
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
                     .padding(.horizontal, 40)
@@ -1246,22 +1259,20 @@ struct MaintenanceLandingView: View {
                 VStack(alignment: .leading, spacing: 30) {
                     // Branding Header
                     HStack(spacing: 8) {
-                        Text(loc.currentLanguage == .chinese ? "系统维护" : "System Maintenance")
+                        Text(loc.text("系统维护", "System Maintenance"))
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.white)
                         
                         // Maintenance Icon
                         HStack(spacing: 4) {
                             Image(systemName: "wrench.and.screwdriver.fill")
-                            Text(loc.currentLanguage == .chinese ? "快速修复" : "Quick Fix")
+                            Text(loc.text("快速修复", "Quick Fix"))
                                 .font(.system(size: 20, weight: .heavy))
                         }
                         .foregroundColor(.white)
                     }
                     
-                    Text(loc.currentLanguage == .chinese ? 
-                         "运行一组可快速优化系统性能的脚本。\n上次维护时间：从未" :
-                         "Run a set of scripts to quickly optimize system performance.\nLast maintenance: Never")
+                    Text(loc.text("运行一组可快速优化系统性能的脚本。\n上次维护时间：从未", "Run a set of scripts to quickly optimize system performance.\nLast maintenance: Never"))
                         .font(.system(size: 13))
                         .foregroundColor(.white.opacity(0.7))
                         .lineSpacing(4)
@@ -1270,26 +1281,26 @@ struct MaintenanceLandingView: View {
                     VStack(alignment: .leading, spacing: 24) {
                         featureRow(
                             icon: "gauge",
-                            title: loc.currentLanguage == .chinese ? "提高驱动器性能" : "Improve Drive Performance",
-                            desc: loc.currentLanguage == .chinese ? "保护磁盘，确保其文件系统和物理状态良好。" : "Maintain the disk to ensure its file system and physical health are good."
+                            title: loc.text("提高驱动器性能", "Improve Drive Performance"),
+                            desc: loc.text("保护磁盘，确保其文件系统和物理状态良好。", "Maintain the disk to ensure its file system and physical health are good.")
                         )
                         
                         featureRow(
                             icon: "exclamationmark.triangle",
-                            title: loc.currentLanguage == .chinese ? "消除应用程序错误" : "Fix Application Errors",
-                            desc: loc.currentLanguage == .chinese ? "通过修改权限以及运行维护脚本解决不适当的应用程序行为。" : "Fix improper application behavior by repairing permissions and running maintenance scripts."
+                            title: loc.text("消除应用程序错误", "Fix Application Errors"),
+                            desc: loc.text("通过修改权限以及运行维护脚本解决不适当的应用程序行为。", "Fix improper application behavior by repairing permissions and running maintenance scripts.")
                         )
                         
                         featureRow(
                             icon: "magnifyingglass",
-                            title: loc.currentLanguage == .chinese ? "提高搜索性能" : "Improve Search Performance",
-                            desc: loc.currentLanguage == .chinese ? "为您的\"聚焦\"数据库重新建立索引，提高搜索速度和质量。" : "Reindex your Spotlight database to improve search speed and quality."
+                            title: loc.text("提高搜索性能", "Improve Search Performance"),
+                            desc: loc.text("为您的\"聚焦\"数据库重新建立索引，提高搜索速度和质量。", "Reindex your Spotlight database to improve search speed and quality.")
                         )
                     }
                     
                     // View Tasks Button
                     Button(action: { viewState = 0 }) {
-                        Text(loc.currentLanguage == .chinese ? "查看 7 个任务..." : "View 7 Tasks...")
+                        Text(loc.text("查看 7 个任务...", "View 7 Tasks..."))
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.black)
                             .padding(.horizontal, 16)
@@ -1369,7 +1380,7 @@ struct MaintenanceLandingView: View {
                             .frame(width: 74, height: 74)
                             .shadow(color: Color.black.opacity(0.3), radius: 10, y: 5)
                         
-                        Text(loc.currentLanguage == .chinese ? "开始" : "Start")
+                        Text(loc.text("开始", "Start"))
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.white)
                     }
@@ -1420,7 +1431,7 @@ struct MaintenanceConfirmDialog: View {
                             .font(.system(size: 20))
                         
                             
-                        Text(loc.currentLanguage == .chinese ? "确认操作" : "Confirm Action")
+                        Text(loc.text("确认操作", "Confirm Action"))
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.white)
                     }
@@ -1478,7 +1489,7 @@ struct MaintenanceConfirmDialog: View {
             // Task Details
             VStack(alignment: .leading, spacing: 12) {
                 if let task = service.confirmDialogTask {
-                    Text(loc.currentLanguage == .chinese ? "将要执行的操作：" : "Operations to perform:")
+                    Text(loc.text("将要执行的操作：", "Operations to perform:"))
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.white)
                     
@@ -1510,7 +1521,7 @@ struct MaintenanceConfirmDialog: View {
                     service.cancelAction()
                     dismiss()
                 }) {
-                    Text(loc.currentLanguage == .chinese ? "取消" : "Cancel")
+                    Text(loc.text("取消", "Cancel"))
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.white.opacity(0.8))
                         .padding(.horizontal, 20)
@@ -1525,7 +1536,7 @@ struct MaintenanceConfirmDialog: View {
                     service.confirmAction()
                     dismiss()
                 }) {
-                    Text(loc.currentLanguage == .chinese ? "继续执行" : "Continue")
+                    Text(loc.text("继续执行", "Continue"))
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.white)
                         .padding(.horizontal, 20)

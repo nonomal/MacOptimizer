@@ -140,10 +140,17 @@ struct SmartCleanerView: View {
         }
         // Alerts & Confirmations ... (Keeping existing logic)
         .confirmationDialog(
-            loc.currentLanguage == .chinese ? "确认删除" : "Confirm Delete",
+            loc.text("确认删除", "Confirm Delete"),
             isPresented: $showDeleteConfirmation
         ) {
-            Button(loc.currentLanguage == .chinese ? "开始清理" : "Start Cleaning", role: .destructive) {
+            Button(loc.text(
+    simplifiedChinese: "开始清理",
+    traditionalChinese: "開始清理",
+    english: "Start Cleaning",
+    japanese: "清掃を開始",
+    korean: "청소 시작",
+    russian: "Начало уборки"
+), role: .destructive) {
                 Task {
                     let result = await service.cleanAll()
                     deleteResult = (result.success, result.failed, result.size)
@@ -157,10 +164,10 @@ struct SmartCleanerView: View {
             }
             Button(loc.L("cancel"), role: .cancel) {}
         } message: {
-            Text(loc.currentLanguage == .chinese ? "将清理所有选中的垃圾文件，释放空间。" : "Clean all selected files to free up space.")
+            Text(loc.text("将清理所有选中的垃圾文件，释放空间。", "Clean all selected files to free up space."))
         }
-        .alert(loc.currentLanguage == .chinese ? "部分文件需要管理员权限" : "Some Files Require Admin Privileges", isPresented: $showRetryWithAdmin) {
-             Button(loc.currentLanguage == .chinese ? "使用管理员权限删除" : "Delete with Admin", role: .destructive) {
+        .alert(loc.text("部分文件需要管理员权限", "Some Files Require Admin Privileges"), isPresented: $showRetryWithAdmin) {
+             Button(loc.text("使用管理员权限删除", "Delete with Admin"), role: .destructive) {
                  Task {
                      let adminResult = await service.cleanWithPrivileges(files: failedFiles)
                      if let currentResult = deleteResult {
@@ -177,9 +184,7 @@ struct SmartCleanerView: View {
              Button(loc.L("cancel"), role: .cancel) { showCleaningFinished = true }
         } message: {
 
-            Text(loc.currentLanguage == .chinese ?
-                 "有 \(failedFiles.count) 个文件因权限不足无法删除。" :
-                 "\(failedFiles.count) files could not be deleted due to permissions.")
+            Text(loc.text("有 \(failedFiles.count) 个文件因权限不足无法删除。", "\(failedFiles.count) files could not be deleted due to permissions."))
         }
         }
     
@@ -187,7 +192,7 @@ struct SmartCleanerView: View {
     private var headerView: some View {
         ZStack {
             // Center Title
-            Text(loc.currentLanguage == .chinese ? "智能扫描" : "Smart Scan")
+            Text(loc.text("智能扫描", "Smart Scan"))
                 .font(.system(size: 14, weight: .regular))
                 .foregroundColor(.white.opacity(0.6))
             
@@ -202,7 +207,7 @@ struct SmartCleanerView: View {
                     }) {
                         HStack(spacing: 6) {
                             Image(systemName: "arrow.counterclockwise")
-                            Text(loc.currentLanguage == .chinese ? "重新开始" : "Start Over")
+                            Text(loc.text("重新开始", "Start Over"))
                         }
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.white.opacity(0.8))
@@ -245,11 +250,11 @@ struct SmartCleanerView: View {
             .padding(.bottom, 60)
             
             VStack(spacing: 12) {
-                Text(loc.currentLanguage == .chinese ? "欢迎使用 Mac优化大师" : "Welcome to MacOptimizer")
+                Text(loc.text("欢迎使用Mac优化大师", "Welcome to MacOptimizer"))
                     .font(.system(size: 40, weight: .regular))
                     .foregroundColor(.white)
                 
-                Text(loc.currentLanguage == .chinese ? "开始全面、仔细扫描您的 Mac。" : "Start a comprehensive and thorough scan of your Mac.")
+                Text(loc.text("开始全面、仔细扫描您的 Mac。", "Start a comprehensive and thorough scan of your Mac."))
                     .font(.system(size: 16))
                     .foregroundColor(.white.opacity(0.6))
             }
@@ -264,11 +269,11 @@ struct SmartCleanerView: View {
         VStack {
             // Title & Subtitle for Scanning - Added per user request
             VStack(spacing: 12) {
-                Text(loc.currentLanguage == .chinese ? "正在查看它..." : "Checking it...")
+                Text(loc.text("正在查看它...", "Checking it..."))
                     .font(.system(size: 28, weight: .medium))
                     .foregroundColor(.white)
                 
-                Text(loc.currentLanguage == .chinese ? "稍等片刻。我们都希望它易如反掌。" : "Just a moment. We hope it's effortless.")
+                Text(loc.text("稍等片刻。我们都希望它易如反掌。", "Just a moment. We hope it's effortless."))
                     .font(.system(size: 14))
                     .foregroundColor(.white.opacity(0.6))
             }
@@ -287,11 +292,11 @@ struct SmartCleanerView: View {
         VStack {
             // Title & Subtitle for Results
             VStack(spacing: 12) {
-                Text(loc.currentLanguage == .chinese ? "好了，我发现的内容都在这里。" : "Okay, here's what I found.")
+                Text(loc.text("好了，我发现的内容都在这里。", "Okay, here's what I found."))
                     .font(.system(size: 28, weight: .medium))
                     .foregroundColor(.white)
                 
-                Text(loc.currentLanguage == .chinese ? "保持您的 Mac 干净、安全、性能优化的所有任务正在等候。立即运行！" : "All tasks to keep your Mac clean, safe, and optimized are waiting. Run now!")
+                Text(loc.text("保持您的 Mac 干净、安全、性能优化的所有任务正在等候。立即运行！", "All tasks to keep your Mac clean, safe, and optimized are waiting. Run now!"))
                     .font(.system(size: 14))
                     .foregroundColor(.white.opacity(0.6))
             }
@@ -344,11 +349,25 @@ struct SmartCleanerView: View {
                 // Right: Text & Task List
                 VStack(alignment: .leading, spacing: 30) {
                     VStack(alignment: .leading, spacing: 12) {
-                         Text(loc.currentLanguage == .chinese ? "正在清理系统..." : "Cleaning System...")
+                         Text(loc.text(
+    simplifiedChinese: "正在清理系统...",
+    traditionalChinese: "正在清理系統...",
+    english: "Cleaning System...",
+    japanese: "システムのクリーニング",
+    korean: "세척 시스템(cleaning system)",
+    russian: "Процедура уборки"
+))
                             .font(.system(size: 32, weight: .bold))
                             .foregroundColor(.white)
                         
-                        Text(loc.currentLanguage == .chinese ? "正在移除不需要的文件，优化您的 Mac。" : "Removing unwanted files and optimizing your Mac.")
+                        Text(loc.text(
+    simplifiedChinese: "正在移除不需要的文件，优化您的 Mac。",
+    traditionalChinese: "正在移除不需要的文件，優化您的Mac。",
+    english: "Removing unwanted files and optimizing your Mac.",
+    japanese: "不要なファイルを削除し、Macを最適化します。",
+    korean: "원치 않는 파일을 제거하고 Mac을 최적화합니다.",
+    russian: "Удаление нежелательных файлов и оптимизация Mac."
+))
                             .font(.system(size: 14))
                             .foregroundColor(.white.opacity(0.6))
                     }
@@ -372,7 +391,7 @@ struct SmartCleanerView: View {
                                         .foregroundColor(getCategoryColor(cat))
                                 }
                                 
-                                Text(cat == .largeFiles ? (loc.currentLanguage == .chinese ? "废纸篓" : "Trash") : getCategoryTitle(cat))
+                                Text(cat == .largeFiles ? (loc.text("废纸篓", "Trash")) : getCategoryTitle(cat))
                                     .font(.system(size: 15))
                                     .foregroundColor(.white)
                                 
@@ -429,7 +448,7 @@ struct SmartCleanerView: View {
                 
                 // Right: Detailed Task List (Log)
                 VStack(alignment: .leading, spacing: 24) {
-                    Text(loc.currentLanguage == .chinese ? "清理日志" : "Cleaning Log")
+                    Text(loc.text("清理日志", "Cleaning Log"))
                         .font(.system(size: 32, weight: .bold))
                         .foregroundColor(.white)
                     
@@ -441,7 +460,7 @@ struct SmartCleanerView: View {
                         cleaningTaskRow(
                             icon: "trash.circle.fill",
                             color: .pink,
-                            title: loc.currentLanguage == .chinese ? "系统垃圾" : "System Junk",
+                            title: loc.text("系统垃圾", "System Junk"),
                             size: sysJunkSize > 0 ? sysJunkSize : service.totalCleanedSize, 
                             state: sysJunkState
                         )
@@ -450,7 +469,7 @@ struct SmartCleanerView: View {
                         cleaningTaskRow(
                             icon: "trash.fill",
                             color: .green,
-                            title: loc.currentLanguage == .chinese ? "废纸篓" : "Trash",
+                            title: loc.text("废纸篓", "Trash"),
                             size: 0,
                             state: .completed
                         )
@@ -459,7 +478,7 @@ struct SmartCleanerView: View {
                         cleaningTaskRow(
                             icon: "exclamationmark.shield.fill",
                             color: .gray,
-                            title: loc.currentLanguage == .chinese ? "可能有害的应用程序" : "Potentially Harmful Apps",
+                            title: loc.text("可能有害的应用程序", "Potentially Harmful Apps"),
                             size: 0,
                             state: .completed
                         )
@@ -468,7 +487,7 @@ struct SmartCleanerView: View {
                         cleaningTaskRow(
                             icon: "network",
                             color: .blue,
-                            title: loc.currentLanguage == .chinese ? "刷新 DNS 缓存" : "Refresh DNS Cache",
+                            title: loc.text("刷新 DNS 缓存", "Refresh DNS Cache"),
                             size: 0,
                             state: .completed
                         )
@@ -476,7 +495,7 @@ struct SmartCleanerView: View {
                          cleaningTaskRow(
                              icon: "memorychip",
                              color: .blue,
-                             title: loc.currentLanguage == .chinese ? "释放 RAM" : "Free RAM",
+                             title: loc.text("释放 RAM", "Free RAM"),
                              size: 0,
                              state: .completed
                          )
@@ -489,7 +508,7 @@ struct SmartCleanerView: View {
             
             // Bottom Left: Hide Log Button
             Button(action: { withAnimation { viewingLog = false } }) {
-                Text(loc.currentLanguage == .chinese ? "隐藏日志" : "Hide Log")
+                Text(loc.text("隐藏日志", "Hide Log"))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.white.opacity(0.8))
                     .padding(.horizontal, 16)
@@ -508,11 +527,11 @@ struct SmartCleanerView: View {
             
             // Headline
             VStack(spacing: 8) {
-                Text(loc.currentLanguage == .chinese ? "好了，我发现的内容都在这里。" : "Well done, here is what I found.")
+                Text(loc.text("好了，我发现的内容都在这里。", "Well done, here is what I found."))
                     .font(.system(size: 32, weight: .medium))
                     .foregroundColor(.white)
                 
-                Text(loc.currentLanguage == .chinese ? "保持您的 Mac 干净、安全、性能优化的所有任务正在等候。立即运行！" : "All tasks to keep your Mac clean, safe, and optimized are ready. Run now!")
+                Text(loc.text("保持您的 Mac 干净、安全、性能优化的所有任务正在等候。立即运行！", "All tasks to keep your Mac clean, safe, and optimized are ready. Run now!"))
                     .font(.system(size: 14))
                     .foregroundColor(.white.opacity(0.6))
             }
@@ -525,8 +544,8 @@ struct SmartCleanerView: View {
                 VStack(spacing: 30) {
                     ScanResultCard(
                         icon: "trash.circle.fill", // Using standard SF Symbol or custom
-                        title: loc.currentLanguage == .chinese ? "清理" : "Cleanup",
-                        subtitle: loc.currentLanguage == .chinese ? "移除不需要的垃圾" : "Remove unwanted junk",
+                        title: loc.text("清理", "Cleanup"),
+                        subtitle: loc.text("移除不需要的垃圾", "Remove unwanted junk"),
                         gradient: BackgroundStyles.cardApps, // Blue
                         isCompleted: true
                     )
@@ -546,15 +565,15 @@ struct SmartCleanerView: View {
                 VStack(spacing: 30) {
                     ScanResultCard(
                         icon: "lock.shield.fill",
-                        title: loc.currentLanguage == .chinese ? "保护" : "Protection",
-                        subtitle: loc.currentLanguage == .chinese ? "消除潜在威胁" : "Eliminate potential threats",
+                        title: loc.text("保护", "Protection"),
+                        subtitle: loc.text("消除潜在威胁", "Eliminate potential threats"),
                         gradient: BackgroundStyles.cardCleaning, // Green (naming mismatch in Styles)
                         isCompleted: true
                     )
                     
                     ScanResultStat(
-                        value: service.totalResolvedThreats > 0 ? "\(service.totalResolvedThreats)" : (loc.currentLanguage == .chinese ? "好" : "Good"),
-                        unit: service.totalResolvedThreats > 0 ? (loc.currentLanguage == .chinese ? "个威胁" : "Threats") : "",
+                        value: service.totalResolvedThreats > 0 ? "\(service.totalResolvedThreats)" : (loc.text("好", "Good")),
+                        unit: service.totalResolvedThreats > 0 ? (loc.text("个威胁", "Threats")) : "",
                         detailsAction: nil, // No details for Good
                         color: Color.green, // Green Text
                         loc: loc
@@ -565,15 +584,15 @@ struct SmartCleanerView: View {
                 VStack(spacing: 30) {
                     ScanResultCard(
                         icon: "gauge.with.needle",
-                        title: loc.currentLanguage == .chinese ? "速度" : "Speed",
-                        subtitle: loc.currentLanguage == .chinese ? "提升系统性能" : "Boost system performance",
+                        title: loc.text("速度", "Speed"),
+                        subtitle: loc.text("提升系统性能", "Boost system performance"),
                         gradient: BackgroundStyles.cardProtection, // Pink/Purple (naming mismatch)
                         isCompleted: service.totalOptimizedItems > 0
                     )
                     
                     ScanResultStat(
                         value: "\(service.totalOptimizedItems)",
-                        unit: loc.currentLanguage == .chinese ? "个任务可运行" : "Tasks",
+                        unit: loc.text("个任务可运行", "Tasks"),
                         detailsAction: nil,
                         color: Color(red: 1.0, green: 0.4, blue: 0.6), // Pink Text
                         loc: loc
@@ -598,7 +617,7 @@ struct SmartCleanerView: View {
                         .frame(width: 80, height: 80)
                         .shadow(color: .blue.opacity(0.5), radius: 10)
                         
-                    Text(loc.currentLanguage == .chinese ? "运行" : "Run")
+                    Text(loc.text("运行", "Run"))
                         .font(.system(size: 18, weight: .bold))
                         .foregroundColor(.white)
                 }
@@ -661,20 +680,18 @@ struct SmartCleanerView: View {
                   .buttonStyle(.plain)
                   .popover(isPresented: $showFailedFilesPopover, arrowEdge: .top) {
                       VStack(alignment: .leading, spacing: 12) {
-                          Text(loc.currentLanguage == .chinese ? "此项目清理了一部分。" : "This item was partially cleaned.")
+                          Text(loc.text("此项目清理了一部分。", "This item was partially cleaned."))
                               .font(.system(size: 13, weight: .bold))
                           
                           VStack(alignment: .leading, spacing: 4) {
-                              Text(loc.currentLanguage == .chinese ? "错误：" : "Errors:")
+                              Text(loc.text("错误：", "Errors:"))
                                   .font(.system(size: 12, weight: .semibold))
                                   .foregroundColor(.gray)
                               
                               ScrollView {
                                   VStack(alignment: .leading, spacing: 4) {
                                       ForEach(failedFiles, id: \.id) { item in
-                                          Text(loc.currentLanguage == .chinese ? 
-                                              "无法移除 \"\(item.url.lastPathComponent)\"，因为它的关联应用程序正在运行。" :
-                                              "Could not remove \"\(item.url.lastPathComponent)\" because its associated application is running.")
+                                          Text(loc.text("无法移除 \"\(item.url.lastPathComponent)\"，因为它的关联应用程序正在运行。", "Could not remove \"\(item.url.lastPathComponent)\" because its associated application is running."))
                                               .font(.system(size: 11))
                                               .foregroundColor(.white.opacity(0.8))
                                       }
@@ -685,15 +702,13 @@ struct SmartCleanerView: View {
                           
                           Button(action: {
                               let errorText = failedFiles.map { item in
-                                  loc.currentLanguage == .chinese ? 
-                                  "无法移除 \"\(item.url.lastPathComponent)\"，因为它的关联应用程序正在运行。" :
-                                  "Could not remove \"\(item.url.lastPathComponent)\" because its associated application is running."
+                                  loc.text("无法移除 \"\(item.url.lastPathComponent)\"，因为它的关联应用程序正在运行。", "Could not remove \"\(item.url.lastPathComponent)\" because its associated application is running.")
                               }.joined(separator: "\n")
                               let pasteboard = NSPasteboard.general
                               pasteboard.clearContents()
                               pasteboard.setString(errorText, forType: .string)
                           }) {
-                              Text(loc.currentLanguage == .chinese ? "拷贝至剪贴板" : "Copy to Clipboard")
+                              Text(loc.text("拷贝至剪贴板", "Copy to Clipboard"))
                                   .font(.system(size: 12))
                                   .foregroundColor(.white.opacity(0.9))
                                   .padding(.horizontal, 12)
@@ -786,9 +801,9 @@ struct SmartCleanerView: View {
             let cleanupDone = state == .finished || (state == .cleaning && service.cleanedCategories.contains(.systemJunk) && !cleanupActive)
             
             itemColumn(
-                title: loc.currentLanguage == .chinese ? "清理" : "Cleanup",
+                title: loc.text("清理", "Cleanup"),
                 iconName: "yinpan_2026",
-                description: state == .scanning ? (loc.currentLanguage == .chinese ? "正在查找不需要的文件..." : "Searching for unwanted files...") : (loc.currentLanguage == .chinese ? "移除不需要的垃圾" : "Remove unwanted junk"),
+                description: state == .scanning ? (loc.text("正在查找不需要的文件...", "Searching for unwanted files...")) : (loc.text("移除不需要的垃圾", "Remove unwanted junk")),
                 categories: [.systemJunk, .duplicates, .similarPhotos, .largeFiles],
                 state: state,
                 isActive: (state == .scanning && [.systemJunk, .duplicates, .similarPhotos, .largeFiles].contains(service.currentCategory)) || cleanupActive,
@@ -802,9 +817,9 @@ struct SmartCleanerView: View {
             let protectionDone = state == .finished || (state == .cleaning && service.cleanedCategories.contains(.virus))
             
             itemColumn(
-                title: loc.currentLanguage == .chinese ? "保护" : "Protection",
+                title: loc.text("保护", "Protection"),
                 iconName: "zhiwendunpai_2026",
-                description: state == .scanning ? (loc.currentLanguage == .chinese ? "正在确定潜在威胁..." : "Determining potential threats...") : (loc.currentLanguage == .chinese ? "消除潜在威胁" : "Eliminate potential threats"),
+                description: state == .scanning ? (loc.text("正在确定潜在威胁...", "Determining potential threats...")) : (loc.text("消除潜在威胁", "Eliminate potential threats")),
                 categories: [.virus],
                 state: state,
                 isActive: (state == .scanning && service.currentCategory == .virus) || protectionActive,
@@ -819,9 +834,9 @@ struct SmartCleanerView: View {
             
             // ⚠️ 暂时禁用 performanceApps：用户反馈智能扫描清理会把应用搞废
             itemColumn(
-                title: loc.currentLanguage == .chinese ? "速度" : "Speed",
+                title: loc.text("速度", "Speed"),
                 iconName: "yibiaopan_2026", // Speedometer
-                description: state == .scanning ? (loc.currentLanguage == .chinese ? "定义合适的任务..." : "Defining suitable tasks...") : (loc.currentLanguage == .chinese ? "提升系统性能" : "Boost system performance"),
+                description: state == .scanning ? (loc.text("定义合适的任务...", "Defining suitable tasks...")) : (loc.text("提升系统性能", "Boost system performance")),
                 categories: [.startupItems, .performanceApps, .appUpdates],
                 state: state,
                 isActive: (state == .scanning && [.startupItems, .performanceApps, .appUpdates].contains(service.currentCategory)) || speedActive,
@@ -952,7 +967,7 @@ struct SmartCleanerView: View {
                 } else if state == .completed {
                     // Completed: Show result size
                     VStack(spacing: 6) {
-                        if title == (loc.currentLanguage == .chinese ? "清理" : "Cleanup") {
+                        if title == (loc.text("清理", "Cleanup")) {
                             let size = categories.reduce(0) { $0 + service.sizeFor(category: $1) }
                             if size > 0 {
                                 Text(ByteCountFormatter.string(fromByteCount: size, countStyle: .file))
@@ -964,7 +979,7 @@ struct SmartCleanerView: View {
                                     initialDetailCategory = .systemJunk
                                     showDetailSheet = true
                                 }) {
-                                    Text(loc.currentLanguage == .chinese ? "查看详情..." : "View Details...")
+                                    Text(loc.text("查看详情...", "View Details..."))
                                         .font(.system(size: 12))
                                         .foregroundColor(.white.opacity(0.8))
                                         .padding(.horizontal, 12)
@@ -974,11 +989,11 @@ struct SmartCleanerView: View {
                                 }
                                 .buttonStyle(.plain)
                             } else {
-                                Text(loc.currentLanguage == .chinese ? "好" : "Good")
+                                Text(loc.text("好", "Good"))
                                     .font(.system(size: 28, weight: .light))
                                     .foregroundColor(Color.green)
                             }
-                        } else if title == (loc.currentLanguage == .chinese ? "保护" : "Protection") {
+                        } else if title == (loc.text("保护", "Protection")) {
                             let threats = service.virusThreats.count
                             if threats > 0 {
                                 Text("\(threats)")
@@ -990,7 +1005,7 @@ struct SmartCleanerView: View {
                                     initialDetailCategory = .virus
                                     showDetailSheet = true
                                 }) {
-                                    Text(loc.currentLanguage == .chinese ? "查看详情..." : "View Details...")
+                                    Text(loc.text("查看详情...", "View Details..."))
                                         .font(.system(size: 12))
                                         .foregroundColor(.white.opacity(0.8))
                                         .padding(.horizontal, 12)
@@ -1000,11 +1015,11 @@ struct SmartCleanerView: View {
                                 }
                                 .buttonStyle(.plain)
                             } else {
-                                Text(loc.currentLanguage == .chinese ? "好" : "Good")
+                                Text(loc.text("好", "Good"))
                                     .font(.system(size: 28, weight: .light))
                                     .foregroundColor(Color.green)
                             }
-                        } else if title == (loc.currentLanguage == .chinese ? "速度" : "Speed") {
+                        } else if title == (loc.text("速度", "Speed")) {
                             let count = service.startupItems.count
                             if count > 0 {
                                 VStack(spacing: 0) {
@@ -1013,7 +1028,7 @@ struct SmartCleanerView: View {
                                         .foregroundColor(.white)
                                     
                                     // Text Description instead of Button (matched reference)
-                                    Text(loc.currentLanguage == .chinese ? "个任务可运行" : "tasks to run")
+                                    Text(loc.text("个任务可运行", "tasks to run"))
                                         .font(.system(size: 12))
                                         .foregroundColor(.white.opacity(0.6))
                                         .padding(.top, 2)
@@ -1025,7 +1040,7 @@ struct SmartCleanerView: View {
                                 }
                                 
                             } else {
-                                Text(loc.currentLanguage == .chinese ? "好" : "Good")
+                                Text(loc.text("好", "Good"))
                                     .font(.system(size: 28, weight: .light))
                                     .foregroundColor(Color.green)
                             }
@@ -1237,7 +1252,14 @@ struct SmartCleanerView: View {
                             .blur(radius: 2)
                         
                         // Text
-                        Text(loc.currentLanguage == .chinese ? "扫描" : "Scan")
+                        Text(loc.text(
+    simplifiedChinese: "扫描",
+    traditionalChinese: "掃描",
+    english: "Scan",
+    japanese: "スキャン",
+    korean: "스캔",
+    russian: "Сканировать"
+))
                             .font(.system(size: 14, weight: .semibold, design: .rounded))
                             .foregroundColor(.white)
                             .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
@@ -1312,7 +1334,14 @@ struct SmartCleanerView: View {
                         // Design shows a simple Stop square or text. Let's use text as before for clarity, or icon.
                         // User mentioned "Stop button" but design screenshot 3 shows "停止" text inside.
                         // 4. "Stop" Icon/Text
-                        Text(loc.currentLanguage == .chinese ? "停止" : "Stop")
+                        Text(loc.text(
+    simplifiedChinese: "停止",
+    traditionalChinese: "停止",
+    english: "Stop",
+    japanese: "停止",
+    korean: "정지",
+    russian: "Остановить"
+))
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(.white)
                     }
@@ -1345,7 +1374,14 @@ struct SmartCleanerView: View {
                         Image(systemName: "stop.fill")
                             .font(.system(size: 20))
                             .foregroundColor(.white)
-                        Text(loc.currentLanguage == .chinese ? "停止" : "Stop")
+                        Text(loc.text(
+    simplifiedChinese: "停止",
+    traditionalChinese: "停止",
+    english: "Stop",
+    japanese: "停止",
+    korean: "정지",
+    russian: "Остановить"
+))
                             .font(.system(size: 12))
                             .foregroundColor(.white)
                     }
@@ -1424,7 +1460,7 @@ struct SmartCleanerView: View {
                         .blur(radius: 0.5)
 
                     // 6. Text
-                    Text(loc.currentLanguage == .chinese ? "运行" : "Run")
+                    Text(loc.text("运行", "Run"))
                         .font(.system(size: 16, weight: .medium, design: .rounded))
                         .foregroundColor(.white)
                         .shadow(color: Color.black.opacity(0.2), radius: 2, y: 1)
@@ -1453,7 +1489,14 @@ struct SmartCleanerView: View {
                                  .strokeBorder(Color.white.opacity(0.2), lineWidth: 1)
                          )
                      
-                     Text(loc.currentLanguage == .chinese ? "返回" : "Back")
+                     Text(loc.text(
+    simplifiedChinese: "返回",
+    traditionalChinese: "返回",
+    english: "Back",
+    japanese: "戻る",
+    korean: "뒤로",
+    russian: "Назад"
+))
                          .font(.system(size: 16, weight: .semibold))
                          .foregroundColor(.white)
                  }
@@ -1469,7 +1512,7 @@ struct SmartCleanerView: View {
 extension SmartCleanerView {
     private func getFinishedResultText(for category: CleanerCategory) -> String {
         if category == .systemJunk && deleteResult != nil {
-            return ByteCountFormatter.string(fromByteCount: deleteResult!.size, countStyle: .file) + " " + (loc.currentLanguage == .chinese ? "已清理" : "Cleaned")
+            return ByteCountFormatter.string(fromByteCount: deleteResult!.size, countStyle: .file) + " " + (loc.text("已清理", "Cleaned"))
         }
         return getCleaningSubText(for: category)
     }
@@ -1595,11 +1638,11 @@ extension SmartCleanerView {
             .padding(.top, 8)
             
             VStack(spacing: 6) {
-                Text(loc.currentLanguage == .chinese ? "一些应用程序应该退出" : "Some Applications Should Quit")
+                Text(loc.text("一些应用程序应该退出", "Some Applications Should Quit"))
                     .font(.system(size: 18, weight: .bold)) // Slightly larger
                     .foregroundColor(.white) // White text
                 
-                Text(loc.currentLanguage == .chinese ? "请退出以下应用程序，以清理所有与之相关的项目：" : "Please quit the following applications to clear all related items:")
+                Text(loc.text("请退出以下应用程序，以清理所有与之相关的项目：", "Please quit the following applications to clear all related items:"))
                     .font(.system(size: 13))
                     .foregroundColor(.white.opacity(0.7)) // Secondary text
                     .multilineTextAlignment(.center)
@@ -1653,7 +1696,7 @@ extension SmartCleanerView {
                                 }
                             }
                         }) {
-                            Text(loc.currentLanguage == .chinese ? "关闭" : "Close")
+                            Text(loc.text("关闭", "Close"))
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(.white.opacity(0.9))
                                 .padding(.horizontal, 10)
@@ -1693,7 +1736,7 @@ extension SmartCleanerView {
                     showDeleteConfirmation = true
                 }
             }) {
-                Text(loc.currentLanguage == .chinese ? "忽略" : "Ignore")
+                Text(loc.text("忽略", "Ignore"))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.white.opacity(0.7))
                     .frame(maxWidth: .infinity)
@@ -1719,7 +1762,7 @@ extension SmartCleanerView {
                     showDeleteConfirmation = true
                 }
             }) {
-                Text(loc.currentLanguage == .chinese ? "全部退出" : "Quit All")
+                Text(loc.text("全部退出", "Quit All"))
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -1737,15 +1780,15 @@ extension SmartCleanerView {
     }
 
 private func currentScanPathInColumn(_ title: String) -> String? {
-    if title == (loc.currentLanguage == .chinese ? "清理" : "Cleanup") {
+    if title == (loc.text("清理", "Cleanup")) {
         if [.systemJunk, .duplicates, .similarPhotos, .largeFiles].contains(service.currentCategory) {
             return service.currentScanPath
         }
-    } else if title == (loc.currentLanguage == .chinese ? "保护" : "Protection") {
+    } else if title == (loc.text("保护", "Protection")) {
         if service.currentCategory == .virus {
             return service.currentScanPath
         }
-    } else if title == (loc.currentLanguage == .chinese ? "速度" : "Speed") {
+    } else if title == (loc.text("速度", "Speed")) {
         if [.startupItems, .performanceApps, .appUpdates].contains(service.currentCategory) {
             return service.currentScanPath
         }
@@ -1756,14 +1799,14 @@ private func currentScanPathInColumn(_ title: String) -> String? {
 
     private func getDisplayTitle(for category: CleanerCategory) -> String {
         switch category {
-        case .systemJunk: return loc.currentLanguage == .chinese ? "系统垃圾" : "System Junk"
-        case .duplicates: return loc.currentLanguage == .chinese ? "重复文件" : "Duplicates"
-        case .similarPhotos: return loc.currentLanguage == .chinese ? "相似照片" : "Similar Photos"
-        case .largeFiles: return loc.currentLanguage == .chinese ? "大文件" : "Large Files"
-        case .virus: return loc.currentLanguage == .chinese ? "病毒防护" : "Virus Protection"
-        case .startupItems: return loc.currentLanguage == .chinese ? "启动项" : "Startup Items"
-        case .performanceApps: return loc.currentLanguage == .chinese ? "性能优化" : "Performance"
-        case .appUpdates: return loc.currentLanguage == .chinese ? "应用更新" : "App Updates"
+        case .systemJunk: return loc.text("系统垃圾", "System Junk")
+        case .duplicates: return loc.text("重复文件", "Duplicates")
+        case .similarPhotos: return loc.text("相似照片", "Similar Photos")
+        case .largeFiles: return loc.text("大文件", "Large Files")
+        case .virus: return loc.text("病毒防护", "Virus Protection")
+        case .startupItems: return loc.text("启动项", "Startup Items")
+        case .performanceApps: return loc.text("性能优化", "Performance")
+        case .appUpdates: return loc.text("应用更新", "App Updates")
         default: return ""
         }
     }
@@ -1775,35 +1818,42 @@ private func currentScanPathInColumn(_ title: String) -> String? {
         }
         
         switch category {
-        case .virus: return service.virusThreats.isEmpty ? (loc.currentLanguage == .chinese ? "0 个威胁" : "0 Threats") : "\(service.virusThreats.count) \(loc.currentLanguage == .chinese ? "个威胁" : "Threats")"
-        case .startupItems: return "\(service.startupItems.count) \(loc.currentLanguage == .chinese ? "个项目" : "Items")"
-        case .performanceApps: return "\(service.performanceApps.count) \(loc.currentLanguage == .chinese ? "个应用" : "Apps")"
-        case .appUpdates: return service.hasAppUpdates ? (loc.currentLanguage == .chinese ? "有更新" : "Has Update") : (loc.currentLanguage == .chinese ? "无更新" : "No Updates")
+        case .virus: return service.virusThreats.isEmpty ? (loc.text("0 个威胁", "0 Threats")) : "\(service.virusThreats.count) \(loc.text("个威胁", "Threats"))"
+        case .startupItems: return "\(service.startupItems.count) \(loc.text("个项目", "Items"))"
+        case .performanceApps: return "\(service.performanceApps.count) \(loc.text("个应用", "Apps"))"
+        case .appUpdates: return service.hasAppUpdates ? (loc.text("有更新", "Has Update")) : (loc.text("无更新", "No Updates"))
         default: return "0 KB"
         }
     }
     
     private func getSubText(for category: CleanerCategory) -> String {
         switch category {
-        case .systemJunk, .duplicates, .similarPhotos, .largeFiles: return loc.currentLanguage == .chinese ? "可清理" : "Cleanable"
-        case .virus: return service.virusThreats.isEmpty ? (loc.currentLanguage == .chinese ? "已保护" : "Safe") : (loc.currentLanguage == .chinese ? "可移除" : "Removable")
-        case .startupItems: return loc.currentLanguage == .chinese ? "可优化" : "Optimizable"
-        case .performanceApps: return loc.currentLanguage == .chinese ? "待查看" : "To Review"
-        case .appUpdates: return loc.currentLanguage == .chinese ? "要安装" : "To Install"
+        case .systemJunk, .duplicates, .similarPhotos, .largeFiles: return loc.text(
+    simplifiedChinese: "可清理",
+    traditionalChinese: "可清理",
+    english: "Cleanable",
+    japanese: "清掃可能",
+    korean: "청소 가능",
+    russian: "очищаемый"
+)
+        case .virus: return service.virusThreats.isEmpty ? (loc.text("已保护", "Safe")) : (loc.text("可移除", "Removable"))
+        case .startupItems: return loc.text("可优化", "Optimizable")
+        case .performanceApps: return loc.text("待查看", "To Review")
+        case .appUpdates: return loc.text("要安装", "To Install")
         default: return ""
         }
     }
     
     private func getScanningTitle(for category: CleanerCategory) -> String {
         switch category {
-        case .systemJunk: return loc.currentLanguage == .chinese ? "正在查找垃圾文件......" : "Searching for junk..."
-        case .duplicates: return loc.currentLanguage == .chinese ? "正在寻找重复文件..." : "Finding duplicates..."
-        case .similarPhotos: return loc.currentLanguage == .chinese ? "正在查找相似照片..." : "Finding similar photos..."
-        case .largeFiles: return loc.currentLanguage == .chinese ? "正在扫描大文件..." : "Scanning for large files..."
-        case .virus: return loc.currentLanguage == .chinese ? "正在查找潜在威胁..." : "Scanning for threats..."
-        case .startupItems: return loc.currentLanguage == .chinese ? "正在分析启动项..." : "Analyzing startup items..."
-        case .performanceApps: return loc.currentLanguage == .chinese ? "正在检查后台应用..." : "Checking background apps..."
-        case .appUpdates: return loc.currentLanguage == .chinese ? "正在检查应用更新..." : "Checking for updates..."
+        case .systemJunk: return loc.text("正在查找垃圾文件......", "Searching for junk...")
+        case .duplicates: return loc.text("正在寻找重复文件...", "Finding duplicates...")
+        case .similarPhotos: return loc.text("正在查找相似照片...", "Finding similar photos...")
+        case .largeFiles: return loc.text("正在扫描大文件...", "Scanning for large files...")
+        case .virus: return loc.text("正在查找潜在威胁...", "Scanning for threats...")
+        case .startupItems: return loc.text("正在分析启动项...", "Analyzing startup items...")
+        case .performanceApps: return loc.text("正在检查后台应用...", "Checking background apps...")
+        case .appUpdates: return loc.text("正在检查应用更新...", "Checking for updates...")
         default: return ""
         }
     }
@@ -1833,22 +1883,22 @@ private func currentScanPathInColumn(_ title: String) -> String? {
     
     private func getCleaningSubText(for category: CleanerCategory) -> String {
         switch category {
-        case .systemJunk, .duplicates, .similarPhotos, .largeFiles: return loc.currentLanguage == .chinese ? "已清理" : "Cleaned"
-        case .virus: return loc.currentLanguage == .chinese ? "已防护" : "Protected"
-        case .performanceApps, .startupItems: return loc.currentLanguage == .chinese ? "已优化" : "Optimized"
-        case .appUpdates: return loc.currentLanguage == .chinese ? "已检查" : "Checked"
+        case .systemJunk, .duplicates, .similarPhotos, .largeFiles: return loc.text("已清理", "Cleaned")
+        case .virus: return loc.text("已防护", "Protected")
+        case .performanceApps, .startupItems: return loc.text("已优化", "Optimized")
+        case .appUpdates: return loc.text("已检查", "Checked")
         default: return ""
         }
     }
     
     private func getCleaningTitle(for category: CleanerCategory) -> String {
         switch category {
-        case .systemJunk: return loc.currentLanguage == .chinese ? "正在清理垃圾文件..." : "Cleaning junk..."
-        case .duplicates, .similarPhotos, .largeFiles: return loc.currentLanguage == .chinese ? "正在整理文件..." : "Organizing files..."
-        case .virus: return loc.currentLanguage == .chinese ? "正在移除威胁..." : "Removing threats..."
-        case .startupItems: return loc.currentLanguage == .chinese ? "正在优化启动项..." : "Optimizing startup..."
-        case .performanceApps: return loc.currentLanguage == .chinese ? "正在优化性能..." : "Optimizing performance..."
-        case .appUpdates: return loc.currentLanguage == .chinese ? "正在检查更新状态..." : "Checking update status..."
+        case .systemJunk: return loc.text("正在清理垃圾文件...", "Cleaning junk...")
+        case .duplicates, .similarPhotos, .largeFiles: return loc.text("正在整理文件...", "Organizing files...")
+        case .virus: return loc.text("正在移除威胁...", "Removing threats...")
+        case .startupItems: return loc.text("正在优化启动项...", "Optimizing startup...")
+        case .performanceApps: return loc.text("正在优化性能...", "Optimizing performance...")
+        case .appUpdates: return loc.text("正在检查更新状态...", "Checking update status...")
         default: return ""
         }
     }
@@ -1891,11 +1941,11 @@ private func currentScanPathInColumn(_ title: String) -> String? {
     
     private func getCategoryTitle(_ category: CleanerCategory) -> String {
         switch category {
-        case .systemJunk: return loc.currentLanguage == .chinese ? "系统垃圾" : "System Junk"
-        case .largeFiles: return loc.currentLanguage == .chinese ? "废纸篓" : "Trash"
-        case .virus: return loc.currentLanguage == .chinese ? "可能有害的应用程序" : "Potentially Harmful Apps"
-        case .startupItems: return loc.currentLanguage == .chinese ? "刷新 DNS 缓存" : "Refresh DNS Cache"
-        case .performanceApps: return loc.currentLanguage == .chinese ? "释放 RAM" : "Free RAM"
+        case .systemJunk: return loc.text("系统垃圾", "System Junk")
+        case .largeFiles: return loc.text("废纸篓", "Trash")
+        case .virus: return loc.text("可能有害的应用程序", "Potentially Harmful Apps")
+        case .startupItems: return loc.text("刷新 DNS 缓存", "Refresh DNS Cache")
+        case .performanceApps: return loc.text("释放 RAM", "Free RAM")
         default: return "Task"
         }
     }
@@ -2170,7 +2220,14 @@ struct ScanBlockView: View {
                 if let action = viewDetailsAction {
                     Button(action: action) {
                         HStack(spacing: 2) {
-                            Text(loc.currentLanguage == .chinese ? "查看详情" : "Details")
+                            Text(loc.text(
+    simplifiedChinese: "查看详情",
+    traditionalChinese: "查看詳情",
+    english: "Details",
+    japanese: "詳細",
+    korean: "세부사항",
+    russian: "Подробнее"
+))
                             Image(systemName: "chevron.right")
                         }
                         .font(.system(size: 10, weight: .bold))
@@ -2332,7 +2389,14 @@ struct CleaningBlockView: View {
                         if let action = viewDetailsAction {
                             Button(action: action) {
                                 HStack(spacing: 2) {
-                                    Text(loc.currentLanguage == .chinese ? "查看详情" : "Details")
+                                    Text(loc.text(
+    simplifiedChinese: "查看详情",
+    traditionalChinese: "查看詳情",
+    english: "Details",
+    japanese: "詳細",
+    korean: "세부사항",
+    russian: "Подробнее"
+))
                                     Image(systemName: "chevron.right")
                                 }
                                 .font(.system(size: 10, weight: .bold))

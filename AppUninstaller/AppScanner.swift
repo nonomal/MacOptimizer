@@ -42,6 +42,10 @@ class AppScanner: NSObject, ObservableObject {
     /// Batches multiple UI updates into single MainActor calls
     /// Reduces context switches and improves responsiveness
     private let uiUpdater = BatchedUIUpdater()
+
+    /// Reuse one scanner so its five-minute result cache survives row scans and
+    /// module switches instead of being discarded for every application.
+    private let residualScanner = ResidualFileScanner()
     
     /// Monitors operation performance and identifies bottlenecks
     /// Logs warnings for operations exceeding 500ms threshold
@@ -255,8 +259,7 @@ class AppScanner: NSObject, ObservableObject {
     
     /// Scans for residual files of an application
     func scanResidualFiles(for app: InstalledApp) async {
-        let scanner = ResidualFileScanner()
-        let residualFiles = await scanner.scanResidualFiles(for: app)
+        let residualFiles = await residualScanner.scanResidualFiles(for: app)
         
         await uiUpdater.batch {
             app.residualFiles = residualFiles

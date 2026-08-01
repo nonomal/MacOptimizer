@@ -3,18 +3,21 @@ import AppKit
 import AVFoundation
 
 struct SpaceLensView: View {
-    @StateObject private var scanner = SpaceLensScanner()
+    @ObservedObject private var scanner = ScanServiceManager.shared.spaceLensScanner
     @State private var viewState: Int = 0 // 0: Landing, 1: Scanning, 2: Results, 3: Cleanup Results
     
     // UI State
     @State private var navigationStack: [FileNode] = []
+    @State private var forwardNavigationStack: [FileNode] = []
     @State private var currentNode: FileNode?
-    @State private var bubblePositions: [UUID: CGPoint] = [:]
-    @State private var bubbleSizes: [UUID: CGFloat] = [:]
+    @State private var focusedNodeID: UUID?
+    @State private var loadingNodeIDs: Set<UUID> = []
     
     // Selection for landing page
-    @State private var selectedDiskPath: URL = URL(fileURLWithPath: "/")
-    @State private var selectedDiskName: String = "mac"
+    @State private var selectedDiskPath: URL = FileManager.default.homeDirectoryForCurrentUser
+    @State private var selectedDiskName: String = NSUserName()
+    @State private var showDiskPicker = false
+    @State private var mountedVolumeURLs: [URL] = []
     
     // Remove Functionality
     @State private var showRemoveConfirmation = false
@@ -76,192 +79,128 @@ struct SpaceLensView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(BackgroundStyles.spaceLens) // Use the Teal-Blue gradient
+        .onAppear(perform: refreshMountedVolumes)
     }
     
     // MARK: - Landing View
     var landingView: some View {
         ZStack {
-            HStack(spacing: 60) {
-                // Left Content
-                VStack(alignment: .leading, spacing: 30) {
-                    // Branding Header
-                    HStack(spacing: 8) {
-                        Text(loc.currentLanguage == .chinese ? "空间透镜" : "Space Lens")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.white)
-                        
-                        // Icon + Title
-                        HStack(spacing: 4) {
-                            Image(systemName: "circle.hexagongrid.fill")
-                            Text(loc.currentLanguage == .chinese ? "视觉分析" : "Visual Analysis")
-                                .font(.system(size: 20, weight: .heavy))
-                        }
+            HStack(alignment: .top, spacing: 25) {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(loc.text("空间透镜", "Space Lens"))
+                        .font(.system(size: 22, weight: .bold))
                         .foregroundColor(.white)
-                    }
-                    
-                    Text(loc.currentLanguage == .chinese ? 
-                         "对文件夹和文件进行视觉大小比较，方便快速清理。\\n上次扫描时间：从未" :
-                         "Visually compare folders and files for quick cleanup.\\nLast scanned: Never")
-                        .font(.system(size: 13))
-                        .foregroundColor(.white.opacity(0.7))
-                        .lineSpacing(4)
-                    
-                    // Feature Rows
-                    VStack(alignment: .leading, spacing: 24) {
-                        featureRow(
-                            icon: "circle.hexagongrid",
-                            title: loc.currentLanguage == .chinese ? "即时尺寸概览" : "Instant Size Overview",
-                            desc: loc.currentLanguage == .chinese ? "浏览存储空间，同时查看什么内容占据最多空间。" : "Browse storage and see what takes the most space."
-                        )
-                        
-                        featureRow(
-                            icon: "airplane",
-                            title: loc.currentLanguage == .chinese ? "快速决策" : "Quick Decisions",
-                            desc: loc.currentLanguage == .chinese ? "不浪费时间检查要删除内容的大小。" : "No time wasted checking sizes before deletion."
-                        )
-                        
-                        featureRow(
-                            icon: "chart.pie.fill",
-                            title: loc.currentLanguage == .chinese ? "可视化分析" : "Visual Analysis",
-                            desc: loc.currentLanguage == .chinese ? "通过直观的气泡图快速识别大文件。" : "Quickly identify large files with intuitive bubble chart."
-                        )
-                    }
-                    
-                    // Disk Selector Card
-                    diskSelectorCard
+
+                    Text(loc.text("对文件夹和文件进行视觉大小比较，方便快速清理。", "Visually compare folders and files for quick cleanup."))
+                        .font(.system(size: 12))
+                        .foregroundColor(.white.opacity(0.72))
                         .padding(.top, 10)
-                }
-                .frame(maxWidth: 400)
-                
-                // Right Icon - Using kongjianshentou.png
-                ZStack {
-                    if let imagePath = Bundle.main.path(forResource: "kongjianshentou", ofType: "png"),
-                       let nsImage = NSImage(contentsOfFile: imagePath) {
-                        Image(nsImage: nsImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 320, height: 320)
-                            .shadow(color: Color.black.opacity(0.3), radius: 20, y: 10)
-                    } else {
-                        // Fallback
-                        Circle()
-                            .fill(LinearGradient(
-                                colors: [Color(hex: "00D9A8"), Color(hex: "009688")],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ))
-                            .frame(width: 280, height: 280)
-                            .overlay(
-                                Image(systemName: "circle.hexagongrid.fill")
-                                    .font(.system(size: 100))
-                                    .foregroundColor(.white)
-                            )
+
+                    VStack(alignment: .leading, spacing: 79) {
+                        featureRow(
+                            image: "space_lens_benefit_overview",
+                            title: loc.text("即时尺寸概览", "Instant Size Overview"),
+                            desc: loc.text("浏览存储空间，同时查看什么内容占据最多空间。", "Browse storage and see what takes the most space.")
+                        )
+
+                        featureRow(
+                            image: "space_lens_benefit_decision",
+                            title: loc.text("快速决策", "Quick Decisions"),
+                            desc: loc.text("不浪费时间检查您要删除内容的大小。", "No time wasted checking sizes before deletion.")
+                        )
                     }
+                    .padding(.top, 40)
+
+                    diskSelectorCard
+                        .padding(.top, 48)
                 }
+                .frame(width: 320, alignment: .leading)
+
+                resourceImage("space_lens_module")
+                    .frame(width: 350, height: 350)
+                    .padding(.top, 8)
             }
-            .padding(.horizontal, 40)
-            .padding(.bottom, 50)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding(.leading, 98)
+            .padding(.top, 132)
             
             // Bottom Floating Scan Button
-            VStack {
-                Spacer()
-                Button(action: startScan) {
-                    ZStack {
-                        Circle()
-                            .stroke(LinearGradient(
-                                colors: [.white.opacity(0.5), .white.opacity(0.1)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ), lineWidth: 2)
-                            .frame(width: 84, height: 84)
-                        
-                        Circle()
-                            .fill(Color.white.opacity(0.2))
-                            .frame(width: 74, height: 74)
-                            .shadow(color: Color.black.opacity(0.3), radius: 10, y: 5)
-                        
-                        Text(loc.currentLanguage == .chinese ? "扫描" : "Scan")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.white)
-                    }
-                }
-                .buttonStyle(.plain)
-                .padding(.bottom, 40)
+            CleanMyMacBottomActionSlot {
+                CircularActionButton(
+                    title: loc.text(
+    simplifiedChinese: "扫描",
+    traditionalChinese: "掃描",
+    english: "Scan",
+    japanese: "スキャン",
+    korean: "스캔",
+    russian: "Сканировать"
+),
+                    gradient: GradientStyles.spaceLens,
+                    action: startScan
+                )
                 .transition(.scale.combined(with: .opacity))
             }
         }
     }
     
     // MARK: - Feature Row Helper
-    private func featureRow(icon: String, title: String, desc: String) -> some View {
-        HStack(alignment: .top, spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 24, weight: .light))
-                .foregroundColor(.white.opacity(0.8))
-                .frame(width: 32, height: 32)
+    private func featureRow(image: String, title: String, desc: String) -> some View {
+        HStack(alignment: .top, spacing: 18) {
+            resourceImage(image)
+                .frame(width: 40, height: 40)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.white)
                 Text(desc)
-                    .font(.system(size: 12))
-                    .foregroundColor(.white.opacity(0.6))
+                    .font(.system(size: 11))
+                    .foregroundColor(.white.opacity(0.55))
                     .fixedSize(horizontal: false, vertical: true)
             }
+        }
+    }
+
+    @ViewBuilder
+    private func resourceImage(_ name: String) -> some View {
+        if let path = Bundle.main.path(forResource: name, ofType: "png"),
+           let image = NSImage(contentsOfFile: path) {
+            Image(nsImage: image)
+                .resizable()
+                .scaledToFit()
+        } else {
+            Image(systemName: "circle")
+                .resizable()
+                .scaledToFit()
+                .foregroundColor(.white.opacity(0.65))
         }
     }
     
     // MARK: - Disk Selector
     private var diskSelectorCard: some View {
-        Menu {
-            Button("mac") {
-                selectedDiskPath = URL(fileURLWithPath: "/")
-                selectedDiskName = "mac"
-            }
-            Button(loc.currentLanguage == .chinese ? "用户文件夹" : "User Home") {
-                selectedDiskPath = FileManager.default.homeDirectoryForCurrentUser
-                selectedDiskName = NSUserName() // 使用实际的用户名
-            }
-            Divider()
-            Button(loc.currentLanguage == .chinese ? "选择文件夹..." : "Select Folder...") {
-                selectFolder()
-            }
+        Button {
+            refreshMountedVolumes()
+            showDiskPicker.toggle()
         } label: {
             HStack(spacing: 12) {
-                // 图标：根据选择的磁盘类型显示不同图标
-                Image(systemName: selectedDiskName == "mac" ? "internaldrive.fill" : "folder.fill")
-                    .font(.system(size: 32))
-                    .foregroundColor(.white.opacity(0.8))
+                Image(nsImage: NSWorkspace.shared.icon(forFile: selectedDiskPath.path))
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 36, height: 36)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         // 显示磁盘名称和容量
                         Text(diskDisplayName)
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(.white)
                         Spacer()
                     }
                     
-                    // Progress Bar
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            Capsule()
-                                .fill(Color.white.opacity(0.2))
-                                .frame(height: 4)
-                            
-                            Capsule()
-                                .fill(Color.green)
-                                .frame(width: geo.size.width * diskUsagePercentage, height: 4)
-                        }
-                    }
-                    .frame(height: 4)
-                    
                     // 显示已使用空间
                     Text(diskUsageText)
-                        .font(.system(size: 11))
-                        .foregroundColor(.white.opacity(0.6))
+                        .font(.system(size: 10))
+                        .foregroundColor(.white.opacity(0.52))
                 }
                 
                 Spacer()
@@ -270,18 +209,161 @@ struct SpaceLensView: View {
                     .font(.system(size: 12))
                     .foregroundColor(.white.opacity(0.5))
             }
-            .padding(16)
+            .padding(.horizontal, 14)
+            .frame(width: 319, height: 57)
             .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.black.opacity(0.3))
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.white.opacity(0.025))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .stroke(Color.white.opacity(0.30), lineWidth: 0.7)
                     )
             )
         }
-        .menuStyle(.borderlessButton)
-        .frame(width: 300)
+        .buttonStyle(.plain)
+        .popover(isPresented: $showDiskPicker, arrowEdge: .bottom) {
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(mountedVolumeURLs, id: \.path) { volumeURL in
+                    diskChoice(
+                        title: volumeName(for: volumeURL),
+                        subtitle: volumeUsageText(for: volumeURL),
+                        url: volumeURL
+                    ) {
+                        selectedDiskPath = volumeURL
+                        selectedDiskName = volumeName(for: volumeURL)
+                    }
+                }
+
+                Divider()
+
+                diskChoice(
+                    title: NSUserName(),
+                    subtitle: loc.text("您的主文件夹", "Your Home Folder"),
+                    url: FileManager.default.homeDirectoryForCurrentUser
+                ) {
+                    selectedDiskPath = FileManager.default.homeDirectoryForCurrentUser
+                    selectedDiskName = NSUserName()
+                }
+
+                Divider()
+
+                Button {
+                    showDiskPicker = false
+                    selectFolder()
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "folder.badge.plus")
+                            .frame(width: 18)
+                        Text(loc.text("选择文件夹…", "Select Folder…"))
+                            .font(.system(size: 12))
+                        Spacer()
+                    }
+                    .padding(.horizontal, 8)
+                    .frame(height: 30)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(8)
+            .frame(width: 245)
+            .onAppear(perform: refreshMountedVolumes)
+        }
+        .frame(width: 319, height: 57)
+    }
+
+    private func diskChoice(
+        title: String,
+        subtitle: String,
+        url: URL,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button {
+            showDiskPicker = false
+            action()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: isSelectedScanLocation(url) ? "checkmark" : "")
+                    .font(.system(size: 10, weight: .semibold))
+                    .frame(width: 12)
+
+                Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 22, height: 22)
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(title)
+                        .font(.system(size: 12, weight: .medium))
+                        .lineLimit(1)
+                    Text(subtitle)
+                        .font(.system(size: 9))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, 6)
+            .frame(height: 38)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func refreshMountedVolumes() {
+        let keys: Set<URLResourceKey> = [
+            .volumeNameKey,
+            .volumeTotalCapacityKey,
+            .volumeIsLocalKey,
+            .volumeIsInternalKey,
+            .volumeIsReadOnlyKey
+        ]
+        let volumes = FileManager.default.mountedVolumeURLs(
+            includingResourceValuesForKeys: Array(keys),
+            options: [.skipHiddenVolumes]
+        ) ?? []
+
+        var seenPaths: Set<String> = []
+        mountedVolumeURLs = volumes
+            .map(\.standardizedFileURL)
+            .filter { seenPaths.insert($0.path).inserted }
+            .sorted { left, right in
+                if left.path == "/" { return true }
+                if right.path == "/" { return false }
+
+                let leftValues = try? left.resourceValues(forKeys: keys)
+                let rightValues = try? right.resourceValues(forKeys: keys)
+                let leftInternal = leftValues?.volumeIsInternal ?? false
+                let rightInternal = rightValues?.volumeIsInternal ?? false
+                if leftInternal != rightInternal { return leftInternal }
+                return volumeName(for: left).localizedStandardCompare(volumeName(for: right)) == .orderedAscending
+            }
+
+        if mountedVolumeURLs.isEmpty {
+            mountedVolumeURLs = [URL(fileURLWithPath: "/")]
+        }
+    }
+
+    private func volumeName(for url: URL) -> String {
+        if let values = try? url.resourceValues(forKeys: [.volumeNameKey]),
+           let name = values.volumeName,
+           !name.isEmpty {
+            return name
+        }
+        let displayName = FileManager.default.displayName(atPath: url.path)
+        return displayName.isEmpty ? url.lastPathComponent : displayName
+    }
+
+    private func volumeUsageText(for url: URL) -> String {
+        guard let attributes = try? FileManager.default.attributesOfFileSystem(forPath: url.path),
+              let total = (attributes[.systemSize] as? NSNumber)?.int64Value,
+              let free = (attributes[.systemFreeSize] as? NSNumber)?.int64Value else {
+            return loc.text("磁盘宗卷", "Disk volume")
+        }
+        let used = max(0, total - free)
+        return loc.text("已使用 \(formatBytes(used))，共 \(formatBytes(total))", "\(formatBytes(used)) used of \(formatBytes(total))")
+    }
+
+    private func isSelectedScanLocation(_ url: URL) -> Bool {
+        selectedDiskPath.standardizedFileURL.path == url.standardizedFileURL.path
     }
     
     // MARK: - Disk Info Helpers
@@ -322,10 +404,8 @@ struct SpaceLensView: View {
     private var diskDisplayName: String {
         guard let diskInfo = getDiskSpaceInfo() else {
             // 如果获取失败，返回简单名称
-            if selectedDiskName == "mac" {
-                return "mac"
-            } else if selectedDiskPath == FileManager.default.homeDirectoryForCurrentUser {
-                return selectedDiskName + " " + (loc.currentLanguage == .chinese ? "您的主文件夹" : "Your Home")
+            if selectedDiskPath == FileManager.default.homeDirectoryForCurrentUser {
+                return selectedDiskName + " " + (loc.text("您的主文件夹", "Your Home"))
             } else {
                 return selectedDiskName
             }
@@ -333,16 +413,10 @@ struct SpaceLensView: View {
         
         let totalSize = formatBytes(diskInfo.total)
         
-        if selectedDiskName == "mac" {
-            return "mac: \(totalSize)"
-        } else {
-            // 对于用户文件夹或其他文件夹，显示名称和描述
-            if selectedDiskPath == FileManager.default.homeDirectoryForCurrentUser {
-                return selectedDiskName + " " + (loc.currentLanguage == .chinese ? "您的主文件夹" : "Your Home")
-            } else {
-                return selectedDiskName
-            }
+        let isMountedVolume = mountedVolumeURLs.contains {
+            $0.standardizedFileURL.path == selectedDiskPath.standardizedFileURL.path
         }
+        return isMountedVolume ? "\(selectedDiskName): \(totalSize)" : selectedDiskName
     }
     
     /// 磁盘使用率（0.0 - 1.0）真实计算
@@ -361,13 +435,24 @@ struct SpaceLensView: View {
     
     /// 磁盘使用文本（真实数据）
     private var diskUsageText: String {
+        if selectedDiskPath == FileManager.default.homeDirectoryForCurrentUser {
+            return loc.text("您的主文件夹", "Your Home Folder")
+        }
+
+        let isMountedVolume = mountedVolumeURLs.contains {
+            $0.standardizedFileURL.path == selectedDiskPath.standardizedFileURL.path
+        }
+        if !isMountedVolume {
+            return (selectedDiskPath.path as NSString).abbreviatingWithTildeInPath
+        }
+
         guard let diskInfo = getDiskSpaceInfo() else {
-            return loc.currentLanguage == .chinese ? "无法获取空间信息" : "Unable to get space info"
+            return loc.text("无法获取空间信息", "Unable to get space info")
         }
         
         let usedSize = formatBytes(diskInfo.used)
         
-        return loc.currentLanguage == .chinese ? "已使用 \(usedSize)" : "Used \(usedSize)"
+        return loc.text("已使用 \(usedSize)", "Used \(usedSize)")
     }
     
 
@@ -390,7 +475,7 @@ struct SpaceLensView: View {
                     }
                 }
                 // Scanning Status Text
-                Text(loc.currentLanguage == .chinese ? "构建您的存储图..." : "Building your storage map...")
+                Text(loc.text("构建您的存储图...", "Building your storage map..."))
                     .font(.title2)
                     .foregroundColor(.white)
                     .padding(.top, 40)
@@ -423,7 +508,14 @@ struct SpaceLensView: View {
                                 .fill(Color.white.opacity(0.1))
                                 .frame(width: 70, height: 70)
                             
-                            Text(loc.currentLanguage == .chinese ? "停止" : "Stop")
+                            Text(loc.text(
+    simplifiedChinese: "停止",
+    traditionalChinese: "停止",
+    english: "Stop",
+    japanese: "停止",
+    korean: "정지",
+    russian: "Остановить"
+))
                                 .foregroundColor(.white)
                         }
                     }
@@ -438,7 +530,9 @@ struct SpaceLensView: View {
             .onChange(of: scanner.rootNode) { newNode in
                 if let root = newNode {
                     self.currentNode = root
-                    self.calculateLayout(for: root)
+                    self.navigationStack = []
+                    self.forwardNavigationStack = []
+                    self.focusedNodeID = root.children.first?.id
                     
                     // Play sound and wait before showing results
                     playScanCompleteSound {
@@ -475,175 +569,56 @@ struct SpaceLensView: View {
     // MARK: - Results View
     var resultsView: some View {
         GeometryReader { geometry in
-            HStack(spacing: 0) {
-                // Sidebar List
-                VStack(spacing: 0) {
-                    // Breadcrumbs / Back
-                    HStack {
-                        Button(action: goBack) {
-                            HStack {
-                                Image(systemName: "chevron.left")
-                                Text(navigationStack.isEmpty ? (loc.currentLanguage == .chinese ? "重新开始" : "Restart") : navigationStack.last?.name ?? "Back")
+            ZStack(alignment: .topLeading) {
+                HStack(spacing: 0) {
+                    resultsDirectoryPane
+                        .frame(width: 300)
+
+                    if let node = currentNode {
+                        ZStack {
+                            packedBubbleChart(
+                                for: node,
+                                size: CGSize(
+                                    width: max(1, geometry.size.width - 300),
+                                    height: max(1, geometry.size.height - 52)
+                                )
+                            )
+
+                            if loadingNodeIDs.contains(node.id) {
+                                directoryLoadingOverlay
                             }
-                            .foregroundColor(.white.opacity(0.7))
+                        }
+                    }
+                }
+                .padding(.top, 52)
+
+                resultsHeader
+
+                CleanMyMacBottomActionSlot {
+                    CleanMyMacBottomActionCluster(accessoryOffset: CGSize(width: 82, height: 0)) {
+                        Button(action: prepareForRemoval) {
+                            CleanMyMacActionOrb(
+                                title: loc.text("移除", "Remove"),
+                                gradient: LinearGradient(
+                                    colors: [Color.white.opacity(selectedSize == 0 ? 0.04 : 0.14), Color.black.opacity(0.12)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                ),
+                                glowColor: Color(red: 0.31, green: 0.84, blue: 0.76),
+                                ringColor: Color(red: 0.31, green: 0.84, blue: 0.76),
+                                disabled: selectedSize == 0
+                            )
                         }
                         .buttonStyle(.plain)
-                        Spacer()
-                    }
-                    .padding()
-                    .background(Color.black.opacity(0.2))
-                    
-                    // Current Dir Info
-                    HStack {
-                        if let icon = iconForFile(currentNode) {
-                            Image(nsImage: icon)
-                                .resizable()
-                                .frame(width: 24, height: 24)
-                        } else {
-                             Image(systemName: "folder.fill")
-                                .foregroundColor(.cyan)
-                        }
-                        Text(currentNode?.name ?? "Mac")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                        Spacer()
-                    }
-                    .padding()
-                    
-                    // List
-                    ScrollView {
-                        VStack(spacing: 0) {
-                            ForEach(currentNode?.children ?? []) { child in
-                                FileListRow(node: child, totalSize: currentNode?.size ?? 1)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        enterNode(child)
-                                    }
-                            }
+                        .disabled(selectedSize == 0)
+                    } accessory: {
+                        if selectedSize > 0 {
+                            Text(ByteCountFormatter.string(fromByteCount: selectedSize, countStyle: .file))
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.white.opacity(0.72))
                         }
                     }
                 }
-                .frame(width: 260)
-                .background(Color.black.opacity(0.15))
-                
-                // Bubble Chart Area
-                ZStack {
-                    // Background Circles
-                    Circle()
-                        .stroke(Color.white.opacity(0.05), lineWidth: 2)
-                        .frame(width: 600, height: 600)
-                    Circle()
-                        .stroke(Color.white.opacity(0.03), lineWidth: 30)
-                        .frame(width: 800, height: 800)
-                    
-                    if let node = currentNode {
-                         bubbleChart(for: node, size: CGSize(width: geometry.size.width - 260, height: geometry.size.height))
-                    }
-                    
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.clear)
-                .clipped()
-
-                 .overlay(alignment: .bottom) {
-                     VStack(spacing: 16) {
-                         // Control Bar - Select All / Deselect All
-                         if let current = currentNode, !current.children.isEmpty {
-                             HStack(spacing: 12) {
-                                 Button(action: selectAllItems) {
-                                     Text(loc.currentLanguage == .chinese ? "全选" : "Select All")
-                                         .font(.system(size: 12, weight: .medium))
-                                         .foregroundColor(.white)
-                                         .padding(.horizontal, 12)
-                                         .padding(.vertical, 6)
-                                         .background(Color.white.opacity(0.15))
-                                         .cornerRadius(6)
-                                 }
-                                 .buttonStyle(.plain)
-                                 
-                                 Button(action: deselectAllItems) {
-                                     Text(loc.currentLanguage == .chinese ? "取消全选" : "Deselect All")
-                                         .font(.system(size: 12, weight: .medium))
-                                         .foregroundColor(.white)
-                                         .padding(.horizontal, 12)
-                                         .padding(.vertical, 6)
-                                         .background(Color.white.opacity(0.15))
-                                         .cornerRadius(6)
-                                 }
-                                 .buttonStyle(.plain)
-                                 
-                                 Spacer()
-                             }
-                             .padding(.horizontal, 20)
-                         }
-                         
-                         // Main Action Bar
-                         HStack(spacing: 20) {
-                             // Floating Remove Button
-                             Button(action: {
-                                  prepareForRemoval()
-                             }) {
-                                 ZStack {
-                                     Circle()
-                                         .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                                         .frame(width: 90, height: 90)
-                                     
-                                     Circle()
-                                         .fill(LinearGradient(colors: [Color.white.opacity(0.2), Color.white.opacity(0.05)], startPoint: .top, endPoint: .bottom))
-                                         .frame(width: 80, height: 80)
-                                         .overlay(
-                                             Circle()
-                                                 .stroke(Color.white, lineWidth: 2)
-                                         )
-                                         .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
-                                     
-                                     Text(loc.currentLanguage == .chinese ? "移除" : "Remove")
-                                         .font(.system(size: 16, weight: .semibold))
-                                         .foregroundColor(.white)
-                                 }
-                             }
-                             .buttonStyle(.plain)
-                             
-                             // Stats Bar
-                             if selectedSize > 0 {
-                                 HStack(spacing: 0) {
-                                     Text(ByteCountFormatter.string(fromByteCount: selectedSize, countStyle: .file))
-                                         .font(.system(size: 14, weight: .regular))
-                                         .foregroundColor(.white.opacity(0.8))
-                                         .padding(.horizontal, 16)
-                                     
-                                     Divider()
-                                         .background(Color.white.opacity(0.2))
-                                         .frame(height: 20)
-                                     
-                                     Button(action: {
-                                         showSelectedItemsPopover.toggle()
-                                     }) {
-                                         Text(loc.currentLanguage == .chinese ? "查看所选内容" : "View Selected")
-                                             .font(.system(size: 13, weight: .medium))
-                                             .foregroundColor(.white)
-                                             .padding(.horizontal, 16)
-                                             .padding(.vertical, 10)
-                                             .contentShape(Rectangle())
-                                     }
-                                     .buttonStyle(.plain)
-                                     .popover(isPresented: $showSelectedItemsPopover, arrowEdge: .top) {
-                                         SelectedItemsList(items: selectedItems)
-                                     }
-                                 }
-                                 .background(Color.black.opacity(0.6))
-                                 .background(.ultraThinMaterial)
-                                 .cornerRadius(8)
-                                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.1), lineWidth: 1))
-                             }
-                             
-                             Spacer()
-                         }
-                         .padding(.horizontal, 20)
-                     }
-                     .padding(.bottom, 40)
-                 }
-
             }
             .overlay {
                 if showRemoveConfirmation {
@@ -660,148 +635,292 @@ struct SpaceLensView: View {
             }
         }
     }
-    
-    // MARK: - Bubble Chart Logic
-    func bubbleChart(for node: FileNode, size: CGSize) -> some View {
-        ZStack {
-            // Central Node (Current Directory)
-            bubbleView(node: node, isCenter: true)
-                .position(x: size.width / 2, y: size.height / 2)
-                .zIndex(100)
-            
-            // Children Nodes (Orbiting)
-            ForEach(node.children.prefix(8)) { child in // Use layout logic here
-                if let pos = bubblePositions[child.id], let radius = bubbleSizes[child.id] {
-                     bubbleView(node: child, isCenter: false, diameter: radius)
-                        .position(x: size.width/2 + pos.x, y: size.height/2 + pos.y) // Offset from center
-                        .onTapGesture {
-                            withAnimation(.spring()) {
-                                enterNode(child)
-                            }
-                        }
+
+    private var resultsHeader: some View {
+        HStack {
+            Button {
+                resetToLanding()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "chevron.left")
+                    Text(loc.text("重新开始", "Start Over"))
+                }
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(.white.opacity(0.68))
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            Text(loc.text("空间透镜", "Space Lens"))
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundColor(.white.opacity(0.58))
+
+            Spacer()
+
+            Color.clear.frame(width: 74, height: 1)
+        }
+        .padding(.horizontal, 17)
+        .frame(height: 52)
+    }
+
+    private var resultsDirectoryPane: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 5) {
+                compactNavigationButton("chevron.left", disabled: navigationStack.isEmpty, action: goBack)
+                compactNavigationButton("chevron.right", disabled: forwardNavigationStack.isEmpty, action: goForward)
+
+                breadcrumbPath
+            }
+            .padding(.horizontal, 10)
+            .frame(height: 42)
+
+            ScrollView(showsIndicators: false) {
+                LazyVStack(spacing: 3) {
+                    ForEach(currentNode?.children ?? []) { child in
+                        FileListRow(
+                            node: child,
+                            isFocused: focusedNodeID == child.id,
+                            isRemovable: isRemovableNode(child),
+                            onFocus: { focusedNodeID = child.id },
+                            onEnter: { enterNode(child) },
+                            onIgnore: { ignoreNode(child) }
+                        )
+                    }
+                }
+                .padding(.horizontal, 9)
+                .padding(.bottom, 100)
+            }
+            .overlay {
+                if let node = currentNode, loadingNodeIDs.contains(node.id) {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(.white.opacity(0.78))
                 }
             }
-            
-            // Handle "Other" or small files?
-        }
-        .onAppear {
-             calculateLayout(for: node)
-        }
-        .onChange(of: node.id) { _ in
-             calculateLayout(for: node)
         }
     }
-    
-    func bubbleView(node: FileNode, isCenter: Bool, diameter: CGFloat = 200) -> some View {
-        let size = isCenter ? 220 : diameter
+
+    private var breadcrumbPath: some View {
+        let path = navigationStack + (currentNode.map { [$0] } ?? [])
+
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 4) {
+                ForEach(Array(path.enumerated()), id: \.element.id) { index, node in
+                    Button {
+                        navigateToBreadcrumb(index, in: path)
+                    } label: {
+                        HStack(spacing: 4) {
+                            if let icon = iconForFile(node) {
+                                Image(nsImage: icon)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 17, height: 17)
+                            }
+
+                            Text(FileManager.default.displayName(atPath: node.url.path))
+                                .font(.system(size: 12, weight: index == path.count - 1 ? .semibold : .medium))
+                                .foregroundColor(.white.opacity(index == path.count - 1 ? 0.90 : 0.66))
+                                .lineLimit(1)
+                        }
+                    }
+                    .buttonStyle(.plain)
+
+                    if index < path.count - 1 {
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 8, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.34))
+                    }
+                }
+            }
+            .padding(.leading, 3)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var directoryLoadingOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.10)
+
+            VStack(spacing: 9) {
+                ProgressView()
+                    .controlSize(.regular)
+                    .tint(.white)
+                Text(loc.text("正在读取文件夹…", "Loading folder…"))
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.white.opacity(0.72))
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+            .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 10))
+        }
+    }
+
+    private func compactNavigationButton(_ symbol: String, disabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(.white.opacity(disabled ? 0.20 : 0.64))
+                .frame(width: 23, height: 23)
+                .background(Color.black.opacity(0.18), in: RoundedRectangle(cornerRadius: 4))
+        }
+        .buttonStyle(.plain)
+        .disabled(disabled)
+    }
+
+    private func isRemovableNode(_ node: FileNode) -> Bool {
+        let protectedNames: Set<String> = [
+            "Library", "Downloads", "Movies", "Pictures", "Documents",
+            "Applications", "Desktop", "Music", "Public"
+        ]
+        return !protectedNames.contains(node.name)
+    }
+
+    private struct BubblePlacement {
+        let node: FileNode
+        var center: CGPoint
+        let radius: CGFloat
+    }
+
+    private func packedBubbleChart(for node: FileNode, size: CGSize) -> some View {
+        let placements = packedPlacements(for: Array(node.children.prefix(14)), in: size)
+        let diameter = max(1, min(size.width - 30, size.height - 28))
+
         return ZStack {
-             Circle()
-                 .fill(
-                    LinearGradient(
-                        colors: isCenter ? [Color.cyan.opacity(0.8), Color.blue.opacity(0.8)] : [Color.white.opacity(0.15), Color.white.opacity(0.05)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                 )
-                 .frame(width: size, height: size)
-                 .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
-                 .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
-            
-             if isCenter {
-                  // Ripple effect for center?
-                 Circle()
-                     .stroke(Color.cyan.opacity(0.3), lineWidth: 2)
-                     .frame(width: size + 20, height: size + 20)
-             }
-            
-            VStack(spacing: 4) {
-                 if let icon = iconForFile(node) {
-                      Image(nsImage: icon)
-                         .resizable()
-                         .frame(width: isCenter ? 64 : 48, height: isCenter ? 64 : 48)
-                 } else {
-                      Image(systemName: isCenter ? "folder.fill" : "doc.fill")
-                         .font(.system(size: isCenter ? 40 : 30))
-                         .foregroundColor(.white)
-                 }
-                
-                Text(node.name)
-                    .font(.system(size: isCenter ? 16 : 12, weight: .medium))
-                    .foregroundColor(.white)
-                    .lineLimit(1)
-                    .frame(maxWidth: size - 20)
-                
-                Text(node.formattedSize)
-                    .font(.system(size: isCenter ? 14 : 10))
-                    .foregroundColor(.white.opacity(0.8))
+            Circle()
+                .fill(Color.black.opacity(0.14))
+                .overlay(Circle().stroke(Color.black.opacity(0.13), lineWidth: 21))
+                .overlay(Circle().stroke(Color.white.opacity(0.045), lineWidth: 1))
+                .frame(width: diameter, height: diameter)
+
+            ForEach(placements, id: \.node.id) { placement in
+                Button {
+                    if placement.node.isDirectory {
+                        enterNode(placement.node)
+                    } else {
+                        focusedNodeID = placement.node.id
+                    }
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(Color(red: 0.29, green: 0.84, blue: 0.78).opacity(0.30))
+                            .overlay {
+                                Circle().stroke(
+                                    focusedNodeID == placement.node.id
+                                        ? Color(red: 0.65, green: 0.96, blue: 0.85).opacity(0.78)
+                                        : Color.white.opacity(0.035),
+                                    lineWidth: focusedNodeID == placement.node.id ? 5 : 1
+                                )
+                            }
+
+                        VStack(spacing: 5) {
+                            if let icon = iconForFile(placement.node) {
+                                Image(nsImage: icon)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(
+                                        width: min(placement.radius * 0.82, 67),
+                                        height: min(placement.radius * 0.82, 67)
+                                    )
+                            }
+
+                            if focusedNodeID == placement.node.id, placement.radius >= 64 {
+                                Text(placement.node.name)
+                                    .font(.system(size: min(13, placement.radius * 0.10), weight: .semibold))
+                                    .foregroundColor(.white.opacity(0.94))
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                                    .frame(maxWidth: placement.radius * 1.55)
+
+                                Text(placement.node.formattedSize)
+                                    .font(.system(size: min(12, placement.radius * 0.09), weight: .medium))
+                                    .foregroundColor(.white.opacity(0.82))
+                            }
+                        }
+                    }
+                    .frame(width: placement.radius * 2, height: placement.radius * 2)
+                    .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .position(placement.center)
+                .help("\(placement.node.name)  \(placement.node.formattedSize)")
             }
         }
+        .frame(width: size.width, height: size.height)
+        .clipped()
     }
-    
-    // MARK: - Layout Algorithm
-    func calculateLayout(for node: FileNode) {
-        // Improved layout algorithm to prevent bubble overlaps
-        // Uses a force-directed approach with collision detection
-        
-        let children = node.children.prefix(12) // Limit displayed bubbles
-        if children.isEmpty { return }
-        
-        // Base Unit
-        let centerR: CGFloat = 110 // Radius of center bubble
-        
-        // Normalize sizes for visualization
-        // Max bubble size = 180, Min = 60
-        let maxSize: CGFloat = 180
-        let minSize: CGFloat = 70
-        let maxFileSize = children.first?.size ?? 1
-        
-        var positions: [UUID: CGPoint] = [:]
-        var sizes: [UUID: CGFloat] = [:]
-        
-        // Calculate bubble sizes first
-        for child in children {
-            let scale = CGFloat(child.size) / CGFloat(maxFileSize)
-            let bubSize = minSize + (maxSize - minSize) * sqrt(scale)
-            sizes[child.id] = bubSize
+
+    private func packedPlacements(for nodes: [FileNode], in size: CGSize) -> [BubblePlacement] {
+        guard !nodes.isEmpty else { return [] }
+
+        let diameter = max(1, min(size.width - 30, size.height - 28))
+        let outerRadius = diameter / 2 - 17
+        let chartCenter = CGPoint(x: size.width / 2, y: size.height / 2 - 3)
+        let maximumSize = max(nodes.first?.size ?? 1, 1)
+        let anchors: [CGPoint] = [
+            CGPoint(x: -0.18, y: 0.04), CGPoint(x: 0.36, y: 0.06),
+            CGPoint(x: 0.08, y: -0.46), CGPoint(x: 0.12, y: 0.48),
+            CGPoint(x: -0.44, y: -0.42), CGPoint(x: 0.51, y: -0.40),
+            CGPoint(x: -0.45, y: 0.43), CGPoint(x: 0.52, y: 0.43),
+            CGPoint(x: -0.62, y: -0.10), CGPoint(x: 0.64, y: -0.10),
+            CGPoint(x: -0.62, y: 0.20), CGPoint(x: 0.64, y: 0.19),
+            CGPoint(x: -0.18, y: 0.68), CGPoint(x: 0.37, y: 0.66)
+        ]
+
+        var placements = nodes.enumerated().map { index, child -> BubblePlacement in
+            let ratio = max(0, Double(child.size) / Double(maximumSize))
+            let radius = max(outerRadius * 0.055, outerRadius * 0.36 * CGFloat(pow(ratio, 0.30)))
+            let anchor = anchors[min(index, anchors.count - 1)]
+            return BubblePlacement(
+                node: child,
+                center: CGPoint(
+                    x: chartCenter.x + anchor.x * outerRadius,
+                    y: chartCenter.y + anchor.y * outerRadius
+                ),
+                radius: radius
+            )
         }
-        
-        // Arrange in concentric circles to prevent overlaps
-        // Group bubbles by size and place them in rings
-        let sortedChildren = children.sorted { $0.size > $1.size }
-        
-        var angle: CGFloat = 0
-        var currentRing: Int = 0
-        var itemsInRing: Int = 0
-        let itemsPerRing: Int = 4
-        
-        for (index, child) in sortedChildren.enumerated() {
-            let bubSize = sizes[child.id] ?? 70
-            
-            // Calculate ring radius based on bubble size
-            let ringRadius = centerR + 40 + CGFloat(currentRing) * (bubSize + 40)
-            
-            // Calculate angle for this position
-            let itemsInCurrentRing = min(itemsPerRing, sortedChildren.count - index)
-            let angleStep = (2 * .pi) / CGFloat(itemsInCurrentRing)
-            let itemAngle = angle + angleStep * CGFloat(itemsInRing)
-            
-            // Calculate position
-            let x = cos(itemAngle) * ringRadius
-            let y = sin(itemAngle) * ringRadius
-            
-            positions[child.id] = CGPoint(x: x, y: y)
-            
-            // Move to next position
-            itemsInRing += 1
-            if itemsInRing >= itemsPerRing {
-                itemsInRing = 0
-                currentRing += 1
-                angle += angleStep / 2 // Offset next ring for better distribution
+
+        for _ in 0..<90 {
+            for left in placements.indices {
+                for right in placements.indices where right > left {
+                    let dx = placements[right].center.x - placements[left].center.x
+                    let dy = placements[right].center.y - placements[left].center.y
+                    let distance = max(sqrt(dx * dx + dy * dy), 0.1)
+                    let required = placements[left].radius + placements[right].radius + 2
+                    guard distance < required else { continue }
+                    let push = (required - distance) / 2
+                    let nx = dx / distance
+                    let ny = dy / distance
+                    placements[left].center.x -= nx * push
+                    placements[left].center.y -= ny * push
+                    placements[right].center.x += nx * push
+                    placements[right].center.y += ny * push
+                }
+            }
+
+            for index in placements.indices {
+                let anchor = anchors[min(index, anchors.count - 1)]
+                let target = CGPoint(
+                    x: chartCenter.x + anchor.x * outerRadius,
+                    y: chartCenter.y + anchor.y * outerRadius
+                )
+                placements[index].center.x += (target.x - placements[index].center.x) * 0.018
+                placements[index].center.y += (target.y - placements[index].center.y) * 0.018
+
+                let dx = placements[index].center.x - chartCenter.x
+                let dy = placements[index].center.y - chartCenter.y
+                let distance = max(sqrt(dx * dx + dy * dy), 0.1)
+                let allowed = outerRadius - placements[index].radius
+                if distance > allowed {
+                    placements[index].center = CGPoint(
+                        x: chartCenter.x + dx / distance * allowed,
+                        y: chartCenter.y + dy / distance * allowed
+                    )
+                }
             }
         }
-        
-        self.bubblePositions = positions
-        self.bubbleSizes = sizes
+        return placements
     }
     
     // MARK: - Actions
@@ -833,18 +952,55 @@ struct SpaceLensView: View {
     }
     
     func enterNode(_ node: FileNode) {
+        guard node.isDirectory else {
+            focusedNodeID = node.id
+            return
+        }
         if let current = currentNode {
             navigationStack.append(current)
         }
-        currentNode = node
+        forwardNavigationStack.removeAll()
+        activateNode(node)
     }
     
     func goBack() {
-        if let parent = navigationStack.popLast() {
-            currentNode = parent
-        } else {
-            // Reset to Landing?
-            stopScan() // Restart
+        guard let parent = navigationStack.popLast() else { return }
+        if let current = currentNode {
+            forwardNavigationStack.append(current)
+        }
+        activateNode(parent)
+    }
+
+    func goForward() {
+        guard let next = forwardNavigationStack.popLast() else { return }
+        if let current = currentNode {
+            navigationStack.append(current)
+        }
+        activateNode(next)
+    }
+
+    private func navigateToBreadcrumb(_ index: Int, in path: [FileNode]) {
+        guard path.indices.contains(index) else { return }
+        navigationStack = Array(path.prefix(index))
+        forwardNavigationStack = Array(path.dropFirst(index + 1).reversed())
+        activateNode(path[index])
+    }
+
+    private func activateNode(_ node: FileNode) {
+        currentNode = node
+        focusedNodeID = node.children.first?.id
+
+        guard !node.childrenLoaded, !loadingNodeIDs.contains(node.id) else { return }
+        loadingNodeIDs.insert(node.id)
+
+        Task {
+            await scanner.loadChildren(for: node)
+            await MainActor.run {
+                loadingNodeIDs.remove(node.id)
+                if currentNode?.id == node.id {
+                    focusedNodeID = node.children.first?.id
+                }
+            }
         }
     }
     
@@ -865,6 +1021,14 @@ struct SpaceLensView: View {
         guard let current = currentNode else { return }
         for child in current.children {
             child.isSelected = false
+        }
+    }
+
+    func ignoreNode(_ node: FileNode) {
+        ScanResultIgnoreStore.shared.ignore(node.url)
+        node.parent?.children.removeAll { $0.id == node.id }
+        if currentNode?.id == node.id {
+            goBack()
         }
     }
     
@@ -941,8 +1105,7 @@ struct SpaceLensView: View {
                     current.size -= deletedSize
                     if current.size < 0 { current.size = 0 } // Safety
                     
-                    // Re-layout bubbles
-                    calculateLayout(for: current)
+                    self.focusedNodeID = current.children.first?.id
                     
                     // Update total scanned size
                     scanner.totalSize -= deletedSize
@@ -1004,7 +1167,10 @@ struct SpaceLensView: View {
     func resetToLanding() {
         viewState = 0
         navigationStack = []
+        forwardNavigationStack = []
         currentNode = nil
+        focusedNodeID = nil
+        loadingNodeIDs.removeAll()
         cleanupResults = nil
         failedFiles = []
         scanner.stopScan()
@@ -1014,63 +1180,94 @@ struct SpaceLensView: View {
 // MARK: - File List Row
 struct FileListRow: View {
     @ObservedObject var node: FileNode
-    let totalSize: Int64
+    let isFocused: Bool
+    let isRemovable: Bool
+    let onFocus: () -> Void
+    let onEnter: () -> Void
+    let onIgnore: () -> Void
     
     var body: some View {
-        HStack(spacing: 12) {
-            ZStack {
-                if node.isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(Color.blue)
-                        .font(.system(size: 16))
-                        .background(Circle().fill(Color.white).frame(width: 8, height: 8)) // White background for the checkmark
-                } else {
-                     Circle()
-                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                        .frame(width: 16, height: 16)
+        HStack(spacing: 8) {
+            if isRemovable {
+                CleanMyMacSelectionButton(rowHeight: 55) {
+                    node.isSelected.toggle()
+                } indicator: {
+                    if node.isSelected {
+                        Circle()
+                            .fill(Color(red: 0.32, green: 0.84, blue: 0.96))
+                            .frame(width: 14, height: 14)
+                            .overlay {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 8, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                    } else {
+                        Circle()
+                            .stroke(Color.white.opacity(0.46), lineWidth: 1)
+                            .frame(width: 14, height: 14)
+                    }
                 }
+            } else {
+                Color.clear.frame(width: 44, height: 55)
             }
-            .frame(width: 20, height: 20) // Consistent hit area
-            .contentShape(Rectangle()) // Hit area
-            .onTapGesture {
-                node.isSelected.toggle()
-            }
-            
+
             let icon = NSWorkspace.shared.icon(forFile: node.url.path)
             Image(nsImage: icon)
                 .resizable()
-                .frame(width: 20, height: 20)
+                .scaledToFit()
+                .frame(width: 37, height: 37)
             
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(node.name)
-                    .font(.system(size: 12))
-                    .foregroundColor(.white)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.white.opacity(0.90))
                     .lineLimit(1)
-                
-                // Size Bar
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Rectangle()
-                            .fill(Color.white.opacity(0.1))
-                            .frame(height: 3)
-                        
-                        Rectangle()
-                            .fill(Color.cyan) // Teal bar
-                            .frame(width: geo.size.width * CGFloat(node.size) / CGFloat(totalSize), height: 3)
-                    }
+
+                if node.isDirectory {
+                    Text("\(node.itemCount) \(LocalizationManager.shared.currentLanguage == .chinese ? "项" : "items")")
+                        .font(.system(size: 10))
+                        .foregroundColor(.white.opacity(0.42))
                 }
-                .frame(height: 3)
             }
-            
+
+            Spacer(minLength: 4)
+
             Text(node.formattedSize)
-                .font(.system(size: 11))
-                .foregroundColor(.white.opacity(0.6))
-            
-            Image(systemName: "chevron.right")
-                .font(.system(size: 10))
-                .foregroundColor(.white.opacity(0.3))
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.white.opacity(0.82))
+
+            Button(action: onEnter) {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(.white.opacity(node.isDirectory ? 0.65 : 0.16))
+                    .frame(width: 24, height: 44)
+            }
+            .buttonStyle(.plain)
+            .disabled(!node.isDirectory)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.leading, 1)
+        .padding(.trailing, 4)
+        .frame(height: 55)
+        .background {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(isFocused ? Color.black.opacity(0.28) : Color.clear)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if node.isDirectory {
+                onEnter()
+            } else {
+                onFocus()
+            }
+        }
+        .scanResultContextMenu(
+            isSelected: node.isSelected,
+            displayName: node.name,
+            url: node.url,
+            onToggleSelection: {
+                if isRemovable { node.isSelected.toggle() }
+            },
+            onIgnore: onIgnore
+        )
     }
 }

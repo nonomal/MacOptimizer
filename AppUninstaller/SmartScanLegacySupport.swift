@@ -159,7 +159,7 @@ struct AllCategoriesDetailSheet: View {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 14, weight: .medium))
-                        Text(loc.currentLanguage == .chinese ? "返回摘要" : "Back")
+                        Text(loc.text("返回摘要", "Back"))
                             .font(.system(size: 14, weight: .medium))
                     }
                     .foregroundColor(.white.opacity(0.8))
@@ -168,7 +168,7 @@ struct AllCategoriesDetailSheet: View {
                 
                 Spacer()
                 
-                Text(loc.currentLanguage == .chinese ? "清理详情" : "Cleanup Details")
+                Text(loc.text("清理详情", "Cleanup Details"))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
                 
@@ -278,7 +278,7 @@ struct AllCategoriesDetailSheet: View {
             Image(systemName: "arrow.left")
                 .font(.system(size: 48))
                 .foregroundColor(.secondaryText.opacity(0.5))
-            Text(loc.currentLanguage == .chinese ? "选择分类查看详情" : "Select a category")
+            Text(loc.text("选择分类查看详情", "Select a category"))
                 .font(.title3)
                 .foregroundColor(.secondaryText)
             Spacer()
@@ -302,7 +302,14 @@ struct AllCategoriesDetailSheet: View {
                     Button(action: {
                         service.toggleCategorySelection(category, forceTo: true)
                     }) {
-                        Text(loc.currentLanguage == .chinese ? "全选" : "Select All")
+                        Text(loc.text(
+    simplifiedChinese: "全选",
+    traditionalChinese: "全選",
+    english: "Select All",
+    japanese: "すべてを選択",
+    korean: "전체선택",
+    russian: "Выбрать все"
+))
                             .font(.system(size: 11))
                             .foregroundColor(.blue)
                     }
@@ -311,13 +318,13 @@ struct AllCategoriesDetailSheet: View {
                     Button(action: {
                         service.toggleCategorySelection(category, forceTo: false)
                     }) {
-                        Text(loc.currentLanguage == .chinese ? "取消全选" : "Deselect All")
+                        Text(loc.text("取消全选", "Deselect All"))
                             .font(.system(size: 11))
                             .foregroundColor(.orange)
                     }
                     .buttonStyle(.plain)
                     
-                    Text(loc.currentLanguage == .chinese ? "排序方式 大小 ▼" : "Sort By Size ▼")
+                    Text(loc.text("排序方式 大小 ▼", "Sort By Size ▼"))
                         .font(.system(size: 10))
                         .foregroundColor(.secondaryText)
                 }
@@ -379,7 +386,7 @@ struct AllCategoriesDetailSheet: View {
                     .foregroundColor(.white)
                 
                 let files = filesFor(category: category)
-                Text("\(files.count) " + (loc.currentLanguage == .chinese ? "个项目，共 " : "items, ") + ByteCountFormatter.string(fromByteCount: files.reduce(0) { $0 + $1.size }, countStyle: .file))
+                Text("\(files.count) " + (loc.text("个项目，共 ", "items, ")) + ByteCountFormatter.string(fromByteCount: files.reduce(0) { $0 + $1.size }, countStyle: .file))
                     .font(.system(size: 12)) // Reduced from subheadline
                     .foregroundColor(.secondaryText)
             }
@@ -423,12 +430,12 @@ struct AllCategoriesDetailSheet: View {
     private var virusRightPane: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(loc.currentLanguage == .chinese ? "病毒威胁" : "Virus Threats")
+                Text(loc.text("病毒威胁", "Virus Threats"))
                     .font(.system(size: 18, weight: .bold)) // Reduced
                     .foregroundColor(.white)
                 Text(service.virusThreats.isEmpty ? 
-                     (loc.currentLanguage == .chinese ? "未检测到威胁" : "No threats detected") :
-                     "\(service.virusThreats.count) " + (loc.currentLanguage == .chinese ? "个威胁" : "threats found"))
+                     (loc.text("未检测到威胁", "No threats detected")) :
+                     "\(service.virusThreats.count) " + (loc.text("个威胁", "threats found")))
                     .font(.system(size: 12)) // Reduced
                     .foregroundColor(service.virusThreats.isEmpty ? .green : .red)
             }
@@ -440,7 +447,7 @@ struct AllCategoriesDetailSheet: View {
                     Image(systemName: "checkmark.shield.fill")
                         .font(.system(size: 64))
                         .foregroundColor(.green)
-                    Text(loc.currentLanguage == .chinese ? "您的系统是安全的" : "Your system is safe")
+                    Text(loc.text("您的系统是安全的", "Your system is safe"))
                         .font(.title3)
                         .foregroundColor(.white)
                         .padding(.top)
@@ -495,10 +502,10 @@ struct AllCategoriesDetailSheet: View {
     private var startupItemsRightPane: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(loc.currentLanguage == .chinese ? "启动项" : "Startup Items")
+                Text(loc.text("启动项", "Startup Items"))
                     .font(.system(size: 18, weight: .bold)) // Reduced
                     .foregroundColor(.white)
-                Text("\(service.startupItems.count) " + (loc.currentLanguage == .chinese ? "个项目会在开机时自动启动" : "items start automatically"))
+                Text("\(service.startupItems.count) " + (loc.text("个项目会在开机时自动启动", "items start automatically")))
                     .font(.system(size: 12)) // Reduced
                     .foregroundColor(.secondaryText)
             }
@@ -533,7 +540,7 @@ struct AllCategoriesDetailSheet: View {
                             
                             Spacer()
                             
-                            Text(item.isEnabled ? (loc.currentLanguage == .chinese ? "已启用" : "Enabled") : (loc.currentLanguage == .chinese ? "已禁用" : "Disabled"))
+                            Text(item.isEnabled ? (loc.text("已启用", "Enabled")) : (loc.text("已禁用", "Disabled")))
                                 .font(.caption)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
@@ -559,10 +566,10 @@ struct AllCategoriesDetailSheet: View {
     private var performanceAppsRightPane: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(loc.currentLanguage == .chinese ? "性能优化" : "Performance")
+                Text(loc.text("性能优化", "Performance"))
                     .font(.system(size: 18, weight: .bold)) // Reduced
                     .foregroundColor(.white)
-                Text("\(service.performanceApps.count) " + (loc.currentLanguage == .chinese ? "个应用正在消耗资源" : "apps consuming resources"))
+                Text("\(service.performanceApps.count) " + (loc.text("个应用正在消耗资源", "apps consuming resources")))
                     .font(.system(size: 12)) // Reduced
                     .foregroundColor(.secondaryText)
             }
@@ -626,12 +633,12 @@ struct AllCategoriesDetailSheet: View {
     private var appUpdatesRightPane: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(loc.currentLanguage == .chinese ? "应用更新" : "App Updates")
+                Text(loc.text("应用更新", "App Updates"))
                     .font(.system(size: 18, weight: .bold)) // Reduced
                     .foregroundColor(.white)
                 Text(service.hasAppUpdates ? 
-                     (loc.currentLanguage == .chinese ? "有可用更新" : "Updates available") :
-                     (loc.currentLanguage == .chinese ? "所有应用已是最新" : "All apps up to date"))
+                     (loc.text("有可用更新", "Updates available")) :
+                     (loc.text("所有应用已是最新", "All apps up to date")))
                     .font(.system(size: 12)) // Reduced
                     .foregroundColor(service.hasAppUpdates ? .blue : .green)
             }
@@ -643,8 +650,8 @@ struct AllCategoriesDetailSheet: View {
                     .font(.system(size: 64))
                     .foregroundColor(service.hasAppUpdates ? .blue : .green)
                 Text(service.hasAppUpdates ? 
-                     (loc.currentLanguage == .chinese ? "点击更新按钮检查更新" : "Click update button to check") :
-                     (loc.currentLanguage == .chinese ? "无需更新" : "No updates needed"))
+                     (loc.text("点击更新按钮检查更新", "Click update button to check")) :
+                     (loc.text("无需更新", "No updates needed")))
                     .font(.title3)
                     .foregroundColor(.white)
                     .padding(.top)
@@ -780,64 +787,13 @@ struct FileItemRow: View {
                      "确定要删除\"\(fileName)\"吗？此操作无法撤销。" :
                      "Are you sure you want to delete \"\(fileName)\"? This action cannot be undone.")
             }
-            .contextMenu {
-                // 仅在选中时显示"取消选择"
-                if file.isSelected {
-                    Button {
-                        onToggle?()
-                    } label: {
-                        let fileName = file.name
-                        Label(
-                            LocalizationManager.shared.currentLanguage == .chinese ? 
-                                "取消选择\"\(fileName)\"" : 
-                                "Deselect \"\(fileName)\"",
-                            systemImage: "checkmark.circle"
-                        )
-                    }
-                    
-                    Divider()
-                }
-                
-                // 在访达中显示
-                Button {
-                    openInFinder()
-                } label: {
-                    Label(
-                        LocalizationManager.shared.currentLanguage == .chinese ? 
-                            "在\"访达\"中显示" : 
-                            "Show in Finder",
-                        systemImage: "folder"
-                    )
-                }
-                
-                // 快速查看
-                Button {
-                    quickLookFile()
-                } label: {
-                    let fileName = file.name
-                    Label(
-                        LocalizationManager.shared.currentLanguage == .chinese ? 
-                            "快速查看\"\(fileName)\"" : 
-                            "Quick Look \"\(fileName)\"",
-                        systemImage: "eye"
-                    )
-                }
-                
-                Divider()
-                
-                // 忽略
-                Button {
-                    // TODO: 实现忽略功能
-                    print("忽略: \(file.name)")
-                } label: {
-                    Label(
-                        LocalizationManager.shared.currentLanguage == .chinese ? 
-                            "忽略" : 
-                            "Ignore",
-                        systemImage: "eye.slash"
-                    )
-                }
-            }
+            .scanResultContextMenu(
+                isSelected: file.isSelected,
+                displayName: file.name,
+                url: file.url,
+                onToggleSelection: { toggleSelection() },
+                onIgnore: { service.ignoreFile(file, in: category) }
+            )
             
             // 展开子项
             if isExpanded && !subItems.isEmpty {
@@ -1097,4 +1053,3 @@ struct DetailSidebarRow: View {
 import SwiftUI
 
 // MARK: - 主分类行（左侧栏）
-

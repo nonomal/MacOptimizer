@@ -140,6 +140,10 @@ class PrivacyScannerService: ObservableObject {
     @Published var isScanning: Bool = false
     @Published var scanProgress: Double = 0
     @Published var shouldStop = false
+    @Published var hasScanned = false
+    @Published var isCleaning = false
+    @Published var cleanedSize: Int64 = 0
+    private var shouldStopCleaning = false
     
     // 统计数据
     var totalHistoryCount: Int { count(for: .history) }
@@ -171,7 +175,12 @@ class PrivacyScannerService: ObservableObject {
             isScanning = true
             shouldStop = false
             privacyItems.removeAll()
+            appPermissions.removeAll()
+            browserDataItems.removeAll()
             scanProgress = 0
+            hasScanned = false
+            isCleaning = false
+            cleanedSize = 0
         }
         
         // 1. 扫描浏览器数据
@@ -180,7 +189,7 @@ class PrivacyScannerService: ObservableObject {
             if shouldStop { break }
             let items = await scanBrowser(browser)
             await MainActor.run {
-                privacyItems.append(contentsOf: items)
+                privacyItems.append(contentsOf: items.filter { ScanResultIgnoreStore.shouldInclude($0.path) })
                 scanProgress = Double(index + 1) / Double(browsers.count + 4)
             }
         }
@@ -189,7 +198,7 @@ class PrivacyScannerService: ObservableObject {
         if !shouldStop {
             let recentItems = await scanRecentItems()
             await MainActor.run {
-                privacyItems.append(contentsOf: recentItems)
+                privacyItems.append(contentsOf: recentItems.filter { ScanResultIgnoreStore.shouldInclude($0.path) })
                 scanProgress += 0.1
             }
         }
@@ -199,7 +208,7 @@ class PrivacyScannerService: ObservableObject {
             let permissions = await scanPermissions()
             print("🔵 [Privacy] scanPermissions returned \(permissions.count) items")
             await MainActor.run {
-                privacyItems.append(contentsOf: permissions)
+                privacyItems.append(contentsOf: permissions.filter { ScanResultIgnoreStore.shouldInclude($0.path) })
                 print("🔵 [Privacy] Total privacyItems after adding permissions: \(privacyItems.count)")
                 print("🔵 [Privacy] Permissions items: \(privacyItems.filter { $0.type == .permissions }.count)")
                 
@@ -217,7 +226,7 @@ class PrivacyScannerService: ObservableObject {
         if !shouldStop {
             let wifiItems = await scanWiFi()
             await MainActor.run {
-                privacyItems.append(contentsOf: wifiItems)
+                privacyItems.append(contentsOf: wifiItems.filter { ScanResultIgnoreStore.shouldInclude($0.path) })
                 scanProgress += 0.1
             }
         }
@@ -226,7 +235,7 @@ class PrivacyScannerService: ObservableObject {
         if !shouldStop {
             let chatItems = await scanChatData()
             await MainActor.run {
-                privacyItems.append(contentsOf: chatItems)
+                privacyItems.append(contentsOf: chatItems.filter { ScanResultIgnoreStore.shouldInclude($0.path) })
                 scanProgress += 0.1
             }
         }
@@ -235,12 +244,28 @@ class PrivacyScannerService: ObservableObject {
         if !shouldStop {
             let devItems = await scanDevelopmentHistory()
             await MainActor.run {
-                privacyItems.append(contentsOf: devItems)
+                privacyItems.append(contentsOf: devItems.filter { ScanResultIgnoreStore.shouldInclude($0.path) })
                 scanProgress = 1.0
                 isScanning = false
             }
         } else {
              await MainActor.run { isScanning = false }
+        }
+
+        await MainActor.run {
+            self.isScanning = false
+            if !self.shouldStop {
+                self.scanProgress = 1.0
+                self.hasScanned = true
+                for index in self.privacyItems.indices {
+                    self.privacyItems[index].isSelected = false
+                    if let children = self.privacyItems[index].children {
+                        for childIndex in children.indices {
+                            self.privacyItems[index].children![childIndex].isSelected = false
+                        }
+                    }
+                }
+            }
         }
     }
     
@@ -341,6 +366,12 @@ class PrivacyScannerService: ObservableObject {
         var cleaned: Int64 = 0
         var failed: Int64 = 0
         var successfullyDeleted: Set<URL> = []
+
+        await MainActor.run {
+            self.isCleaning = true
+            self.cleanedSize = 0
+            self.shouldStopCleaning = false
+        }
         
         // DEBUG: Print all items and their selection state
         print("🔍 [DEBUG] Total privacy items: \(privacyItems.count)")
@@ -371,6 +402,7 @@ class PrivacyScannerService: ObservableObject {
         
         if pathsToDelete.isEmpty {
             print("⚠️ [Clean] WARNING: No items selected for deletion!")
+            await MainActor.run { self.isCleaning = false }
             return (0, 0)
         }
         
@@ -410,6 +442,7 @@ class PrivacyScannerService: ObservableObject {
         
         // 3. Perform Intelligent Cleaning
         for path in pathsToDelete {
+            if shouldStopCleaning { break }
             let pathString = path.path
             let fileName = path.lastPathComponent
             
@@ -461,9 +494,9 @@ class PrivacyScannerService: ObservableObject {
                         try fileManager.trashItem(at: path, resultingItemURL: nil)
                         print("✅ [Clean] Moved to trash: \(path.lastPathComponent)")
                     } catch {
-                        // 废纸篓失败才尝试直接删除(隐私数据需要彻底清除)
-                        try fileManager.removeItem(at: path)
-                        print("✅ [Clean] Force deleted: \(path.lastPathComponent)")
+                        // Keep the result visible if a recoverable move fails.
+                        // Privacy cleanup must not silently become permanent.
+                        throw error
                     }
                     
                     // Verify deletion
@@ -548,18 +581,34 @@ class PrivacyScannerService: ObservableObject {
         
         
         let finalDeleted = successfullyDeleted // Create immutable copy for thread safety
+        let finalCleanedSize = cleaned
         await MainActor.run {
             // Remove successfully deleted file items from list
             privacyItems.removeAll { item in
                 finalDeleted.contains(item.path)
             }
-            // Also remove permission items that were selected (we attempted to reset them)
-            privacyItems.removeAll { item in
-                item.type == .permissions && item.isSelected
-            }
+            self.cleanedSize = finalCleanedSize
+            self.isCleaning = false
         }
         
         return (cleaned, failed)
+    }
+
+    func stopCleaning() {
+        shouldStopCleaning = true
+    }
+
+    func reset() {
+        shouldStop = true
+        shouldStopCleaning = true
+        privacyItems = []
+        appPermissions = []
+        browserDataItems = []
+        isScanning = false
+        scanProgress = 0
+        hasScanned = false
+        isCleaning = false
+        cleanedSize = 0
     }
     
     /// Clear Spotlight kMDItemLastUsedDate metadata from recently used files

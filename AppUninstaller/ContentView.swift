@@ -3,92 +3,200 @@ import AppKit
 import AVKit
 
 struct ContentView: View {
-    @State private var selectedModule: AppModule = .smartClean
+    @ObservedObject private var navigation = AppNavigationController.shared
+    @ObservedObject private var loc = LocalizationManager.shared
+    @StateObject private var uninstallerScanner = AppScanner()
+    @State private var displayedModule: AppModule = AppNavigationController.shared.selectedModule
+    @State private var isModuleLoading = false
+    @State private var moduleSwitchToken = UUID()
     // @State private var showIntro = false // Video disabled
     
     var body: some View {
-        ZStack {
-            // 主内容
-            mainContent
+        GeometryReader { geometry in
+            replicaWindow(size: geometry.size)
         }
-        .frame(minWidth: 1000, minHeight: 700)
+        .frame(minWidth: 980, minHeight: 600)
+        .ignoresSafeArea(.all)
+        .onChange(of: navigation.selectedModule) { target in
+            beginModuleSwitch(to: target)
+        }
+        .onAppear(perform: updateApplicationTitle)
+        .onChange(of: loc.currentLanguage) { _ in updateApplicationTitle() }
     }
-    
-    private var mainContent: some View {
-        ZStack {
-            // 全屏背景 (沉浸式)
-            selectedModule.backgroundGradient
+
+    /// CleanMyMac's window is one continuous gradient surface. The sidebar
+    /// and ubiquitous bottom button float above that surface; there is no
+    /// second inset content card behind the module.
+    private func replicaWindow(size: CGSize) -> some View {
+        // The titlebar is transparent, but the original layout still starts
+        // below its 23pt traffic-light band. Keep that visual inset while the
+        // background itself continues behind the full window.
+        let titlebarInset = CleanMyMacWindowMetrics.titlebarContentInset
+        let sidebarLeft: CGFloat = 9
+        let sidebarTop: CGFloat = 33 + titlebarInset
+        let sidebarWidth: CGFloat = 216
+        let sidebarHeight = max(520, size.height - sidebarTop - 40)
+        let contentLeft = sidebarLeft + sidebarWidth
+        let contentWidth = max(620, size.width - 28 - contentLeft)
+        let contentHeight = max(1, size.height - titlebarInset)
+
+        return ZStack(alignment: .topLeading) {
+            // The original window uses one continuous surface. The window is
+            // opaque at the AppKit level, while this single gradient supplies
+            // the visible module background all the way to the window edges.
+            displayedModule.backgroundGradient
+                .frame(width: size.width, height: size.height)
                 .ignoresSafeArea()
-            
-            HStack(spacing: 16) {
-                // 左侧导航 (Floating Glass Card)
-                NavigationSidebar(selectedModule: $selectedModule)
-                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
-                    .padding(.leading, 16)
-                    .padding(.vertical, 16)
-                    .zIndex(1)
-                
-                // 右侧内容
-                ZStack {
-                    // Color.clear // 内容区域背景透明
-                    
-                    Group {
-                        switch selectedModule {
-                        case .uninstaller:
-                            UninstallerMainView()
-                                .transition(.opacity.combined(with: .move(edge: .trailing)))
-                        case .deepClean:
-                            DeepCleanView(selectedModule: $selectedModule)
-                                .transition(.opacity.combined(with: .move(edge: .trailing)))
-                        case .cleaner:
-                            JunkCleanerView()
-                                .transition(.opacity.combined(with: .move(edge: .trailing)))
-                        case .maintenance:
-                            MaintenanceView()
-                                .transition(.opacity.combined(with: .move(edge: .trailing)))
-                        case .optimizer:
-                            OptimizerView()
-                                .transition(.opacity.combined(with: .move(edge: .trailing)))
-                        case .largeFiles:
-                            LargeFileView(selectedModule: $selectedModule)
-                                .transition(.opacity.combined(with: .move(edge: .trailing)))
-                        case .shredder:
-                            ShredderView()
-                                .transition(.opacity.combined(with: .move(edge: .trailing)))
-                        case .fileExplorer:
-                            FileExplorerView()
-                                .transition(.opacity.combined(with: .move(edge: .trailing)))
-                        case .spaceLens:
-                            SpaceLensView()
-                                .transition(.opacity.combined(with: .move(edge: .trailing)))
-                        case .trash:
-                            TrashView()
-                                .transition(.opacity.combined(with: .move(edge: .trailing)))
-                        case .monitor:
-                            MonitorView()
-                                .transition(.opacity.combined(with: .move(edge: .trailing)))
-                        case .privacy:
-                            PrivacyView(selectedModule: $selectedModule)
-                                .transition(.opacity.combined(with: .move(edge: .trailing)))
-                        case .malware:
-                            MalwareView(selectedModule: $selectedModule)
-                                .transition(.opacity.combined(with: .move(edge: .trailing)))
-                        case .smartClean:
-                            SmartCleanerView(selectedModule: $selectedModule)
-                                .transition(.opacity.combined(with: .move(edge: .trailing)))
-                        case .updater:
-                            AppUpdaterView()
-                                .transition(.opacity.combined(with: .move(edge: .trailing)))
-                        }
+
+            moduleContent(for: displayedModule)
+                .id(displayedModule)
+                .frame(width: contentWidth, height: contentHeight, alignment: .topLeading)
+                .offset(x: contentLeft, y: titlebarInset)
+                .zIndex(2)
+
+            if isModuleLoading {
+                ModuleContentLoadingView(module: navigation.selectedModule)
+                    .frame(width: contentWidth, height: contentHeight)
+                    .offset(x: contentLeft, y: titlebarInset)
+                    .transition(.opacity)
+                    .zIndex(20)
+            }
+
+            CleanMyMacSidebar(
+                selectedModule: $navigation.selectedModule,
+                appScanner: uninstallerScanner
+            )
+            .frame(width: sidebarWidth, height: sidebarHeight)
+            .offset(x: sidebarLeft, y: sidebarTop)
+            .zIndex(30)
+
+            if showsAssistant(for: displayedModule) {
+                Button {
+                    navigation.selectedModule = .smartClean
+                } label: {
+                    HStack(spacing: 6) {
+                        Circle().fill(Color.cyan.opacity(0.92)).frame(width: 8, height: 8)
+                        Circle().fill(Color.cyan.opacity(0.72)).frame(width: 3, height: 3)
+                        Text(LocalizationManager.shared.text(
+    simplifiedChinese: "助手",
+    traditionalChinese: "助理",
+    english: "Assistant",
+    japanese: "アシスタント",
+    korean: "협조자",
+    russian: "Ассистент"
+))
+                            .font(.system(size: 12, weight: .semibold))
                     }
-                    .animation(.easeInOut(duration: 0.3), value: selectedModule)
+                    .foregroundColor(.white.opacity(0.86))
+                    .padding(.horizontal, 13)
+                    .frame(height: 30)
+                    .background(Color.black.opacity(0.25), in: Capsule())
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16)) // Glass Card Background
-                .padding(.trailing, 16)
-                .padding(.vertical, 16)
+                .buttonStyle(.plain)
+                .position(x: size.width - 28 - 46, y: 27 + titlebarInset)
+                .zIndex(25)
             }
         }
+        .frame(width: size.width, height: size.height, alignment: .topLeading)
+    }
+
+    private func showsAssistant(for module: AppModule) -> Bool {
+        module == .spaceLens || module == .largeFiles || module == .updater
+    }
+
+    @ViewBuilder
+    private func moduleContent(for module: AppModule) -> some View {
+        switch module {
+        case .smartClean:
+            SmartCleanerReplicaView(selectedModule: $navigation.selectedModule)
+        case .cleaner:
+            SystemJunkReplicaView()
+        case .mailAttachments:
+            MailAttachmentsReplicaView()
+        case .trash:
+            TrashBinsReplicaView()
+        case .malware:
+            MalwareRemovalReplicaView()
+        case .privacy:
+            PrivacyReplicaView()
+        case .monitor:
+            MonitorView()
+        case .deepClean:
+            DeepCleanView(selectedModule: $navigation.selectedModule)
+        case .maintenance:
+            MaintenanceReplicaView()
+        case .optimizer:
+            OptimizationReplicaView()
+        case .uninstaller:
+            UninstallerReplicaView(appScanner: uninstallerScanner)
+        case .updater:
+            AppUpdaterView()
+        case .extensions:
+            ExtensionsReplicaView()
+        case .spaceLens:
+            SpaceLensView()
+        case .largeFiles:
+            LargeFileView(selectedModule: $navigation.selectedModule)
+        case .shredder:
+            ShredderView()
+        case .fileExplorer:
+            FileExplorerView()
+        }
+    }
+
+    private func beginModuleSwitch(to target: AppModule) {
+        let token = UUID()
+        moduleSwitchToken = token
+        isModuleLoading = true
+
+        // Commit the unique sidebar selection first. Construct the requested
+        // module on the next run-loop turn so expensive module setup cannot
+        // delay the selection highlight.
+        DispatchQueue.main.async {
+            guard moduleSwitchToken == token else { return }
+            displayedModule = target
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+                guard moduleSwitchToken == token else { return }
+                isModuleLoading = false
+            }
+        }
+    }
+
+    private func updateApplicationTitle() {
+        let localizedName = (loc.currentLanguage == .chinese || loc.currentLanguage == .traditionalChinese)
+            ? "Mac优化大师"
+            : "MacOptimizer"
+        NSApp.mainWindow?.title = localizedName
+        NSApp.mainMenu?.items.first?.title = localizedName
+    }
+}
+
+private struct ModuleContentLoadingView: View {
+    let module: AppModule
+    @ObservedObject private var loc = LocalizationManager.shared
+
+    var body: some View {
+        ZStack {
+            module.backgroundGradient
+
+            VStack(spacing: 12) {
+                ProgressView()
+                    .controlSize(.small)
+                    .tint(.white)
+                Text(loc.text(
+    simplifiedChinese: "正在加载…",
+    traditionalChinese: "正在加載…",
+    english: "Loading…",
+    japanese: "読み込み中…",
+    korean: "로드 중…",
+    russian: "Загрузка…"
+))
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.white.opacity(0.68))
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -206,15 +314,6 @@ class VideoLayerView: NSView {
     }
 }
 
-// 包装现有的 Uninstaller 视图
-struct UninstallerMainView: View {
-    @StateObject private var appScanner = AppScanner()
-    
-    var body: some View {
-        AppUninstallerView(appScanner: appScanner)
-    }
-}
-
 // 拆分出来的应用列表视图
 struct AppListView: View {
     let apps: [InstalledApp]
@@ -229,7 +328,14 @@ struct AppListView: View {
         VStack(spacing: 0) {
             // 头部工具栏
             HStack {
-                Text(loc.currentLanguage == .chinese ? "应用列表" : "App List")
+                Text(loc.text(
+    simplifiedChinese: "应用列表",
+    traditionalChinese: "應用程式列表",
+    english: "App List",
+    japanese: "アプリリスト",
+    korean: "앱 목록",
+    russian: "Список приложений"
+))
                     .font(.headline)
                     .foregroundColor(.white)
                 
@@ -261,7 +367,14 @@ struct AppListView: View {
                 Spacer()
                 ProgressView()
                     .scaleEffect(0.8)
-                Text(loc.currentLanguage == .chinese ? "扫描应用中..." : "Scanning apps...")
+                Text(loc.text(
+    simplifiedChinese: "扫描应用中...",
+    traditionalChinese: "掃描應用程式中...",
+    english: "Scanning apps...",
+    japanese: "アプリをスキャンしています...",
+    korean: "앱 검사 중...",
+    russian: "Сканирование приложений..."
+))
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .padding(.top, 8)
@@ -283,7 +396,14 @@ struct AppListView: View {
             
             // 底部统计
             HStack {
-                Text(loc.currentLanguage == .chinese ? "\(apps.count) 个应用" : "\(apps.count) apps")
+                Text(loc.text(
+    simplifiedChinese: "\(apps.count) 个应用",
+    traditionalChinese: "\(apps.count)個應用",
+    english: "\(apps.count) apps",
+    japanese: "アプリ",
+    korean: "\(apps.count) 앱",
+    russian: "\(apps.count) apps"
+))
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Spacer()
@@ -304,7 +424,14 @@ struct EmptySelectionView: View {
             Image(systemName: "app.square")
                 .font(.system(size: 64))
                 .foregroundColor(.white.opacity(0.1))
-            Text(loc.currentLanguage == .chinese ? "选择一个应用以查看详情" : "Select an app to view details")
+            Text(loc.text(
+    simplifiedChinese: "选择一个应用以查看详情",
+    traditionalChinese: "選擇一個應用程式以查看詳情",
+    english: "Select an app to view details",
+    japanese: "アプリを選択して詳細を表示",
+    korean: "세부 정보를 보려면 앱을 선택하세요",
+    russian: "Выберите приложение, чтобы посмотреть подробности"
+))
                 .font(.title3)
                 .foregroundColor(.white.opacity(0.3))
         }

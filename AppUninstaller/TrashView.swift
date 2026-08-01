@@ -46,6 +46,8 @@ class TrashScanner: ObservableObject {
     @Published var isCleaning = false 
     @Published var cleanedCount: Int = 0
     @Published var cleanedSize: Int64 = 0
+    @Published var failedDeletionCount: Int = 0
+    @Published var cleaningWasStopped = false
     
     // 计算选中的大小
     var selectedSize: Int64 {
@@ -74,6 +76,7 @@ class TrashScanner: ObservableObject {
     private let fileManager = FileManager.default
     let trashURL: URL
     private var shouldStop = false
+    private var shouldStopCleaning = false
     
     var formattedTotalSize: String {
         ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file)
@@ -94,6 +97,11 @@ class TrashScanner: ObservableObject {
         isScanning = false
         isStopped = true
     }
+
+    func stopCleaning() {
+        shouldStopCleaning = true
+        cleaningWasStopped = true
+    }
     
     func scan() async {
         await MainActor.run {
@@ -104,6 +112,9 @@ class TrashScanner: ObservableObject {
             totalSize = 0
             scannedItemCount = 0
             hasCompletedScan = false
+            isCleaning = false
+            cleanedCount = 0
+            cleanedSize = 0
             needsPermission = false
         }
         
@@ -114,7 +125,7 @@ class TrashScanner: ObservableObject {
         var hasAccess = false
         
         // 简单模拟一下扫描过程中的路径变化，提升用户体验
-        await MainActor.run { self.currentScanPath = "Preparing..." }
+        await MainActor.run { self.currentScanPath = "正在准备…" }
         try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s pre-delay
         
         do {
@@ -153,22 +164,21 @@ class TrashScanner: ObservableObject {
             print("Direct access failed: \(error)")
         }
         
-        // 如果直接访问失败，尝试使用 shell 命令
+        // Access to the user's Trash is protected by macOS. Do not fall back
+        // to a blocking Finder automation request: it can leave the scan
+        // indefinitely waiting for an off-screen permission prompt. The
+        // replica instead presents the same Full Disk Access result state as
+        // CleanMyMac and lets the user grant access explicitly.
         if !hasAccess && !shouldStop {
-            let result = await scanWithShell()
-            scannedItems = result.items
-            total = result.total
-            
-            // 如果 shell 也没有结果，说明需要权限
-            if scannedItems.isEmpty {
-                await MainActor.run {
-                    needsPermission = true
-                }
+            await MainActor.run {
+                needsPermission = true
             }
         }
         
-        let sortedItems = scannedItems.sorted { $0.size > $1.size }
-        let finalTotal = total
+        let sortedItems = scannedItems
+            .filter { ScanResultIgnoreStore.shouldInclude($0.url) }
+            .sorted { $0.size > $1.size }
+        let finalTotal = sortedItems.reduce(0) { $0 + $1.size }
         
         await MainActor.run {
             self.items = sortedItems
@@ -333,17 +343,25 @@ class TrashScanner: ObservableObject {
             self.isCleaning = true
             self.cleanedCount = 0
             self.cleanedSize = 0
+            self.failedDeletionCount = 0
+            self.cleaningWasStopped = false
+            self.shouldStopCleaning = false
         }
         
         var removedSize: Int64 = 0
+        var removedIDs = Set<UUID>()
+        var failedCount = 0
         
         for item in itemsToDelete {
+            if shouldStopCleaning { break }
+
             do {
                 // 尝试解锁文件 (如果是被锁定的)
                 try? fileManager.setAttributes([.immutable: false], ofItemAtPath: item.url.path)
                 
                 try fileManager.removeItem(at: item.url)
                 removedSize += item.size
+                removedIDs.insert(item.id)
                 await MainActor.run {
                     self.cleanedCount += 1
                     self.cleanedSize += item.size
@@ -352,19 +370,20 @@ class TrashScanner: ObservableObject {
                 try? await Task.sleep(nanoseconds: 100_000_000)
             } catch {
                 print("Failed to delete \(item.url.path): \(error)")
-                
-                // 二次尝试：如果是因为没有权限，尝试使用 chmod (仅对用户拥有的文件有效)
-                // 注意：沙盒应用限制较多，这里尽力而为
+                failedCount += 1
             }
         }
-        
+
+        let successfullyRemovedIDs = removedIDs
+        let deletionFailureCount = failedCount
+
         await MainActor.run {
-            // 只移除选中的项目（假设清理操作即视为移除，即使失败也不留在列表中困扰用户? 
-            // 或者只移除删除成功的？为了简单起见，且符合一般清理软件逻辑，点清理后通常会移除列表项，除非明确报错）
-            // 这里我们只保留未选中的项目
-            items = items.filter { !$0.isSelected }
+            // A permanent deletion is only reflected in the UI after the
+            // filesystem operation actually succeeds. Failed or unprocessed
+            // items remain visible and selectable for a later retry.
+            items.removeAll { successfullyRemovedIDs.contains($0.id) }
             totalSize = items.reduce(0) { $0 + $1.size }
-            
+            self.failedDeletionCount = deletionFailureCount
             self.isCleaning = false
             DiskSpaceManager.shared.updateDiskSpace()
             self.scannedItemCount = items.count 
@@ -385,6 +404,9 @@ class TrashScanner: ObservableObject {
         isCleaning = false
         cleanedCount = 0
         cleanedSize = 0
+        failedDeletionCount = 0
+        cleaningWasStopped = false
+        shouldStopCleaning = false
     }
     
     private func calculateSize(at url: URL) -> Int64 {
@@ -456,7 +478,7 @@ struct TrashView: View {
             }
             Button(loc.L("cancel"), role: .cancel) {}
         } message: {
-            Text(loc.currentLanguage == .chinese ? "此操作不可撤销，所有文件将被永久删除。" : "This cannot be undone. All files will be permanently deleted.")
+            Text(loc.text("此操作不可撤销，所有文件将被永久删除。", "This cannot be undone. All files will be permanently deleted."))
         }
     }
     
@@ -487,22 +509,20 @@ struct TrashView: View {
                 VStack(alignment: .leading, spacing: 30) {
                     // Branding Header
                     HStack(spacing: 8) {
-                        Text(loc.currentLanguage == .chinese ? "废纸篓清理" : "Trash Cleanup")
+                        Text(loc.text("废纸篓清理", "Trash Cleanup"))
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.white)
                         
                         // Trash Icon
                         HStack(spacing: 4) {
                             Image(systemName: "trash.circle.fill")
-                            Text(loc.currentLanguage == .chinese ? "全面清空" : "Complete Empty")
+                            Text(loc.text("全面清空", "Complete Empty"))
                                 .font(.system(size: 20, weight: .heavy))
                         }
                         .foregroundColor(.white)
                     }
                     
-                    Text(loc.currentLanguage == .chinese ? 
-                         "倾倒 Mac 上所有废纸篓，包括邮件和照片图库垃圾。\n上次清空时间：从未" :
-                         "Empty all Trash on Mac, including Mail and Photos.\nLast emptied: Never")
+                    Text(loc.text("倾倒 Mac 上所有废纸篓，包括邮件和照片图库垃圾。\n上次清空时间：从未", "Empty all Trash on Mac, including Mail and Photos.\nLast emptied: Never"))
                         .font(.system(size: 13))
                         .foregroundColor(.white.opacity(0.7))
                         .lineSpacing(4)
@@ -511,26 +531,26 @@ struct TrashView: View {
                     VStack(alignment: .leading, spacing: 24) {
                         featureRow(
                             icon: "trash.slash",
-                            title: loc.currentLanguage == .chinese ? "立即倾倒所有垃圾" : "Empty All Trash Immediately",
-                            subtitle: loc.currentLanguage == .chinese ? "无需浏览所有驱动器和应用查找它们的废纸篓。" : "No need to browse all drives and apps to find their trash."
+                            title: loc.text("立即倾倒所有垃圾", "Empty All Trash Immediately"),
+                            subtitle: loc.text("无需浏览所有驱动器和应用查找它们的废纸篓。", "No need to browse all drives and apps to find their trash.")
                         )
                         
                         featureRow(
                             icon: "exclamationmark.shield",
-                            title: loc.currentLanguage == .chinese ? "避免访达错误" : "Avoid Finder Errors",
-                            subtitle: loc.currentLanguage == .chinese ? "确保倾倒您的废纸篓，不管是否有任何问题。" : "Ensures your Trash is emptied regardless of any issues."
+                            title: loc.text("避免访达错误", "Avoid Finder Errors"),
+                            subtitle: loc.text("确保倾倒您的废纸篓，不管是否有任何问题。", "Ensures your Trash is emptied regardless of any issues.")
                         )
                         
                         featureRow(
                             icon: "mail.and.text.magnifyingglass",
-                            title: loc.currentLanguage == .chinese ? "包含邮件和照片" : "Include Mail & Photos",
-                            subtitle: loc.currentLanguage == .chinese ? "同时清理邮件应用和照片图库中的废纸篓。" : "Also clean trash from Mail app and Photos library."
+                            title: loc.text("包含邮件和照片", "Include Mail & Photos"),
+                            subtitle: loc.text("同时清理邮件应用和照片图库中的废纸篓。", "Also clean trash from Mail app and Photos library.")
                         )
                     }
                     
                     // Optional: View Items Button
                     Button(action: {}) {
-                        Text(loc.currentLanguage == .chinese ? "查看详细项目..." : "View Trash Items...")
+                        Text(loc.text("查看详细项目...", "View Trash Items..."))
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.black)
                             .padding(.horizontal, 16)
@@ -592,7 +612,14 @@ struct TrashView: View {
                             .frame(width: 74, height: 74)
                             .shadow(color: Color.black.opacity(0.3), radius: 10, y: 5)
                         
-                        Text(loc.currentLanguage == .chinese ? "扫描" : "Scan")
+                        Text(loc.text(
+    simplifiedChinese: "扫描",
+    traditionalChinese: "掃描",
+    english: "Scan",
+    japanese: "スキャン",
+    korean: "스캔",
+    russian: "Сканировать"
+))
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.white)
                     }
@@ -629,7 +656,7 @@ struct TrashView: View {
         VStack(spacing: 0) {
             // 顶部标题
             HStack {
-                Text(loc.currentLanguage == .chinese ? "废纸篓" : "Trash")
+                Text(loc.text("废纸篓", "Trash"))
                     .font(.title2)
                     .foregroundColor(.white)
             }
@@ -656,7 +683,7 @@ struct TrashView: View {
             
             // 状态文字 - Use fixed frame to avoid layout jitter
             VStack(spacing: 8) {
-                Text(loc.currentLanguage == .chinese ? "正在计算废纸篓文件夹的大小..." : "Calculating Trash size...")
+                Text(loc.text("正在计算废纸篓文件夹的大小...", "Calculating Trash size..."))
                     .font(.title) 
                     .foregroundColor(.white)
                 
@@ -668,7 +695,7 @@ struct TrashView: View {
                     .frame(height: 20) // Fixed text height
                     .padding(.horizontal, 40)
                 
-                Text(loc.currentLanguage == .chinese ? "系统废纸篓" : "System Trash")
+                Text(loc.text("系统废纸篓", "System Trash"))
                     .font(.caption)
                     .foregroundColor(.secondaryText)
             }
@@ -692,7 +719,14 @@ struct TrashView: View {
                     scanner.stopScan()
                 }) {
                     VStack(spacing: 2) {
-                        Text(loc.currentLanguage == .chinese ? "停止" : "Stop")
+                        Text(loc.text(
+    simplifiedChinese: "停止",
+    traditionalChinese: "停止",
+    english: "Stop",
+    japanese: "停止",
+    korean: "정지",
+    russian: "Остановить"
+))
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.white)
                     }
@@ -725,7 +759,7 @@ struct TrashView: View {
                 }) {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
-                        Text(loc.currentLanguage == .chinese ? "重新开始" : "Start Over")
+                        Text(loc.text("重新开始", "Start Over"))
                     }
                     .foregroundColor(.white.opacity(0.8))
                 }
@@ -733,7 +767,7 @@ struct TrashView: View {
                 
                 Spacer()
                 
-                Text(loc.currentLanguage == .chinese ? "废纸篓" : "Trash")
+                Text(loc.text("废纸篓", "Trash"))
                     .font(.title3)
                     .foregroundColor(.white)
                 
@@ -742,7 +776,14 @@ struct TrashView: View {
                 // Assistant placeholder
                  HStack {
                     Circle().fill(Color.white.opacity(0.2)).frame(width: 6, height: 6)
-                    Text(loc.currentLanguage == .chinese ? "助手" : "Assistant")
+                    Text(loc.text(
+    simplifiedChinese: "助手",
+    traditionalChinese: "助理",
+    english: "Assistant",
+    japanese: "アシスタント",
+    korean: "협조자",
+    russian: "Ассистент"
+))
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
@@ -772,7 +813,7 @@ struct TrashView: View {
                 
                 // Text Info
                 VStack(alignment: .leading, spacing: 16) {
-                    Text(loc.currentLanguage == .chinese ? "扫描完毕" : "Scan Complete")
+                    Text(loc.text("扫描完毕", "Scan Complete"))
                         .font(.system(size: 32, weight: .bold))
                         .foregroundColor(.white)
                     
@@ -787,13 +828,13 @@ struct TrashView: View {
                     }
                     
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(loc.currentLanguage == .chinese ? "包括" : "Including")
+                        Text(loc.text("包括", "Including"))
                             .font(.system(size: 14))
                             .foregroundColor(.white.opacity(0.6))
                         
                         HStack(spacing: 8) {
                             Circle().fill(Color.white.opacity(0.6)).frame(width: 4, height: 4)
-                            Text(loc.currentLanguage == .chinese ? "mac 上的废纸篓" : "Trash on mac")
+                            Text(loc.text("mac 上的废纸篓", "Trash on mac"))
                                 .font(.system(size: 14))
                                 .foregroundColor(.white.opacity(0.8))
                         }
@@ -812,7 +853,7 @@ struct TrashView: View {
                     .buttonStyle(.plain)
                     
                     HStack {
-                         Text(loc.currentLanguage == .chinese ? "共发现" : "Total found")
+                         Text(loc.text("共发现", "Total found"))
                          Text(scanner.formattedTotalSize)
                              .foregroundColor(.white)
                     }
@@ -838,7 +879,7 @@ struct TrashView: View {
                              .fill(Color.white.opacity(0.2))
                              .frame(width: 80, height: 80)
                         
-                        Text(loc.currentLanguage == .chinese ? "倾倒" : "Clean")
+                        Text(loc.text("倾倒", "Clean"))
                              .font(.system(size: 18, weight: .medium))
                              .foregroundColor(.white)
                     }
@@ -859,7 +900,7 @@ struct TrashView: View {
                 }) {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
-                        Text(loc.currentLanguage == .chinese ? "重新开始" : "Start Over")
+                        Text(loc.text("重新开始", "Start Over"))
                     }
                     .foregroundColor(.white.opacity(0.8))
                 }
@@ -912,14 +953,14 @@ struct TrashView: View {
                     .foregroundColor(.green)
                     .font(.title)
                 
-                Text(loc.currentLanguage == .chinese ? "非常干净！" : "Very Clean!")
+                Text(loc.text("非常干净！", "Very Clean!"))
                     .font(.title)
                     .bold()
                     .foregroundColor(.white)
             }
             .padding(.bottom, 8)
             
-            Text(loc.currentLanguage == .chinese ? "任何废纸篓中都没有文件。" : "No files found in any Trash bin.")
+            Text(loc.text("任何废纸篓中都没有文件。", "No files found in any Trash bin."))
                 .font(.body)
                 .foregroundColor(.white.opacity(0.8))
             
@@ -927,7 +968,14 @@ struct TrashView: View {
             
             // Back/Rescan Button
              CircularActionButton(
-                 title: loc.currentLanguage == .chinese ? "返回" : "Back",
+                 title: loc.text(
+    simplifiedChinese: "返回",
+    traditionalChinese: "返回",
+    english: "Back",
+    japanese: "戻る",
+    korean: "뒤로",
+    russian: "Назад"
+),
                  gradient: CircularActionButton.blueGradient,
                  action: {
                      scanner.reset()
@@ -967,11 +1015,11 @@ struct TrashView: View {
             }
             .padding(.bottom, 40)
             
-            Text(loc.currentLanguage == .chinese ? "正在清理..." : "Cleaning...")
+            Text(loc.text("正在清理...", "Cleaning..."))
                 .font(.title3)
                 .foregroundColor(.white)
             
-            Text(loc.currentLanguage == .chinese ? "已清理: \(scanner.cleanedCount) 个文件" : "Cleaned: \(scanner.cleanedCount) items")
+            Text(loc.text("已清理: \(scanner.cleanedCount) 个文件", "Cleaned: \(scanner.cleanedCount) items"))
                 .foregroundColor(.secondaryText)
                 .padding(.top, 8)
             
@@ -979,7 +1027,7 @@ struct TrashView: View {
             
             // 占位按钮
              CircularActionButton(
-                 title: loc.currentLanguage == .chinese ? "清理中" : "Cleaning",
+                 title: loc.text("清理中", "Cleaning"),
                  gradient: CircularActionButton.grayGradient,
                  action: {}
              )
@@ -999,7 +1047,14 @@ struct TrashView: View {
                 }) {
                     HStack(spacing: 4) {
                         Image(systemName: "arrow.left")
-                        Text(loc.currentLanguage == .chinese ? "返回" : "Back")
+                        Text(loc.text(
+    simplifiedChinese: "返回",
+    traditionalChinese: "返回",
+    english: "Back",
+    japanese: "戻る",
+    korean: "뒤로",
+    russian: "Назад"
+))
                     }
                     .foregroundColor(.secondaryText)
                 }
@@ -1035,12 +1090,12 @@ struct TrashView: View {
             }
             .padding(.bottom, 40)
             
-            Text(loc.currentLanguage == .chinese ? "清理完成" : "Cleanup Complete")
+            Text(loc.text("清理完成", "Cleanup Complete"))
                 .font(.title)
                 .bold()
                 .foregroundColor(.white)
             
-            Text(loc.currentLanguage == .chinese ? "共释放 \(ByteCountFormatter.string(fromByteCount: scanner.cleanedSize, countStyle: .file)) 空间" : "Freed \(ByteCountFormatter.string(fromByteCount: scanner.cleanedSize, countStyle: .file)) space")
+            Text(loc.text("共释放 \(ByteCountFormatter.string(fromByteCount: scanner.cleanedSize, countStyle: .file)) 空间", "Freed \(ByteCountFormatter.string(fromByteCount: scanner.cleanedSize, countStyle: .file)) space"))
                 .foregroundColor(.secondaryText)
                 .padding(.top, 8)
             
@@ -1048,7 +1103,14 @@ struct TrashView: View {
             
             // 完成按钮
              CircularActionButton(
-                 title: loc.currentLanguage == .chinese ? "完成" : "Done",
+                 title: loc.text(
+    simplifiedChinese: "完成",
+    traditionalChinese: "完成",
+    english: "Done",
+    japanese: "完了",
+    korean: "완료",
+    russian: "Готово"
+),
                  gradient: CircularActionButton.blueGradient,
                  action: {
                      scanner.reset()
@@ -1071,7 +1133,7 @@ struct TrashDirectoryView: View {
     var body: some View {
         List {
             if items.isEmpty {
-                Text(loc.currentLanguage == .chinese ? "空文件夹" : "Empty Folder")
+                Text(loc.text("空文件夹", "Empty Folder"))
                     .foregroundColor(.secondaryText)
                     .padding()
             } else {
@@ -1103,22 +1165,17 @@ struct TrashDirectoryView: View {
                 TrashItemRow(item: item)
             }
         }
-        .contextMenu {
-            Button {
-                NSWorkspace.shared.activateFileViewerSelecting([item.url])
-            } label: {
-                Label(loc.L("show_in_finder"), systemImage: "folder")
-            }
-            
-            Divider()
-            
-            Button(role: .destructive) {
-                try? FileManager.default.removeItem(at: item.url)
-                items = scanner.scanDirectory(url)
-            } label: {
-                Label(loc.currentLanguage == .chinese ? "立即删除" : "Delete Immediately", systemImage: "trash")
-            }
-        }
+        .scanResultContextMenu(
+            isSelected: item.isSelected,
+            displayName: item.name,
+            url: item.url,
+            onToggleSelection: {
+                if let index = items.firstIndex(where: { $0.id == item.id }) {
+                    items[index].isSelected.toggle()
+                }
+            },
+            onIgnore: { items.removeAll { $0.id == item.id } }
+        )
     }
 }
 

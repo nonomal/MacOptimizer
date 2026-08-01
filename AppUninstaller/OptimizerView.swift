@@ -76,7 +76,11 @@ enum OptimizerTask: String, CaseIterable, Identifiable {
             case .launchAgents: return "启动代理"
             case .hungApps: return "挂起的应用程序"
             }
-        case .english: return englishTitle
+        case .traditionalChinese:
+            let simplified = title(for: .chinese)
+            return simplified.applyingTransform(StringTransform("Hans-Hant"), reverse: false) ?? simplified
+        case .english, .japanese, .korean, .russian:
+            return englishTitle
         }
     }
     
@@ -92,7 +96,11 @@ enum OptimizerTask: String, CaseIterable, Identifiable {
             case .launchAgents: return "通常，这些是其他软件产品的小辅助应用程序，可以扩展其主产品的功能。但是在一些情况下，您可以考虑移除或禁用它们。"
             case .hungApps: return "如果应用程序停止响应，您可以强制将其关闭以释放资源。"
             }
-        case .english: return englishDescription
+        case .traditionalChinese:
+            let simplified = description(for: .chinese)
+            return simplified.applyingTransform(StringTransform("Hans-Hant"), reverse: false) ?? simplified
+        case .english, .japanese, .korean, .russian:
+            return englishDescription
         }
     }
     
@@ -113,7 +121,7 @@ struct OptimizerProcessItem: Identifiable, Equatable {
     let name: String
     let icon: NSImage
     let usageDescription: String // e.g. "15% CPU" or "500 MB"
-    var isSelected: Bool = true // 默认全选
+    var isSelected: Bool = false
 }
 
 struct LaunchAgentItem: Identifiable, Equatable {
@@ -123,18 +131,19 @@ struct LaunchAgentItem: Identifiable, Equatable {
     let label: String
     let icon: NSImage
     var isEnabled: Bool // Status
-    var isSelected: Bool = true // 默认全选
+    var isSelected: Bool = false
 }
 
 // MARK: - Service
 class OptimizerService: ObservableObject {
-    @Published var selectedTask: OptimizerTask = .networkOptimize
-    @Published var selectedTasks: Set<OptimizerTask> = Set(OptimizerTask.allCases) // 默认全选
+    @Published var selectedTask: OptimizerTask = .heavyConsumers
+    @Published var selectedTasks: Set<OptimizerTask> = []
     @Published var heavyProcesses: [OptimizerProcessItem] = []
     @Published var launchAgents: [LaunchAgentItem] = []
     @Published var hungApps: [OptimizerProcessItem] = []
     @Published var isScanning = false
     @Published var isExecuting = false
+    @Published private(set) var executionWasCancelled = false
     
     // 执行进度跟踪
     @Published var executingTask: OptimizerTask? = nil
@@ -182,6 +191,7 @@ class OptimizerService: ObservableObject {
     func executeAllSelectedTasks() async {
         await MainActor.run {
             isExecuting = true
+            executionWasCancelled = false
             completedTasks.removeAll()
             executionProgress = 0.0
             showResults = false
@@ -191,12 +201,15 @@ class OptimizerService: ObservableObject {
         let totalTasks = tasksToExecute.count
         
         for (index, task) in tasksToExecute.enumerated() {
+            if executionWasCancelled || Task.isCancelled { break }
             await MainActor.run {
                 executingTask = task
                 executionProgress = Double(index) / Double(totalTasks)
             }
             
             await executeTask(task)
+
+            if executionWasCancelled || Task.isCancelled { break }
             
             await MainActor.run {
                 _ = completedTasks.insert(task)
@@ -205,10 +218,18 @@ class OptimizerService: ObservableObject {
         
         await MainActor.run {
             executingTask = nil
-            executionProgress = 1.0
             isExecuting = false
-            showResults = true
+            if executionWasCancelled {
+                showResults = false
+            } else {
+                executionProgress = 1.0
+                showResults = true
+            }
         }
+    }
+
+    func cancelExecution() {
+        executionWasCancelled = true
     }
     
     // 执行单个任务
@@ -775,7 +796,14 @@ struct OptimizerView: View {
                         Button(action: { viewState = 0 }) {
                             HStack(spacing: 4) {
                                 Image(systemName: "chevron.left")
-                                Text(loc.currentLanguage == .chinese ? "简介" : "Intro")
+                                Text(loc.text(
+    simplifiedChinese: "简介",
+    traditionalChinese: "簡介",
+    english: "Intro",
+    japanese: "イントロ",
+    korean: "Intro",
+    russian: "Вводная"
+))
                             }
                             .foregroundColor(.white.opacity(0.7))
                             .font(.system(size: 13))
@@ -815,7 +843,7 @@ struct OptimizerView: View {
                     VStack(alignment: .leading, spacing: 0) {
                         // Header
                         HStack {
-                            Text(loc.currentLanguage == .chinese ? "优化" : "Optimization")
+                            Text(loc.text("优化", "Optimization"))
                                 .font(.system(size: 11))
                                 .foregroundColor(.white.opacity(0.6))
                             Spacer()
@@ -825,7 +853,14 @@ struct OptimizerView: View {
                                 Image(systemName: "magnifyingglass")
                                     .font(.system(size: 10))
                                     .foregroundColor(.white.opacity(0.5))
-                                Text(loc.currentLanguage == .chinese ? "搜索" : "Search")
+                                Text(loc.text(
+    simplifiedChinese: "搜索",
+    traditionalChinese: "搜尋",
+    english: "Search",
+    japanese: "検索する",
+    korean: "검색",
+    russian: "Поиск"
+))
                                     .font(.system(size: 10))
                                     .foregroundColor(.white.opacity(0.3))
                                 Spacer()
@@ -874,11 +909,11 @@ struct OptimizerView: View {
                                         
                                         // 提示信息
                                         VStack(spacing: 8) {
-                                            Text(loc.currentLanguage == .chinese ? "点击下方按钮开始优化" : "Click button below to start optimization")
+                                            Text(loc.text("点击下方按钮开始优化", "Click button below to start optimization"))
                                                 .font(.system(size: 14, weight: .medium))
                                                 .foregroundColor(.white.opacity(0.7))
                                             
-                                            Text(loc.currentLanguage == .chinese ? "此操作是安全的，可随时执行" : "This operation is safe and can be run anytime")
+                                            Text(loc.text("此操作是安全的，可随时执行", "This operation is safe and can be run anytime"))
                                                 .font(.system(size: 12))
                                                 .foregroundColor(.white.opacity(0.5))
                                         }
@@ -894,7 +929,7 @@ struct OptimizerView: View {
                                     }
                                 } else if service.selectedTask == .hungApps {
                                     if service.hungApps.isEmpty {
-                                        Text(loc.currentLanguage == .chinese ? "未发现挂起的应用程序" : "No hung applications found")
+                                        Text(loc.text("未发现挂起的应用程序", "No hung applications found"))
                                             .foregroundColor(.white.opacity(0.5))
                                             .padding(.top, 40)
                                             .frame(maxWidth: .infinity, alignment: .center)
@@ -939,7 +974,7 @@ struct OptimizerView: View {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                     } else {
-                        Text(loc.currentLanguage == .chinese ? "执行" : "Run")
+                        Text(loc.text("执行", "Run"))
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.white)
                     }
@@ -959,7 +994,7 @@ struct OptimizerView: View {
             Spacer()
             
             // 标题
-            Text(loc.currentLanguage == .chinese ? "正在执行优化任务..." : "Executing Optimization Tasks...")
+            Text(loc.text("正在执行优化任务...", "Executing Optimization Tasks..."))
                 .font(.title2)
                 .foregroundColor(.white)
             
@@ -1032,7 +1067,7 @@ struct OptimizerView: View {
                     .foregroundColor(.green)
             }
             
-            Text(loc.currentLanguage == .chinese ? "优化完成！" : "Optimization Complete!")
+            Text(loc.text("优化完成！", "Optimization Complete!"))
                 .font(.title)
                 .bold()
                 .foregroundColor(.white)
@@ -1077,7 +1112,14 @@ struct OptimizerView: View {
                 service.completedTasks.removeAll()
                 viewState = 1
             }) {
-                Text(loc.currentLanguage == .chinese ? "完成" : "Done")
+                Text(loc.text(
+    simplifiedChinese: "完成",
+    traditionalChinese: "完成",
+    english: "Done",
+    japanese: "完了",
+    korean: "완료",
+    russian: "Готово"
+))
                     .font(.headline)
                     .foregroundColor(.white)
                     .padding(.horizontal, 40)
@@ -1250,7 +1292,7 @@ struct LaunchAgentRow: View {
                 Circle()
                     .fill(item.isEnabled ? Color.green : Color.gray)
                     .frame(width: 6, height: 6)
-                Text(item.isEnabled ? (loc.currentLanguage == .chinese ? "已启用" : "Enabled") : (loc.currentLanguage == .chinese ? "已禁用" : "Disabled"))
+                Text(item.isEnabled ? (loc.text("已启用", "Enabled")) : (loc.text("已禁用", "Disabled")))
                     .font(.system(size: 10))
                     .foregroundColor(.white.opacity(0.7))
             }
@@ -1272,22 +1314,20 @@ struct OptimizerLandingView: View {
                 VStack(alignment: .leading, spacing: 30) {
                     // Branding Header
                     HStack(spacing: 8) {
-                        Text(loc.currentLanguage == .chinese ? "系统优化" : "System Optimization")
+                        Text(loc.text("系统优化", "System Optimization"))
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.white)
                         
                         // Optimization Icon
                         HStack(spacing: 4) {
                             Image(systemName: "slider.horizontal.3")
-                            Text(loc.currentLanguage == .chinese ? "全面提速" : "Full Boost")
+                            Text(loc.text("全面提速", "Full Boost"))
                                 .font(.system(size: 20, weight: .heavy))
                         }
                         .foregroundColor(.white)
                     }
                     
-                    Text(loc.currentLanguage == .chinese ? 
-                         "通过控制 Mac 上运行的应用，提高它的输出。\n上次优化时间：从未" :
-                         "Improve output by controlling apps running on your Mac.\nLast optimized: Never")
+                    Text(loc.text("通过控制 Mac 上运行的应用，提高它的输出。\n上次优化时间：从未", "Improve output by controlling apps running on your Mac.\nLast optimized: Never"))
                         .font(.system(size: 13))
                         .foregroundColor(.white.opacity(0.7))
                         .lineSpacing(4)
@@ -1296,26 +1336,26 @@ struct OptimizerLandingView: View {
                     VStack(alignment: .leading, spacing: 24) {
                         featureRow(
                             icon: "light.beacon.max.fill",
-                            title: loc.currentLanguage == .chinese ? "管理启动代理" : "Manage Launch Agents",
-                            desc: loc.currentLanguage == .chinese ? "控制您的 Mac 支持的应用。" : "Control applications supported by your Mac."
+                            title: loc.text("管理启动代理", "Manage Launch Agents"),
+                            desc: loc.text("控制您的 Mac 支持的应用。", "Control applications supported by your Mac.")
                         )
                         
                         featureRow(
                             icon: "waveform.path.ecg",
-                            title: loc.currentLanguage == .chinese ? "控制运行的应用" : "Control Running Apps",
-                            desc: loc.currentLanguage == .chinese ? "管理所有登录项，仅运行真正需要的项目。" : "Manage login items, running only what you truly need."
+                            title: loc.text("控制运行的应用", "Control Running Apps"),
+                            desc: loc.text("管理所有登录项，仅运行真正需要的项目。", "Manage login items, running only what you truly need.")
                         )
                         
                         featureRow(
                             icon: "chart.xyaxis.line",
-                            title: loc.currentLanguage == .chinese ? "占用资源项目" : "Heavy Consumers",
-                            desc: loc.currentLanguage == .chinese ? "找出并关闭占用太多资源的进程。" : "Find and quit processes using too many resources."
+                            title: loc.text("占用资源项目", "Heavy Consumers"),
+                            desc: loc.text("找出并关闭占用太多资源的进程。", "Find and quit processes using too many resources.")
                         )
                     }
                     
                     // View Items Button
                     Button(action: { viewState = 1 }) {
-                        Text(loc.currentLanguage == .chinese ? "查看项目..." : "View Items...")
+                        Text(loc.text("查看项目...", "View Items..."))
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.black)
                             .padding(.horizontal, 16)
@@ -1397,7 +1437,7 @@ struct OptimizerLandingView: View {
                             .frame(width: 74, height: 74)
                             .shadow(color: Color.black.opacity(0.3), radius: 10, y: 5)
                         
-                        Text(loc.currentLanguage == .chinese ? "开始" : "Start")
+                        Text(loc.text("开始", "Start"))
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.white)
                     }
@@ -1442,13 +1482,11 @@ struct MemoryConfirmationDialog: View {
             // Header
             HStack {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(loc.currentLanguage == .chinese ? "内存优化" : "Memory Optimization")
+                    Text(loc.text("内存优化", "Memory Optimization"))
                         .font(.system(size: 18, weight: .bold))
                         .foregroundColor(.primary)
                     
-                    Text(loc.currentLanguage == .chinese ? 
-                         "发现以下应用占用大量内存，是否需要关闭以释放内存？" : 
-                         "The following apps are using high memory. Close them to free up RAM?")
+                    Text(loc.text("发现以下应用占用大量内存，是否需要关闭以释放内存？", "The following apps are using high memory. Close them to free up RAM?"))
                         .font(.system(size: 13))
                         .foregroundColor(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -1507,7 +1545,7 @@ struct MemoryConfirmationDialog: View {
                                     .font(.system(size: 13, weight: .medium))
                                     .foregroundColor(.primary)
                                 
-                                Text(loc.currentLanguage == .chinese ? "内存占用: \(app.usageDescription)" : "Memory: \(app.usageDescription)")
+                                Text(loc.text("内存占用: \(app.usageDescription)", "Memory: \(app.usageDescription)"))
                                     .font(.system(size: 11))
                                     .foregroundColor(.secondary)
                             }
@@ -1541,8 +1579,15 @@ struct MemoryConfirmationDialog: View {
                     }
                 }) {
                     Text(service.highMemoryApps.allSatisfy { $0.isSelected } ? 
-                         (loc.currentLanguage == .chinese ? "取消全选" : "Deselect All") : 
-                         (loc.currentLanguage == .chinese ? "全选" : "Select All"))
+                         (loc.text("取消全选", "Deselect All")) : 
+                         (loc.text(
+    simplifiedChinese: "全选",
+    traditionalChinese: "全選",
+    english: "Select All",
+    japanese: "すべてを選択",
+    korean: "전체선택",
+    russian: "Выбрать все"
+)))
                         .font(.system(size: 13))
                         .foregroundColor(.blue)
                 }
@@ -1556,7 +1601,7 @@ struct MemoryConfirmationDialog: View {
                     service.showMemoryConfirmAlert = false
                     dismiss()
                 }) {
-                    Text(loc.currentLanguage == .chinese ? "忽略" : "Ignore")
+                    Text(loc.text("忽略", "Ignore"))
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 20)
@@ -1573,7 +1618,7 @@ struct MemoryConfirmationDialog: View {
                         dismiss()
                     }
                 }) {
-                    Text(loc.currentLanguage == .chinese ? "关闭应用" : "Close Apps")
+                    Text(loc.text("关闭应用", "Close Apps"))
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.white)
                         .padding(.horizontal, 20)
@@ -1603,13 +1648,11 @@ struct BootOptimizationDialog: View {
             // Header
             HStack {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(loc.currentLanguage == .chinese ? "启动加速" : "Boot Optimization")
+                    Text(loc.text("启动加速", "Boot Optimization"))
                         .font(.system(size: 18, weight: .bold))
                         .foregroundColor(.primary)
                     
-                    Text(loc.currentLanguage == .chinese ? 
-                         "以下启动代理将被禁用以加快系统启动速度。请谨慎选择，禁用必要的启动项可能导致某些应用功能异常。" : 
-                         "The following launch agents will be disabled to speed up boot time. Choose carefully - disabling essential items may affect app functionality.")
+                    Text(loc.text("以下启动代理将被禁用以加快系统启动速度。请谨慎选择，禁用必要的启动项可能导致某些应用功能异常。", "The following launch agents will be disabled to speed up boot time. Choose carefully - disabling essential items may affect app functionality."))
                         .font(.system(size: 13))
                         .foregroundColor(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -1639,9 +1682,7 @@ struct BootOptimizationDialog: View {
                     .foregroundColor(.orange)
                     .font(.system(size: 16))
                 
-                Text(loc.currentLanguage == .chinese ? 
-                     "建议仅禁用您确认不需要的启动项" : 
-                     "Only disable launch agents you're sure you don't need")
+                Text(loc.text("建议仅禁用您确认不需要的启动项", "Only disable launch agents you're sure you don't need"))
                     .font(.system(size: 12))
                     .foregroundColor(.orange)
                 
@@ -1701,8 +1742,8 @@ struct BootOptimizationDialog: View {
                                     .fill(agent.isEnabled ? Color.green : Color.gray)
                                     .frame(width: 6, height: 6)
                                 Text(agent.isEnabled ? 
-                                     (loc.currentLanguage == .chinese ? "已启用" : "Enabled") : 
-                                     (loc.currentLanguage == .chinese ? "已禁用" : "Disabled"))
+                                     (loc.text("已启用", "Enabled")) : 
+                                     (loc.text("已禁用", "Disabled")))
                                     .font(.system(size: 10))
                                     .foregroundColor(.secondary)
                             }
@@ -1734,8 +1775,15 @@ struct BootOptimizationDialog: View {
                     }
                 }) {
                     Text(service.bootAgentsToDisable.allSatisfy { $0.isSelected } ? 
-                         (loc.currentLanguage == .chinese ? "取消全选" : "Deselect All") : 
-                         (loc.currentLanguage == .chinese ? "全选" : "Select All"))
+                         (loc.text("取消全选", "Deselect All")) : 
+                         (loc.text(
+    simplifiedChinese: "全选",
+    traditionalChinese: "全選",
+    english: "Select All",
+    japanese: "すべてを選択",
+    korean: "전체선택",
+    russian: "Выбрать все"
+)))
                         .font(.system(size: 13))
                         .foregroundColor(.blue)
                 }
@@ -1749,7 +1797,7 @@ struct BootOptimizationDialog: View {
                     service.showBootConfirmAlert = false
                     dismiss()
                 }) {
-                    Text(loc.currentLanguage == .chinese ? "跳过" : "Skip")
+                    Text(loc.text("跳过", "Skip"))
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 20)
@@ -1766,7 +1814,7 @@ struct BootOptimizationDialog: View {
                         dismiss()
                     }
                 }) {
-                    Text(loc.currentLanguage == .chinese ? "禁用选中项" : "Disable Selected")
+                    Text(loc.text("禁用选中项", "Disable Selected"))
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.white)
                         .padding(.horizontal, 20)

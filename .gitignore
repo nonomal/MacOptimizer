@@ -25,3 +25,4 @@ dist/
 # Swift Package Manager
 .build/
 Packages/
+.strict-localization-cache.json

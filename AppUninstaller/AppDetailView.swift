@@ -89,7 +89,14 @@ struct AppDetailView: View {
                     HStack(spacing: 12) {
                         StatBadge(
                             icon: "internaldrive.fill",
-                            label: loc.currentLanguage == .chinese ? "应用大小" : "App Size",
+                            label: loc.text(
+    simplifiedChinese: "应用大小",
+    traditionalChinese: "應用大小",
+    english: "App Size",
+    japanese: "アプリサイズ",
+    korean: "앱 크기",
+    russian: "Размер приложения"
+),
                             value: app.formattedSize,
                             color: .uninstallerStart
                         )
@@ -98,13 +105,27 @@ struct AppDetailView: View {
                             StatBadge(
                                 icon: "doc.on.doc.fill",
                                 label: loc.L("residual_files"),
-                                value: loc.currentLanguage == .chinese ? "\(app.residualFiles.count) 个" : "\(app.residualFiles.count)",
+                                value: loc.text(
+    simplifiedChinese: "\(app.residualFiles.count) 个",
+    traditionalChinese: "個",
+    english: "\(app.residualFiles.count)",
+    japanese: "\(app.residualFiles.count)",
+    korean: "\(app.residualFiles.count)",
+    russian: "\(app.residualFiles.count)"
+),
                                 color: .warning
                             )
                             
                             StatBadge(
                                 icon: "trash.fill",
-                                label: loc.currentLanguage == .chinese ? "可清理" : "Cleanable",
+                                label: loc.text(
+    simplifiedChinese: "可清理",
+    traditionalChinese: "可清理",
+    english: "Cleanable",
+    japanese: "清掃可能",
+    korean: "청소 가능",
+    russian: "очищаемый"
+),
                                 value: app.formattedResidualSize,
                                 color: .danger
                             )
@@ -139,7 +160,14 @@ struct AppDetailView: View {
                     .scaleEffect(1.4)
             }
             
-            Text(loc.currentLanguage == .chinese ? "正在扫描残留文件..." : "Scanning residual files...")
+            Text(loc.text(
+    simplifiedChinese: "正在扫描残留文件...",
+    traditionalChinese: "正在掃描殘留檔案...",
+    english: "Scanning residual files...",
+    japanese: "残りのファイルをスキャンしています...",
+    korean: "잔여 파일 검색 중...",
+    russian: "Сканирование остаточных файлов..."
+))
                 .font(.system(size: 15, weight: .medium))
                 .foregroundColor(.secondaryText)
             
@@ -163,11 +191,25 @@ struct AppDetailView: View {
             }
             
             VStack(spacing: 8) {
-                Text(loc.currentLanguage == .chinese ? "太棒了！" : "Excellent!")
+                Text(loc.text(
+    simplifiedChinese: "太棒了！",
+    traditionalChinese: "太棒了！",
+    english: "Excellent!",
+    japanese: "エクセレント！",
+    korean: "매우 훌륭!",
+    russian: "Отлично!"
+))
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(.primaryText)
                 
-                Text(loc.currentLanguage == .chinese ? "此应用没有检测到残留文件" : "No residual files detected for this app")
+                Text(loc.text(
+    simplifiedChinese: "此应用没有检测到残留文件",
+    traditionalChinese: "此應用沒有偵測到殘留文件",
+    english: "No residual files detected for this app",
+    japanese: "このアプリの残りのファイルは検出されませんでした",
+    korean: "이 앱에 대해 감지된 잔여 파일이 없습니다",
+    russian: "Для этого приложения не обнаружено остаточных файлов"
+))
                     .font(.system(size: 14))
                     .foregroundColor(.secondaryText)
             }
@@ -195,7 +237,14 @@ struct AppDetailView: View {
                     Text("\(selectedFilesCount)")
                         .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(GradientStyles.uninstaller)
-                    Text(loc.currentLanguage == .chinese ? "/ \(app.residualFiles.count) 已选择" : "/ \(app.residualFiles.count) selected")
+                    Text(loc.text(
+    simplifiedChinese: "/ \(app.residualFiles.count) 已选择",
+    traditionalChinese: "/\(app.residualFiles.count)已選擇",
+    english: "/ \(app.residualFiles.count) selected",
+    japanese: "選択",
+    korean: "/\(app.residualFiles.count) selected",
+    russian: "/ \(app.residualFiles.count) выбрано"
+))
                         .font(.system(size: 12))
                         .foregroundColor(.tertiaryText)
                 }
@@ -237,7 +286,14 @@ struct AppDetailView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "app.fill")
                                 .font(.system(size: 11))
-                            Text(loc.currentLanguage == .chinese ? "包含应用本体" : "Include App")
+                            Text(loc.text(
+    simplifiedChinese: "包含应用本体",
+    traditionalChinese: "包含應用本體",
+    english: "Include App",
+    japanese: "アプリを含める",
+    korean: "앱 포함",
+    russian: "Включить приложение"
+))
                                 .font(.system(size: 13))
                         }
                         .foregroundColor(.primaryText.opacity(0.85))
@@ -248,7 +304,14 @@ struct AppDetailView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "trash")
                                 .font(.system(size: 11))
-                            Text(loc.currentLanguage == .chinese ? "移至废纸篓（可恢复）" : "Move to Trash (Recoverable)")
+                            Text(loc.text(
+    simplifiedChinese: "移至废纸篓（可恢复）",
+    traditionalChinese: "移至廢紙簍（可恢復）",
+    english: "Move to Trash (Recoverable)",
+    japanese: "ゴミ箱に移動（回復可能）",
+    korean: "휴지통으로 이동 (복구 가능)",
+    russian: "Переместить в корзину (восстанавливаемый)"
+))
                                 .font(.system(size: 13))
                         }
                         .foregroundColor(.primaryText.opacity(0.85))
@@ -260,7 +323,14 @@ struct AppDetailView: View {
                 
                 // 删除统计
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text(loc.currentLanguage == .chinese ? "将清理" : "To Clean")
+                    Text(loc.text(
+    simplifiedChinese: "将清理",
+    traditionalChinese: "將清理",
+    english: "To Clean",
+    japanese: "クリーンアップ方法",
+    korean: "청소 방법:",
+    russian: "для чистки"
+))
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.tertiaryText)
                     
@@ -358,7 +428,14 @@ struct FileTypeSection: View {
         case .crashReports:
             return loc.L("crash_reports")
         case .developer:
-            return loc.currentLanguage == .chinese ? "开发数据" : "Developer Data"
+            return loc.text(
+    simplifiedChinese: "开发数据",
+    traditionalChinese: "開發數據",
+    english: "Developer Data",
+    japanese: "デベロッパーデータ",
+    korean: "개발자 데이터",
+    russian: "Данные разработчика:"
+)
         }
     }
     
@@ -471,5 +548,11 @@ struct ResidualFileRow: View {
                 isHovering = hovering
             }
         }
+        .scanResultContextMenu(
+            isSelected: file.isSelected,
+            displayName: file.fileName,
+            url: file.path,
+            onToggleSelection: { file.isSelected.toggle() }
+        )
     }
 }

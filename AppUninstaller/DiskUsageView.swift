@@ -13,7 +13,7 @@ struct DiskUsageView: View {
                 
                 Spacer()
                 
-                Text(loc.currentLanguage == .chinese ? "\(diskManager.formattedFree) 可用 / 共 \(diskManager.formattedTotal)" : "\(diskManager.formattedFree) Free / \(diskManager.formattedTotal)")
+                Text(loc.text("\(diskManager.formattedFree) 可用 / 共 \(diskManager.formattedTotal)", "\(diskManager.formattedFree) Free / \(diskManager.formattedTotal)"))
                     .font(.system(size: 11))
                     .foregroundColor(.secondaryText)
             }

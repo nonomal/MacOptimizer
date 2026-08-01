@@ -91,15 +91,15 @@ struct PrivacyView: View {
                 selectFirstAvailableCategory()
             }
         }
-        .alert(loc.currentLanguage == .chinese ? "关闭浏览器" : "Close Browsers", isPresented: $showingCloseBrowserAlert) {
-            Button(loc.currentLanguage == .chinese ? "关闭并清理" : "Close and Clean", role: .destructive) {
+        .alert(loc.text("关闭浏览器", "Close Browsers"), isPresented: $showingCloseBrowserAlert) {
+            Button(loc.text("关闭并清理", "Close and Clean"), role: .destructive) {
                 Task {
                     await performClean(closeBrowsers: true)
                 }
             }
             Button(loc.L("cancel"), role: .cancel) { }
         } message: {
-            Text(loc.currentLanguage == .chinese ? "检测到浏览器正在运行，清理前需要将其关闭以确保数据被彻底清除。" : "Browsers are running. They need to be closed to ensure data is completely removed.")
+            Text(loc.text("检测到浏览器正在运行，清理前需要将其关闭以确保数据被彻底清除。", "Browsers are running. They need to be closed to ensure data is completely removed."))
         }
     }
     
@@ -137,11 +137,11 @@ struct PrivacyView: View {
             
             // 标题文本
             VStack(alignment: .leading, spacing: 16) {
-                Text(loc.currentLanguage == .chinese ? "隐私" : "Privacy")
+                Text(loc.text("隐私", "Privacy"))
                     .font(.system(size: 32, weight: .bold))
                     .foregroundColor(.white)
                 
-                Text(loc.currentLanguage == .chinese ? "立即移除浏览历史以及在线和离线活动的痕迹。" : "Remove browsing history and traces of online and offline activity instantly.")
+                Text(loc.text("立即移除浏览历史以及在线和离线活动的痕迹。", "Remove browsing history and traces of online and offline activity instantly."))
                     .font(.system(size: 14))
                     .foregroundColor(.white.opacity(0.8))
                     .frame(maxWidth: 400, alignment: .leading)
@@ -152,9 +152,9 @@ struct PrivacyView: View {
             HStack(spacing: 40) {
                 // 左侧功能列表
                 VStack(alignment: .leading, spacing: 24) {
-                    FeatureRow(icon: "theatermasks", title: loc.currentLanguage == .chinese ? "移除浏览痕迹" : "Remove Browsing Traces", description: loc.currentLanguage == .chinese ? "清理浏览历史，包括常用浏览器存储的自动填写表单和其他数据。" : "Clean browsing history, including autofill forms and other data stored by common browsers.")
-                    FeatureRow(icon: "message", title: loc.currentLanguage == .chinese ? "清理聊天数据" : "Clean Chat Data", description: loc.currentLanguage == .chinese ? "您可以清理 Skype 和其他信息应用程序的聊天历史记录。" : "You can clean chat history for Skype and other messaging applications.")
-                    FeatureRow(icon: "exclamationmark.triangle", title: loc.currentLanguage == .chinese ? "授予完全磁盘访问权限，清理更多内容" : "Grant Full Disk Access to Clean More", description: loc.currentLanguage == .chinese ? "MacOptimizer 需要完全磁盘访问权限才能清理隐私项目。" : "MacOptimizer requires Full Disk Access to clean privacy items.", isWarning: true)
+                    FeatureRow(icon: "theatermasks", title: loc.text("移除浏览痕迹", "Remove Browsing Traces"), description: loc.text("清理浏览历史，包括常用浏览器存储的自动填写表单和其他数据。", "Clean browsing history, including autofill forms and other data stored by common browsers."))
+                    FeatureRow(icon: "message", title: loc.text("清理聊天数据", "Clean Chat Data"), description: loc.text("您可以清理 Skype 和其他信息应用程序的聊天历史记录。", "You can clean chat history for Skype and other messaging applications."))
+                    FeatureRow(icon: "exclamationmark.triangle", title: loc.text("授予完全磁盘访问权限，清理更多内容", "Grant Full Disk Access to Clean More"), description: loc.text("MacOptimizer 需要完全磁盘访问权限才能清理隐私项目。", "MacOptimizer requires Full Disk Access to clean privacy items."), isWarning: true)
                     
                     Button(action: {
                         // 打开系统设置
@@ -162,7 +162,7 @@ struct PrivacyView: View {
                             NSWorkspace.shared.open(url)
                         }
                     }) {
-                        Text(loc.currentLanguage == .chinese ? "授权访问" : "Grant Access")
+                        Text(loc.text("授权访问", "Grant Access"))
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.black)
                             .padding(.horizontal, 20)
@@ -225,7 +225,14 @@ struct PrivacyView: View {
                         .stroke(Color.white.opacity(0.3), lineWidth: 2)
                         .frame(width: 76, height: 76)
                     
-                    Text(loc.currentLanguage == .chinese ? "扫描" : "Scan")
+                    Text(loc.text(
+    simplifiedChinese: "扫描",
+    traditionalChinese: "掃描",
+    english: "Scan",
+    japanese: "スキャン",
+    korean: "스캔",
+    russian: "Сканировать"
+))
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.white)
                 }
@@ -276,7 +283,7 @@ struct PrivacyView: View {
             .padding(.bottom, 40)
             
             // 扫描状态文本
-            Text(loc.currentLanguage == .chinese ? "正在查找隐私项..." : "Searching for privacy items...")
+            Text(loc.text("正在查找隐私项...", "Searching for privacy items..."))
                 .font(.title2)
                 .foregroundColor(.white)
             
@@ -299,7 +306,14 @@ struct PrivacyView: View {
                         .fill(Color.white.opacity(0.1))
                         .frame(width: 60, height: 60)
                     
-                    Text(loc.currentLanguage == .chinese ? "停止" : "Stop")
+                    Text(loc.text(
+    simplifiedChinese: "停止",
+    traditionalChinese: "停止",
+    english: "Stop",
+    japanese: "停止",
+    korean: "정지",
+    russian: "Остановить"
+))
                         .font(.system(size: 14))
                         .foregroundColor(.white)
                 }
@@ -330,7 +344,14 @@ struct PrivacyView: View {
             }) {
                 HStack {
                     Image(systemName: "chevron.left")
-                    Text(loc.currentLanguage == .chinese ? "返回" : "Back")
+                    Text(loc.text(
+    simplifiedChinese: "返回",
+    traditionalChinese: "返回",
+    english: "Back",
+    japanese: "戻る",
+    korean: "뒤로",
+    russian: "Назад"
+))
                 }
                 .foregroundColor(.white.opacity(0.8))
             }
@@ -338,7 +359,7 @@ struct PrivacyView: View {
             
             Spacer()
             
-            Text(loc.currentLanguage == .chinese ? "隐私" : "Privacy")
+            Text(loc.text("隐私", "Privacy"))
                 .font(.headline)
                 .foregroundColor(.white.opacity(0.8))
             
@@ -348,7 +369,14 @@ struct PrivacyView: View {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.white.opacity(0.5))
-                Text(loc.currentLanguage == .chinese ? "搜索" : "Search")
+                Text(loc.text(
+    simplifiedChinese: "搜索",
+    traditionalChinese: "搜尋",
+    english: "Search",
+    japanese: "検索する",
+    korean: "검색",
+    russian: "Поиск"
+))
                     .foregroundColor(.white.opacity(0.5))
                 Spacer()
             }
@@ -369,7 +397,7 @@ struct PrivacyView: View {
                     .bold()
                     .foregroundColor(.white)
                 
-                Text(loc.currentLanguage == .chinese ? "您的任何应用都可以请求获得更多权限..." : "Any application can request more permissions...")
+                Text(loc.text("您的任何应用都可以请求获得更多权限...", "Any application can request more permissions..."))
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.7))
                     .lineLimit(2)
@@ -396,7 +424,14 @@ struct PrivacyView: View {
             // 表头
             HStack {
                 Spacer()
-                Text(loc.currentLanguage == .chinese ? "排序方式按 名称" : "Sort by Name")
+                Text(loc.text(
+    simplifiedChinese: "排序方式按 名称",
+    traditionalChinese: "排序方式按名稱",
+    english: "Sort by Name",
+    japanese: "名前でソート",
+    korean: "이름으로 정렬",
+    russian: "Сортировать по имени"
+))
                     .font(.caption)
                     .foregroundColor(.white.opacity(0.6))
             }
@@ -539,11 +574,18 @@ struct PrivacyView: View {
     private var detailListView: some View {
         VStack(spacing: 0) {
             HStack {
-                Text(loc.currentLanguage == .chinese ? "分组方式 许可类型" : "Group by Type")
+                Text(loc.text("分组方式 许可类型", "Group by Type"))
                     .font(.caption)
                     .foregroundColor(.white.opacity(0.6))
                 Spacer()
-                Text(loc.currentLanguage == .chinese ? "排序方式按 名称" : "Sort by Name")
+                Text(loc.text(
+    simplifiedChinese: "排序方式按 名称",
+    traditionalChinese: "排序方式按名稱",
+    english: "Sort by Name",
+    japanese: "名前でソート",
+    korean: "이름으로 정렬",
+    russian: "Сортировать по имени"
+))
                     .font(.caption)
                     .foregroundColor(.white.opacity(0.6))
             }
@@ -592,7 +634,7 @@ struct PrivacyView: View {
                         .shadow(color: Color.black.opacity(0.2), radius: 10, y: 5)
                     
                     VStack(spacing: 2) {
-                        Text(loc.currentLanguage == .chinese ? "移除" : "Remove")
+                        Text(loc.text("移除", "Remove"))
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.white)
                     }
@@ -656,7 +698,7 @@ struct PrivacyView: View {
                     .foregroundColor(.white)
             }
             
-            Text(loc.currentLanguage == .chinese ? "正在清理活动痕迹..." : "Cleaning activity traces...")
+            Text(loc.text("正在清理活动痕迹...", "Cleaning activity traces..."))
                 .font(.title)
                 .bold()
                 .foregroundColor(.white)
@@ -668,10 +710,10 @@ struct PrivacyView: View {
                         .font(.title2)
                         .foregroundColor(.blue)
                         
-                    Text(loc.currentLanguage == .chinese ? "最近项目列表" : "Recent Items List")
+                    Text(loc.text("最近项目列表", "Recent Items List"))
                         .foregroundColor(.white)
                     Spacer()
-                    Text(loc.currentLanguage == .chinese ? "15 个痕迹" : "15 traces")
+                    Text(loc.text("15 个痕迹", "15 traces"))
                         .foregroundColor(.white.opacity(0.7))
                     Image(systemName: "checkmark.square.fill")
                         .foregroundColor(.blue)
@@ -683,7 +725,7 @@ struct PrivacyView: View {
                         .font(.title2)
                         .foregroundColor(.blue)
                         
-                    Text(loc.currentLanguage == .chinese ? "应用权限" : "Application Permissions")
+                    Text(loc.text("应用权限", "Application Permissions"))
                         .foregroundColor(.white)
                     Spacer()
                     Image(systemName: "ellipsis")
@@ -710,7 +752,14 @@ struct PrivacyView: View {
                         .stroke(Color.white.opacity(0.2), lineWidth: 4)
                         .frame(width: 64, height: 64)
                     
-                    Text(loc.currentLanguage == .chinese ? "停止" : "Stop")
+                    Text(loc.text(
+    simplifiedChinese: "停止",
+    traditionalChinese: "停止",
+    english: "Stop",
+    japanese: "停止",
+    korean: "정지",
+    russian: "Остановить"
+))
                         .font(.system(size: 13))
                         .foregroundColor(.white)
                 }
@@ -730,7 +779,7 @@ struct PrivacyView: View {
                 .foregroundColor(.green)
                 .shadow(color: .green.opacity(0.5), radius: 10)
             
-            Text(loc.currentLanguage == .chinese ? "清理完成" : "Cleanup Complete")
+            Text(loc.text("清理完成", "Cleanup Complete"))
                 .font(.largeTitle)
                 .bold()
                 .foregroundColor(.white)
@@ -744,7 +793,14 @@ struct PrivacyView: View {
             Button(action: {
                 scanState = .initial
             }) {
-                Text(loc.currentLanguage == .chinese ? "完成" : "Done")
+                Text(loc.text(
+    simplifiedChinese: "完成",
+    traditionalChinese: "完成",
+    english: "Done",
+    japanese: "完了",
+    korean: "완료",
+    russian: "Готово"
+))
                     .font(.headline)
                     .foregroundColor(.white)
                     .padding(.horizontal, 40)

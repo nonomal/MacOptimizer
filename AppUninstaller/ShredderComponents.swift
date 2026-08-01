@@ -8,77 +8,58 @@ struct ShredderLandingView: View {
     var selectFiles: () -> Void
     
     var body: some View {
-        HStack(spacing: 60) {
-            // Left Content
-            VStack(alignment: .leading, spacing: 30) {
-                // Branding Header (统一风格)
-                HStack(spacing: 8) {
-                    Text(loc.L("shredder_title"))
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white)
-                    
-                    // Shredder Icon
-                    HStack(spacing: 4) {
-                        Image(systemName: "doc.badge.gearshape")
-                        Text(loc.currentLanguage == .chinese ? "安全擦除" : "Secure Erase")
-                            .font(.system(size: 20, weight: .heavy))
-                    }
+        HStack(alignment: .top, spacing: 25) {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(loc.L("shredder_title"))
+                    .font(.system(size: 22, weight: .bold))
                     .foregroundColor(.white)
-                }
-                
+
                 Text(loc.L("shredder_subtitle"))
-                    .font(.system(size: 13))
-                    .foregroundColor(.white.opacity(0.7))
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
-                
-                // Feature Rows (统一样式)
-                VStack(alignment: .leading, spacing: 24) {
+                    .font(.system(size: 12))
+                    .foregroundColor(.white.opacity(0.72))
+                    .padding(.top, 10)
+
+                VStack(alignment: .leading, spacing: 64) {
                     featureRow(
-                        icon: "lock.shield",
+                        image: "shredder_benefit_secure",
                         title: loc.L("secure_erase"),
                         subtitle: loc.L("secure_erase_desc")
                     )
-                    
+
                     featureRow(
-                        icon: "exclamationmark.triangle",
+                        image: "shredder_benefit_finder",
                         title: loc.L("resolve_finder_errors"),
                         subtitle: loc.L("resolve_finder_errors_desc")
                     )
                 }
-                
-                // Action Button (统一颜色)
+                .padding(.top, 40)
+
                 Button(action: { selectFiles() }) {
                     Text(loc.L("select_files"))
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.black)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Color(hex: "4DDEE8")) // Teal - 与废纸篓统一
-                        .cornerRadius(6)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(Color(red: 0.10, green: 0.20, blue: 0.25))
+                        .frame(width: 92, height: 31)
+                        .background(Color(red: 0.42, green: 0.82, blue: 0.94))
+                        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
                 }
-                .buttonStyle(.plain)
-                .padding(.top, 10)
+                .buttonStyle(ShredderLandingButtonStyle())
+                .padding(.top, 48)
             }
-            .frame(maxWidth: 400)
-            
-            // Right Icon (统一大小和阴影)
-            ZStack {
-                ShredderIconView(isAnimating: false)
-                    .frame(width: 320, height: 320)
-                    .shadow(color: Color.black.opacity(0.3), radius: 20, y: 10)
-            }
+            .frame(width: 320, alignment: .leading)
+
+            resourceImage("shredder_module")
+                .frame(width: 350, height: 350)
+                .padding(.top, 7)
         }
-        .padding(48)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(.leading, 98)
+        .padding(.top, 152)
     }
     
-    // 统一的 Feature Row 样式
-    private func featureRow(icon: String, title: String, subtitle: String) -> some View {
-        HStack(alignment: .top, spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 20))
-                .foregroundColor(Color(hex: "4DDEE8"))
-                .frame(width: 28)
+    private func featureRow(image: String, title: String, subtitle: String) -> some View {
+        HStack(alignment: .top, spacing: 18) {
+            resourceImage(image)
+                .frame(width: 40, height: 40)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
@@ -86,11 +67,35 @@ struct ShredderLandingView: View {
                     .foregroundColor(.white)
                 
                 Text(subtitle)
-                    .font(.system(size: 12))
-                    .foregroundColor(.white.opacity(0.6))
+                    .font(.system(size: 11))
+                    .foregroundColor(.white.opacity(0.55))
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+    }
+
+    @ViewBuilder
+    private func resourceImage(_ name: String) -> some View {
+        if let path = Bundle.main.path(forResource: name, ofType: "png"),
+           let image = NSImage(contentsOfFile: path) {
+            Image(nsImage: image)
+                .resizable()
+                .scaledToFit()
+        } else {
+            Image(systemName: "circle")
+                .resizable()
+                .scaledToFit()
+                .foregroundColor(.white.opacity(0.65))
+        }
+    }
+}
+
+private struct ShredderLandingButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .brightness(configuration.isPressed ? -0.08 : 0)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.easeOut(duration: 0.08), value: configuration.isPressed)
     }
 }
 
@@ -99,109 +104,126 @@ struct ShredderSelectionView: View {
     @ObservedObject var service: ShredderService
     @Binding var showFileImporter: Bool
     @Environment(\.localization) var loc
+
+    private var selectedSize: Int64 {
+        service.items.reduce(Int64(0)) { $0 + $1.size }
+    }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                Button(action: { service.reset() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                        Text(loc.L("restart"))
+        ZStack {
+            VStack(spacing: 0) {
+                ZStack {
+                    Text(loc.L("shredder_title"))
+                        .foregroundColor(.white.opacity(0.58))
+                        .font(.system(size: 12, weight: .medium))
+
+                    HStack {
+                        Button(action: { service.reset() }) {
+                            HStack(spacing: 5) {
+                                Image(systemName: "chevron.left")
+                                Text(loc.L("restart"))
+                            }
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.white.opacity(0.68))
+                        }
+                        .buttonStyle(.plain)
+
+                        Spacer()
                     }
-                    .foregroundColor(.white.opacity(0.8))
                 }
-                .buttonStyle(.plain)
-                
-                Spacer()
-                
-                Text(loc.L("shredder_title"))
-                    .foregroundColor(.white.opacity(0.6))
-                    .font(.system(size: 13))
-                
-                Spacer()
-                
-                // 移除助手按钮（与智能扫描统一）
-                Color.clear.frame(width: 80)
-            }
-            .padding(16)
-            
-            HStack(spacing: 0) {
-                // List
+                .frame(height: 52)
+                .padding(.horizontal, 18)
+
                 List {
                     ForEach(service.items) { item in
-                        HStack {
+                        HStack(spacing: 12) {
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(Color(hex: "4DDEE8")) // 统一颜色
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(Color(hex: "4DDEE8"))
                             
                             Image(nsImage: item.icon)
                                 .resizable()
-                                .frame(width: 24, height: 24)
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 28, height: 28)
                             
                             Text(item.name)
-                                .foregroundColor(.white)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.white.opacity(0.88))
                             
                             Spacer()
                             
                             Text(item.formattedSize)
-                                .foregroundColor(.white.opacity(0.6))
+                                .foregroundColor(.white.opacity(0.66))
                                 .font(.system(size: 12))
                         }
+                        .frame(height: 50)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 26, bottom: 0, trailing: 22))
                         .listRowBackground(Color.clear)
+                        .compatibleListRowSeparatorHidden()
+                        .scanResultContextMenu(
+                            isSelected: true,
+                            displayName: item.name,
+                            url: item.url,
+                            onToggleSelection: {},
+                            onIgnore: { service.removeItem(id: item.id) }
+                        )
                     }
                     .onDelete { indexSet in
-                        // service.items.remove(atOffsets: indexSet) // Need to implement delete in service
+                        service.removeItems(at: indexSet)
                     }
                 }
+                .listStyle(.plain)
                 .compatibleScrollContentBackgroundHidden()
                 .frame(maxWidth: .infinity)
-                
-                Spacer()
+                .padding(.horizontal, 18)
+                .padding(.top, 38)
+                .padding(.bottom, 108)
             }
-            
-            // Bottom Action Bar
-            HStack {
-                Menu {
-                    Button(loc.L("remove_now")) {
+
+            CleanMyMacBottomActionSlot {
+                ZStack {
+                    Menu {
+                        Button(loc.L("remove_now")) {
+                            Task { await service.startShredding() }
+                        }
+                    } label: {
+                        Text(loc.L("remove_now"))
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.white.opacity(0.66))
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+                    .offset(x: -95)
+
+                    Button {
                         Task { await service.startShredding() }
-                    }
-                } label: {
-                    Text(loc.L("remove_now"))
-                        .font(.system(size: 13))
-                        .foregroundColor(.white.opacity(0.7))
-                }
-                .menuStyle(.borderlessButton)
-                .fixedSize()
-                
-                Spacer()
-                
-                // Start Button
-                Button(action: {
-                    Task { await service.startShredding() }
-                }) {
-                    ZStack {
-                        Circle()
-                        .fill(LinearGradient(colors: [Color.white.opacity(0.2), Color.white.opacity(0.1)], startPoint: .top, endPoint: .bottom))
-                        .frame(width: 80, height: 80)
-                        .overlay(
-                            Circle()
-                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                    } label: {
+                        CleanMyMacActionOrb(
+                            title: loc.L("shred"),
+                            gradient: LinearGradient(
+                                colors: [
+                                    Color(red: 0.52, green: 0.62, blue: 0.75),
+                                    Color(red: 0.34, green: 0.40, blue: 0.61)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            ),
+                            glowColor: Color(red: 0.25, green: 0.82, blue: 0.98),
+                            ringColor: Color(red: 0.35, green: 0.86, blue: 0.98)
                         )
-                    
-                    Text(loc.L("shred"))
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.white)
                     }
+                    .buttonStyle(.plain)
+
+                    Text(ByteCountFormatter.string(fromByteCount: selectedSize, countStyle: .file))
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.white.opacity(0.62))
+                        .fixedSize()
+                        .offset(x: 70)
                 }
-                .buttonStyle(.plain)
-                
-                Spacer()
-                
-                Text(ByteCountFormatter.string(fromByteCount: service.items.reduce(0) { $0 + $1.size }, countStyle: .file))
-                    .foregroundColor(.white.opacity(0.7))
+                .frame(width: 390, height: CleanMyMacWindowMetrics.actionOrbFrame.height)
             }
-            .padding(24)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 
@@ -243,13 +265,15 @@ struct ShreddingProgressView: View {
             Spacer()
             
             // Stop button
-            Button(action: { /* Stop logic? */ }) {
+            Button(action: { service.stopShredding() }) {
                 ZStack {
                     Circle()
                         .stroke(Color.green, lineWidth: 4)
                         .frame(width: 80, height: 80)
                     
-                    Text(loc.L("stop"))
+                    Text(service.isStopping
+                         ? (loc.text("正在停止", "Stopping"))
+                         : loc.L("stop"))
                         .foregroundColor(.white)
                 }
             }

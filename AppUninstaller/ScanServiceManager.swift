@@ -12,6 +12,10 @@ class ScanServiceManager: ObservableObject {
     let deepCleanScanner = DeepCleanScanner()
     let smartCleanerService = SmartCleanerService()
     let trashScanner = TrashScanner()  // 废纸篓扫描器 - 防止切换界面时扫描中断
+    let malwareScanner = MalwareScanner()
+    let privacyScanner = PrivacyScannerService()
+    let spaceLensScanner = SpaceLensScanner()
+    let shredderService = ShredderService()
     
     // 扫描任务状态跟踪
     @Published var activeScans: Set<ScanType> = []

@@ -6,7 +6,14 @@ struct ConsoleSidebar: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(loc.currentLanguage == .chinese ? "控制台" : "Console")
+            Text(loc.text(
+    simplifiedChinese: "控制台",
+    traditionalChinese: "主控台",
+    english: "Console",
+    japanese: "ゲーム機:",
+    korean: "콘솔",
+    russian: "Консоль"
+))
                 .font(.title3)
                 .bold()
                 .padding(.horizontal, 16)
@@ -15,27 +22,69 @@ struct ConsoleSidebar: View {
                 .foregroundColor(.white)
             
             Group {
-                SidebarButton(title: loc.currentLanguage == .chinese ? "概览" : "Overview", icon: "square.grid.2x2", isSelected: selection == .dashboard) {
+                SidebarButton(title: loc.text(
+    simplifiedChinese: "概览",
+    traditionalChinese: "概述",
+    english: "Overview",
+    japanese: "概要",
+    korean: "개요",
+    russian: "Обзор"
+), icon: "square.grid.2x2", isSelected: selection == .dashboard) {
                     selection = .dashboard
                 }
                 
-                SidebarButton(title: loc.currentLanguage == .chinese ? "应用管理" : "App Manager", icon: "app.badge", isSelected: selection == .appManager) {
+                SidebarButton(title: loc.text(
+    simplifiedChinese: "应用管理",
+    traditionalChinese: "應用管理",
+    english: "App Manager",
+    japanese: "アプリマネージャー",
+    korean: "앱 관리자",
+    russian: "Диспетчер приложений"
+), icon: "app.badge", isSelected: selection == .appManager) {
                     selection = .appManager
                 }
                 
-                SidebarButton(title: loc.currentLanguage == .chinese ? "进程管理" : "Process Manager", icon: "waveform.path.ecg", isSelected: selection == .processManager) {
+                SidebarButton(title: loc.text(
+    simplifiedChinese: "进程管理",
+    traditionalChinese: "行程管理",
+    english: "Process Manager",
+    japanese: "プロセスマネージャー",
+    korean: "진행관리자",
+    russian: "Менеджер по технологиям"
+), icon: "waveform.path.ecg", isSelected: selection == .processManager) {
                     selection = .processManager
                 }
                 
-                SidebarButton(title: loc.currentLanguage == .chinese ? "网络优化" : "Network", icon: "wifi", isSelected: selection == .networkOptimize) {
+                SidebarButton(title: loc.text(
+    simplifiedChinese: "网络诊断",
+    traditionalChinese: "網路診斷",
+    english: "Network",
+    japanese: "ネットワーク",
+    korean: "네트워크",
+    russian: "Сеть"
+), icon: "wifi", isSelected: selection == .networkOptimize) {
                     selection = .networkOptimize
                 }
                 
-                SidebarButton(title: loc.currentLanguage == .chinese ? "端口管理" : "Port Manager", icon: "network", isSelected: selection == .portManager) {
+                SidebarButton(title: loc.text(
+    simplifiedChinese: "端口管理",
+    traditionalChinese: "連接埠管理",
+    english: "Port Manager",
+    japanese: "港湾管理者",
+    korean: "포트 관리자",
+    russian: "Менеджер порта"
+), icon: "network", isSelected: selection == .portManager) {
                     selection = .portManager
                 }
                 
-                SidebarButton(title: loc.currentLanguage == .chinese ? "安全中心" : "Safety Center", icon: "shield.checkerboard", isSelected: selection == .protection) {
+                SidebarButton(title: loc.text(
+    simplifiedChinese: "安全中心",
+    traditionalChinese: "安全中心",
+    english: "Safety Center",
+    japanese: "セーフティセンター",
+    korean: "CCTV 안전센터",
+    russian: "Центр безопасности"
+), icon: "shield.checkerboard", isSelected: selection == .protection) {
                     selection = .protection
                 }
             }
@@ -52,6 +101,7 @@ struct SidebarButton: View {
     let icon: String
     let isSelected: Bool
     let action: () -> Void
+    @State private var isHovering = false
     
     var body: some View {
         Button(action: action) {
@@ -67,17 +117,25 @@ struct SidebarButton: View {
                 
                 if isSelected {
                     Capsule()
-                        .fill(Color.blue)
+                        .fill(Color(red: 0.28, green: 0.82, blue: 0.96))
                         .frame(width: 3, height: 16)
+                } else {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundColor(.white.opacity(isHovering ? 0.38 : 0))
                 }
             }
             .foregroundColor(isSelected ? .white : .white.opacity(0.7))
-            .padding(.vertical, 8)
             .padding(.horizontal, 16)
-            .background(isSelected ? Color.white.opacity(0.06) : Color.clear)
+            .frame(height: 42)
+            .background(Color.white.opacity(isSelected ? 0.075 : (isHovering ? 0.035 : 0)))
             .cornerRadius(8)
             .padding(.horizontal, 8)
         }
         .buttonStyle(.plain)
+        .contentShape(Rectangle())
+        .onHover { isHovering = $0 }
+        .animation(.easeOut(duration: 0.14), value: isHovering)
+        .animation(.easeOut(duration: 0.14), value: isSelected)
     }
 }

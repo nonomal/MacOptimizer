@@ -585,6 +585,14 @@ class SmartCleanerService: ObservableObject {
             break
         }
     }
+
+    /// Removes an ignored result from every live representation without
+    /// touching the file on disk. Future scans also consult the shared store.
+    @MainActor
+    func ignoreFile(_ file: CleanerFileItem, in category: CleanerCategory) {
+        ScanResultIgnoreStore.shared.ignore(file.url)
+        removeFileFromCategory(file, category: category)
+    }
     
     // MARK: - 主分类支持方法
     
@@ -849,7 +857,7 @@ class SmartCleanerService: ObservableObject {
         // 1. 扫描系统缓存
         await updateProgress(step: currentStep, total: totalSteps, message: "正在扫描系统缓存...")
         let sysCache = await scanSystemCache()
-        await MainActor.run { systemCacheFiles = sysCache }
+        await MainActor.run { systemCacheFiles = visible(sysCache) }
         currentStep += 1
         
         // 2. 扫描旧更新 (Skipped due to SIP protection issues)
@@ -861,13 +869,13 @@ class SmartCleanerService: ObservableObject {
         // 3. 扫描用户缓存
         await updateProgress(step: currentStep, total: totalSteps, message: "正在扫描用户缓存...")
         let usrCache = await scanUserCache()
-        await MainActor.run { userCacheFiles = usrCache }
+        await MainActor.run { userCacheFiles = visible(usrCache) }
         currentStep += 1
         
         // 3.5 扫描废纸篓
         await updateProgress(step: currentStep, total: totalSteps, message: "正在扫描废纸篓...")
         let trash = await scanTrash()
-        await MainActor.run { trashFiles = trash }
+        await MainActor.run { trashFiles = visible(trash) }
         
         // 4. 扫描语言文件 - ⚠️ 已禁用(用户要求只清理缓存和日志)
         // await updateProgress(step: currentStep, total: totalSteps, message: "正在扫描语言文件...")
@@ -878,13 +886,13 @@ class SmartCleanerService: ObservableObject {
         // 5. 扫描系统日志
         await updateProgress(step: currentStep, total: totalSteps, message: "正在扫描系统日志...")
         let sysLogs = await scanSystemLogs()
-        await MainActor.run { systemLogFiles = sysLogs }
+        await MainActor.run { systemLogFiles = visible(sysLogs) }
         currentStep += 1
         
         // 6. 扫描用户日志
         await updateProgress(step: currentStep, total: totalSteps, message: "正在扫描用户日志...")
         let usrLogs = await scanUserLogs()
-        await MainActor.run { userLogFiles = usrLogs }
+        await MainActor.run { userLogFiles = visible(usrLogs) }
         currentStep += 1
         
         // 7. 扫描损坏的登录项 - ⚠️ 已禁用(用户要求只清理缓存和日志)
@@ -902,6 +910,10 @@ class SmartCleanerService: ObservableObject {
             setProgress(step / total)
             currentScanPath = message
         }
+    }
+
+    private nonisolated func visible(_ items: [CleanerFileItem]) -> [CleanerFileItem] {
+        items.filter { ScanResultIgnoreStore.shouldInclude($0.url) }
     }
     
     // MARK: - 系统缓存扫描 (全面扫描系统级缓存)
@@ -2600,6 +2612,8 @@ class SmartCleanerService: ObservableObject {
             scannedCategories = []
             scanProgress = 0.0
             isScanning = true
+            isCleaning = false
+            totalCleanedSize = 0
         }
         
         // --- 1. 系统垃圾 (仅缓存和日志) ---

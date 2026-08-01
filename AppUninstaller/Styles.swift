@@ -120,6 +120,18 @@ struct GradientStyles {
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
+
+    // Mail Attachments (sampled from the locally installed CleanMyMac X window).
+    static let mailAttachments = LinearGradient(
+        stops: [
+            .init(color: Color(red: 0.412, green: 0.557, blue: 0.765), location: 0.0),
+            .init(color: Color(red: 0.384, green: 0.510, blue: 0.725), location: 0.12),
+            .init(color: Color(red: 0.314, green: 0.400, blue: 0.608), location: 0.48),
+            .init(color: Color(red: 0.208, green: 0.231, blue: 0.435), location: 1.0)
+        ],
+        startPoint: .top,
+        endPoint: .bottom
+    )
     
     // 8. 文件管理器 (钢蓝色)
     static let fileExplorer = LinearGradient(
@@ -168,6 +180,8 @@ struct GradientStyles {
         switch module {
         case .monitor: return monitor
         case .uninstaller: return uninstaller
+        case .extensions: return uninstaller
+        case .mailAttachments: return mailAttachments
         case .deepClean: return deepClean
         case .cleaner: return cleaner
         case .maintenance: return optimizer
@@ -190,11 +204,24 @@ struct GradientStyles {
 
 // MARK: - 背景渐变样式 (全屏)
 struct BackgroundStyles {
-    // 1. 卸载器 (深邃蓝 - 科技/纯净)
+    static let malware = LinearGradient(
+        stops: [
+            .init(color: Color(red: 0.797, green: 0.471, blue: 0.454), location: 0.0),
+            .init(color: Color(red: 0.624, green: 0.376, blue: 0.469), location: 0.34),
+            .init(color: Color(red: 0.429, green: 0.330, blue: 0.464), location: 0.67),
+            .init(color: Color(red: 0.240, green: 0.263, blue: 0.447), location: 1.0)
+        ],
+        startPoint: .top,
+        endPoint: .bottom
+    )
+
+    // Uninstaller, sampled from the locally installed CleanMyMac X window.
     static let uninstaller = LinearGradient(
         stops: [
-            .init(color: Color(red: 0.0, green: 0.5, blue: 1.0), location: 0.0), // 亮蓝
-            .init(color: Color(red: 0.0, green: 0.1, blue: 0.4), location: 1.0)  // 深蓝
+            .init(color: Color(red: 0.439, green: 0.627, blue: 0.769), location: 0.0),
+            .init(color: Color(red: 0.365, green: 0.520, blue: 0.690), location: 0.32),
+            .init(color: Color(red: 0.290, green: 0.390, blue: 0.570), location: 0.65),
+            .init(color: Color(red: 0.240, green: 0.280, blue: 0.470), location: 1.0)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -203,41 +230,47 @@ struct BackgroundStyles {
     // 2. 垃圾清理 (粉紫渐变 - 现代清理工具风格)
     static let cleaner = LinearGradient(
         stops: [
-            .init(color: Color(hex: "D15589"), location: 0.0), // 粉红色
-            .init(color: Color(hex: "4A4385"), location: 1.0)  // 深紫色
+            .init(color: Color(red: 0.73, green: 0.43, blue: 0.57), location: 0.0),
+            .init(color: Color(red: 0.50, green: 0.34, blue: 0.55), location: 0.52),
+            .init(color: Color(red: 0.24, green: 0.27, blue: 0.48), location: 1.0)
         ],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
+        startPoint: .top,
+        endPoint: .bottom
     )
     
-    // 3. 系统优化 (活力橙 - 加速/能量)
+    // 3. 优化（CleanMyMac X 本机参考的紫色到靛蓝纵向渐变）
     static let optimizer = LinearGradient(
         stops: [
-            .init(color: Color(red: 1.0, green: 0.5, blue: 0.0), location: 0.0), // 橙色
-            .init(color: Color(red: 0.6, green: 0.2, blue: 0.0), location: 1.0)  // 深褐
+            .init(color: Color(red: 0.604, green: 0.459, blue: 0.796), location: 0.0),
+            .init(color: Color(red: 0.510, green: 0.392, blue: 0.694), location: 0.38),
+            .init(color: Color(red: 0.365, green: 0.337, blue: 0.592), location: 0.70),
+            .init(color: Color(red: 0.235, green: 0.282, blue: 0.486), location: 1.0)
         ],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
+        startPoint: .top,
+        endPoint: .bottom
     )
     
     // 4. 大文件查找 (红紫渐变 - 匹配设计图)
     static let largeFiles = LinearGradient(
         stops: [
-            .init(color: Color(red: 0.85, green: 0.35, blue: 0.35), location: 0.0), // 柔和红
-            .init(color: Color(red: 0.25, green: 0.18, blue: 0.35), location: 1.0)  // 深紫
+            .init(color: Color(hex: "C97B79"), location: 0.0),
+            .init(color: Color(hex: "966271"), location: 0.48),
+            .init(color: Color(hex: "414878"), location: 1.0)
         ],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
+        startPoint: .top,
+        endPoint: .bottom
     )
     
-    // 5. 废纸篓 (青绿色 - 清新/整理) - 匹配设计图
+    // Trash Bins, sampled from the locally installed CleanMyMac X window.
     static let trash = LinearGradient(
         stops: [
-            .init(color: Color(red: 0.0, green: 0.8, blue: 0.7), location: 0.0), // 青绿
-            .init(color: Color(red: 0.0, green: 0.4, blue: 0.5), location: 1.0)  // 深青
+            .init(color: Color(red: 0.337, green: 0.714, blue: 0.690), location: 0.0),
+            .init(color: Color(red: 0.285, green: 0.586, blue: 0.628), location: 0.24),
+            .init(color: Color(red: 0.250, green: 0.404, blue: 0.557), location: 0.62),
+            .init(color: Color(red: 0.238, green: 0.260, blue: 0.463), location: 1.0)
         ],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
+        startPoint: .top,
+        endPoint: .bottom
     )
 
     static let monitor = LinearGradient(
@@ -259,6 +292,17 @@ struct BackgroundStyles {
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
+
+    static let mailAttachments = LinearGradient(
+        stops: [
+            .init(color: Color(red: 0.412, green: 0.557, blue: 0.765), location: 0.0),
+            .init(color: Color(red: 0.384, green: 0.510, blue: 0.725), location: 0.12),
+            .init(color: Color(red: 0.314, green: 0.400, blue: 0.608), location: 0.48),
+            .init(color: Color(red: 0.208, green: 0.231, blue: 0.435), location: 1.0)
+        ],
+        startPoint: .top,
+        endPoint: .bottom
+    )
     
     // 7. 文件管理器 (钢蓝色)
     static let fileExplorer = LinearGradient(
@@ -273,41 +317,47 @@ struct BackgroundStyles {
     // 8. 隐私保护 (粉紫渐变 - 匹配设计图)
     static let privacy = LinearGradient(
         stops: [
-            .init(color: Color(hex: "D65D89"), location: 0.0), // Deep Pink
-            .init(color: Color(hex: "4A306D"), location: 1.0)  // Deep Purple
+            .init(color: Color(red: 0.716, green: 0.402, blue: 0.527), location: 0.0),
+            .init(color: Color(red: 0.620, green: 0.365, blue: 0.520), location: 0.34),
+            .init(color: Color(red: 0.453, green: 0.316, blue: 0.500), location: 0.68),
+            .init(color: Color(red: 0.245, green: 0.271, blue: 0.461), location: 1.0)
         ],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
+        startPoint: .top,
+        endPoint: .bottom
     )
     
     // 15. 空间透镜 (与设计图一致的深青/深海绿背景)
     static let spaceLens = LinearGradient(
         stops: [
-            .init(color: Color(hex: "00A896"), location: 0.0), // Teal
-            .init(color: Color(hex: "051937"), location: 1.0)  // Dark Blue Black
+            .init(color: Color(hex: "49AA93"), location: 0.0),
+            .init(color: Color(hex: "3F8D82"), location: 0.48),
+            .init(color: Color(hex: "315672"), location: 1.0)
         ],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
+        startPoint: .top,
+        endPoint: .bottom
     )
     
 
 
-    // 14. 更新程序 (青色/蓝绿渐变背景)
+    // Updater, sampled from the locally installed CleanMyMac X window.
     static let updater = LinearGradient(
         stops: [
-            .init(color: Color(hex: "00B09B"), location: 0.0), // Greeish Teal
-            .init(color: Color(hex: "35495E"), location: 1.0)  // Dark Blue-Green
+            .init(color: Color(red: 0.294, green: 0.729, blue: 0.655), location: 0.0),
+            .init(color: Color(red: 0.243, green: 0.635, blue: 0.588), location: 0.15),
+            .init(color: Color(red: 0.239, green: 0.506, blue: 0.541), location: 0.45),
+            .init(color: Color(red: 0.235, green: 0.373, blue: 0.494), location: 0.75),
+            .init(color: Color(red: 0.231, green: 0.282, blue: 0.459), location: 1.0)
         ],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
+        startPoint: .top,
+        endPoint: .bottom
     )
     
-    // 9. 智能清理 (紫靛色渐变 - 匹配设计图 V2 Vibrant)
+    // 9. 智能扫描（取自原版 CleanMyMac X 1090x644 窗口的纵向色阶）
     static let smartClean = LinearGradient(
         stops: [
-            .init(color: Color(red: 0.45, green: 0.35, blue: 0.65), location: 0.0),   // Top: Vibrant Purple
-            .init(color: Color(red: 0.38, green: 0.28, blue: 0.58), location: 0.5),   // Mid: Transition
-            .init(color: Color(red: 0.25, green: 0.20, blue: 0.50), location: 1.0)    // Bottom: Deep Indigo
+            .init(color: Color(red: 0.565, green: 0.463, blue: 0.651), location: 0.0),
+            .init(color: Color(red: 0.435, green: 0.376, blue: 0.569), location: 0.50),
+            .init(color: Color(red: 0.278, green: 0.286, blue: 0.475), location: 1.0)
         ],
         startPoint: .top,
         endPoint: .bottom
@@ -361,11 +411,12 @@ struct BackgroundStyles {
     // 10. 碎纸机 (深蓝/紫渐变 - 匹配设计图)
     static let shredder = LinearGradient(
         stops: [
-            .init(color: Color(red: 0.1, green: 0.3, blue: 0.6), location: 0.0), // 深蓝
-            .init(color: Color(red: 0.2, green: 0.2, blue: 0.5), location: 1.0)  // 蓝紫
+            .init(color: Color(hex: "67ABC0"), location: 0.0),
+            .init(color: Color(hex: "527F9D"), location: 0.48),
+            .init(color: Color(hex: "424A7B"), location: 1.0)
         ],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
+        startPoint: .top,
+        endPoint: .bottom
     )
     
     // 12. 智能扫描详情页背景 (柔和的紫靛色渐变 - 匹配设计图)
@@ -405,6 +456,7 @@ enum AppModule: String, CaseIterable, Identifiable {
     case monitor = "控制台"
     case smartClean = "智能扫描"
     case cleaner = "系统垃圾"
+    case mailAttachments = "邮件附件"
     case deepClean = "深度清理"
     case maintenance = "系统维护"
     case optimizer = "系统优化"
@@ -415,6 +467,7 @@ enum AppModule: String, CaseIterable, Identifiable {
     case spaceLens = "空间透镜"     // New Space Lens
     case uninstaller = "应用卸载"
     case updater = "更新程序"
+    case extensions = "扩展"
     case trash = "废纸篓"
     case malware = "移除恶意软件"
     
@@ -425,6 +478,8 @@ enum AppModule: String, CaseIterable, Identifiable {
         case .monitor: return "chart.bar.xaxis"
         case .uninstaller: return "puzzlepiece.extension"
         case .updater: return "arrow.triangle.2.circlepath"
+        case .extensions: return "puzzlepiece.extension"
+        case .mailAttachments: return "envelope"
         case .deepClean: return "magnifyingglass.circle.fill"
         case .cleaner: return "square.stack.3d.up.fill"
         case .maintenance: return "wrench.and.screwdriver"
@@ -444,6 +499,8 @@ enum AppModule: String, CaseIterable, Identifiable {
         switch self {
         case .monitor: return GradientStyles.monitor
         case .uninstaller: return GradientStyles.uninstaller
+        case .extensions: return GradientStyles.uninstaller
+        case .mailAttachments: return GradientStyles.mailAttachments
         case .deepClean: return GradientStyles.deepClean
         case .cleaner: return GradientStyles.cleaner
         case .maintenance: return GradientStyles.optimizer
@@ -465,19 +522,18 @@ enum AppModule: String, CaseIterable, Identifiable {
         switch self {
         case .monitor: return BackgroundStyles.monitor
         case .uninstaller: return BackgroundStyles.uninstaller
+        case .extensions: return BackgroundStyles.optimizer
+        case .mailAttachments: return BackgroundStyles.mailAttachments
         case .deepClean: return BackgroundStyles.deepClean
         case .cleaner: return BackgroundStyles.cleaner
         case .maintenance: return BackgroundStyles.privacy
-        case .optimizer: return BackgroundStyles.privacy
+        case .optimizer: return BackgroundStyles.optimizer
         case .shredder: return BackgroundStyles.shredder
         case .largeFiles: return BackgroundStyles.largeFiles
         case .fileExplorer: return BackgroundStyles.fileExplorer
         case .spaceLens: return BackgroundStyles.spaceLens // New Background
         case .trash: return BackgroundStyles.trash
-        case .malware: return LinearGradient(stops: [
-            .init(color: Color(hex: "E05E5E"), location: 0.0),
-            .init(color: Color(hex: "3F2E56"), location: 1.0)
-        ], startPoint: .topLeading, endPoint: .bottomTrailing)
+        case .malware: return BackgroundStyles.malware
         case .privacy: return BackgroundStyles.privacy
         case .smartClean: return BackgroundStyles.smartClean
         case .updater: return BackgroundStyles.updater
@@ -488,6 +544,8 @@ enum AppModule: String, CaseIterable, Identifiable {
         switch self {
         case .monitor: return "CPU、内存、网络端口实时监控"
         case .uninstaller: return "完全删除应用及其残留文件"
+        case .extensions: return "控制系统扩展、插件和偏好设置面板"
+        case .mailAttachments: return "扫描并清理邮件下载的本地附件"
         case .deepClean: return "扫描已卸载应用的残留文件"
         case .cleaner: return "清理缓存和系统垃圾"
         case .maintenance: return "运行系统维护脚本"

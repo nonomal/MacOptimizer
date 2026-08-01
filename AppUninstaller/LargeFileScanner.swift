@@ -35,6 +35,58 @@ struct ScanProgress: Sendable {
     let elapsedTime: TimeInterval
 }
 
+/// Aggregates work from concurrent directory enumerators and emits compact
+/// snapshots at most a few times per second. This keeps the path, discovered
+/// size and sidebar status live without publishing once for every file.
+private actor LargeFileScanAccumulator {
+    struct Snapshot: Sendable {
+        let filesProcessed: Int
+        let totalSize: Int64
+        let currentPath: String
+        let files: [FileItem]
+    }
+
+    private var filesProcessed = 0
+    private var totalSize: Int64 = 0
+    private var currentPath = ""
+    private var files: [FileItem] = []
+    private var lastPublishTime = Date.distantPast
+
+    func record(
+        processed: Int,
+        discoveredFiles: [FileItem],
+        currentPath: String,
+        forcePublish: Bool = false
+    ) -> Snapshot? {
+        filesProcessed += processed
+        files.append(contentsOf: discoveredFiles)
+        totalSize += discoveredFiles.reduce(Int64(0)) { $0 + $1.size }
+        if !currentPath.isEmpty {
+            self.currentPath = currentPath
+        }
+
+        let now = Date()
+        guard forcePublish || now.timeIntervalSince(lastPublishTime) >= 0.14 else {
+            return nil
+        }
+        lastPublishTime = now
+        return snapshot()
+    }
+
+    func finalSnapshot() -> Snapshot {
+        snapshot()
+    }
+
+    private func snapshot() -> Snapshot {
+        Snapshot(
+            filesProcessed: filesProcessed,
+            totalSize: totalSize,
+            currentPath: currentPath,
+            files: files
+        )
+    }
+}
+
 class LargeFileScanner: ObservableObject {
     @Published var foundFiles: [FileItem] = []
     @Published var isScanning = false
@@ -54,7 +106,8 @@ class LargeFileScanner: ObservableObject {
     @Published var cleanedSize: Int64 = 0
     @Published var isStopped = false
     @Published var selectedFiles: Set<UUID> = []
-    private var shouldStop = false
+    private let stopLock = NSLock()
+    private var stopRequested = false
     
     // Computed property for total size of selected files
     var totalSelectedSize: Int64 {
@@ -62,7 +115,7 @@ class LargeFileScanner: ObservableObject {
     }
     
     func stopScan() {
-        shouldStop = true
+        setStopRequested(true)
         isScanning = false
         isStopped = true
     }
@@ -77,12 +130,12 @@ class LargeFileScanner: ObservableObject {
         cleanedCount = 0
         cleanedSize = 0
         isStopped = false
-        shouldStop = false
+        setStopRequested(false)
         selectedFiles = []
         scanProgress = nil
     }
     
-    func scan() async {
+    func scan(at requestedRoot: URL? = nil) async {
         let token = performanceMonitor.startMeasuring("largeFileScan")
         defer { performanceMonitor.endMeasuring(token) }
         
@@ -92,130 +145,237 @@ class LargeFileScanner: ObservableObject {
             self.scannedCount = 0
             self.totalSize = 0
             self.hasCompletedScan = false
+            self.isCleaning = false
+            self.cleanedCount = 0
+            self.cleanedSize = 0
             self.isStopped = false
-            self.shouldStop = false
             self.scanProgress = nil
         }
+        setStopRequested(false)
         
         let fileManager = FileManager.default
-        let home = fileManager.homeDirectoryForCurrentUser
+        let requestedScanRoot = requestedRoot ?? fileManager.homeDirectoryForCurrentUser
+        // CleanMyMac's volume option reports the volume capacity, but its LAOF
+        // query searches user-owned content and excludes macOS internals.
+        let scanRoot = requestedScanRoot.path == "/"
+            ? fileManager.homeDirectoryForCurrentUser
+            : requestedScanRoot
         
         // Critical directories to exclude from recursion
-        let excludedDirs: Set<String> = [
-            "Library", "Applications", "Public", ".Trash", ".git", "node_modules", 
-            "go", "venv", ".build", "Pods" // Dev exclusions
-        ]
+        let excludedDirs: Set<String> = ["Library", ".Trash", ".git"]
         
-        // Get all top-level items in Home
-        guard let topLevelItems = try? fileManager.contentsOfDirectory(at: home, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]) else {
-            await MainActor.run { self.isScanning = false }
-            return
-        }
-        
-        let collector = ScanResultCollector<FileItem>()
-        var totalScannedCount = 0
+        let accumulator = LargeFileScanAccumulator()
         let scanStartTime = Date()
-        
-        await withTaskGroup(of: ([FileItem], Int).self) { group in
-            for itemURL in topLevelItems {
-                let name = itemURL.lastPathComponent
-                if excludedDirs.contains(name) { continue }
-                
-                // Determine if it's a directory
-                let resourceValues = try? itemURL.resourceValues(forKeys: [.isDirectoryKey, .isPackageKey])
-                let isDirectory = resourceValues?.isDirectory ?? false
-                let isPackage = resourceValues?.isPackage ?? false
-                
-                if isDirectory && !isPackage {
-                    // Spawn a task for each top-level directory (Recursively scan)
-                    group.addTask {
-                        await self.scanDirectoryRecursively(itemURL, excludedDirs: excludedDirs)
-                    }
-                } else {
-                    // Check file size directly
-                    group.addTask {
-                        await self.checkFileSize(itemURL)
-                    }
-                }
+
+        // The original module queries Spotlight's volume index. It returns
+        // user-facing large files in under a second and naturally omits most
+        // cache/package internals. Keep the enumerator below as a fallback for
+        // folders or volumes whose Spotlight index is unavailable.
+        let usedSpotlight = await scanUsingSpotlight(
+            at: scanRoot,
+            excludedDirs: excludedDirs,
+            accumulator: accumulator,
+            scanStartTime: scanStartTime
+        )
+
+        if !usedSpotlight && !isStopRequested {
+            guard let topLevelItems = try? fileManager.contentsOfDirectory(
+                at: scanRoot,
+                includingPropertiesForKeys: [.isDirectoryKey],
+                options: []
+            ) else {
+                await MainActor.run { self.isScanning = false }
+                return
             }
-            
-            // Collect results with batch processing and progress reporting
-            var batchFiles: [FileItem] = []
-            var batchSize: Int64 = 0
-            var lastUpdateTime = Date()
-            
-            for await (files, count) in group {
-                if self.shouldStop { break }
-                batchFiles.append(contentsOf: files)
-                totalScannedCount += count
-                batchSize += files.reduce(0) { $0 + $1.size }
-                
-                // Update UI periodically with progress
-                let now = Date()
-                if now.timeIntervalSince(lastUpdateTime) >= 0.2 || batchFiles.count >= 20 {
-                    let currentFiles = batchFiles.sorted(by: { $0.size > $1.size })
-                    let currentTotal = batchSize
-                    let currentCount = totalScannedCount
-                    let elapsedTime = now.timeIntervalSince(scanStartTime)
-                    
-                    await self.uiUpdater.batch {
-                        self.foundFiles = currentFiles
-                        self.totalSize = currentTotal
-                        self.scannedCount = currentCount
-                        self.scanProgress = ScanProgress(
-                            filesProcessed: currentCount,
-                            totalEstimated: currentCount + 1000, // Rough estimate
-                            currentPath: "",
-                            elapsedTime: elapsedTime
-                        )
+
+            await withTaskGroup(of: Void.self) { group in
+                for itemURL in topLevelItems {
+                    let name = itemURL.lastPathComponent
+                    if excludedDirs.contains(name) { continue }
+
+                    let resourceValues = try? itemURL.resourceValues(forKeys: [.isDirectoryKey, .isPackageKey])
+                    let isDirectory = resourceValues?.isDirectory ?? false
+                    let isPackage = resourceValues?.isPackage ?? false
+
+                    if isDirectory && !isPackage {
+                        group.addTask {
+                            await self.scanDirectoryRecursively(
+                                itemURL,
+                                excludedDirs: excludedDirs,
+                                accumulator: accumulator,
+                                scanStartTime: scanStartTime
+                            )
+                        }
+                    } else {
+                        group.addTask {
+                            let files = await self.checkFileSize(itemURL).0
+                                .filter { ScanResultIgnoreStore.shouldInclude($0.url) }
+                            if let snapshot = await accumulator.record(
+                                processed: 1,
+                                discoveredFiles: files,
+                                currentPath: itemURL.path
+                            ) {
+                                await self.publish(snapshot, scanStartTime: scanStartTime)
+                            }
+                        }
                     }
-                    lastUpdateTime = now
                 }
-                
-                await collector.appendContents(of: files)
             }
         }
         
-        // Final Update
-        let finalFiles = await collector.getResults().sorted(by: { $0.size > $1.size })
-        let finalTotal = finalFiles.reduce(0) { $0 + $1.size }
+        let finalSnapshot = await accumulator.finalSnapshot()
+        let finalFiles = finalSnapshot.files.sorted(by: { $0.size > $1.size })
         let totalElapsedTime = Date().timeIntervalSince(scanStartTime)
+        let stopped = isStopRequested
         
         await uiUpdater.batch {
             self.foundFiles = finalFiles
-            self.totalSize = finalTotal
-            self.scannedCount = totalScannedCount
+            self.totalSize = finalSnapshot.totalSize
+            self.scannedCount = finalSnapshot.filesProcessed
             self.isScanning = false
-            self.hasCompletedScan = true
+            self.hasCompletedScan = !stopped || !finalFiles.isEmpty
+            self.isStopped = stopped
             self.scanProgress = ScanProgress(
-                filesProcessed: totalScannedCount,
-                totalEstimated: totalScannedCount,
-                currentPath: "Scan complete",
+                filesProcessed: finalSnapshot.filesProcessed,
+                totalEstimated: finalSnapshot.filesProcessed,
+                currentPath: stopped ? finalSnapshot.currentPath : "Scan complete",
                 elapsedTime: totalElapsedTime
             )
         }
     }
+
+    private func scanUsingSpotlight(
+        at root: URL,
+        excludedDirs: Set<String>,
+        accumulator: LargeFileScanAccumulator,
+        scanStartTime: Date
+    ) async -> Bool {
+        let rootPath = root.path
+        let threshold = minimumSize
+        let queryResult = await Task.detached(priority: .userInitiated) { () -> (Int32, [String]) in
+            let process = Process()
+            let output = Pipe()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/mdfind")
+            process.arguments = [
+                "-0",
+                "-onlyin", rootPath,
+                "kMDItemFSSize >= \(threshold)"
+            ]
+            process.standardOutput = output
+            process.standardError = Pipe()
+
+            do {
+                try process.run()
+                let data = output.fileHandleForReading.readDataToEndOfFile()
+                process.waitUntilExit()
+                let paths = String(decoding: data, as: UTF8.self)
+                    .split(separator: "\0")
+                    .map(String.init)
+                return (process.terminationStatus, paths)
+            } catch {
+                return (-1, [])
+            }
+        }.value
+
+        guard queryResult.0 == 0 else { return false }
+
+        var pendingFiles: [FileItem] = []
+        var pendingCount = 0
+        var currentPath = root.path
+
+        for path in queryResult.1 {
+            if isStopRequested || Task.isCancelled { break }
+
+            let url = URL(fileURLWithPath: path)
+            let components = Set(url.pathComponents)
+            if !excludedDirs.isDisjoint(with: components) { continue }
+
+            guard let values = try? url.resourceValues(forKeys: [
+                .isRegularFileKey,
+                .fileSizeKey,
+                .contentAccessDateKey
+            ]),
+            values.isRegularFile == true,
+            let fileSize = values.fileSize,
+            Int64(fileSize) > minimumSize,
+            ScanResultIgnoreStore.shouldInclude(url)
+            else { continue }
+
+            currentPath = path
+            pendingCount += 1
+            pendingFiles.append(
+                FileItem(
+                    url: url,
+                    name: url.lastPathComponent,
+                    size: Int64(fileSize),
+                    type: url.pathExtension.isEmpty ? "File" : url.pathExtension.uppercased(),
+                    accessDate: values.contentAccessDate ?? Date()
+                )
+            )
+
+            if let snapshot = await accumulator.record(
+                processed: pendingCount,
+                discoveredFiles: pendingFiles,
+                currentPath: currentPath
+            ) {
+                await publish(snapshot, scanStartTime: scanStartTime)
+            }
+            pendingCount = 0
+            pendingFiles.removeAll(keepingCapacity: true)
+
+            // Preserve the brief observable scan state of the original while
+            // still publishing only real indexed paths and sizes.
+            try? await Task.sleep(nanoseconds: 14_000_000)
+        }
+
+        if pendingCount > 0 || !pendingFiles.isEmpty || queryResult.1.isEmpty {
+            if let snapshot = await accumulator.record(
+                processed: pendingCount,
+                discoveredFiles: pendingFiles,
+                currentPath: currentPath,
+                forcePublish: true
+            ) {
+                await publish(snapshot, scanStartTime: scanStartTime)
+            }
+        }
+
+        let minimumVisibleDuration: TimeInterval = 0.9
+        let elapsed = Date().timeIntervalSince(scanStartTime)
+        if !isStopRequested && elapsed < minimumVisibleDuration {
+            try? await Task.sleep(
+                nanoseconds: UInt64((minimumVisibleDuration - elapsed) * 1_000_000_000)
+            )
+        }
+        return true
+    }
     
-    private func scanDirectoryRecursively(_ directory: URL, excludedDirs: Set<String>) async -> ([FileItem], Int) {
+    private func scanDirectoryRecursively(
+        _ directory: URL,
+        excludedDirs: Set<String>,
+        accumulator: LargeFileScanAccumulator,
+        scanStartTime: Date
+    ) async {
         let fileManager = FileManager.default
-        var files: [FileItem] = []
-        var scannedCount = 0
+        var pendingFiles: [FileItem] = []
+        var pendingCount = 0
+        var currentPath = directory.path
+        var lastFlushTime = Date()
         
         // Use enumerator for deep recursion
         // skipsPackageDescendants is CRITICAL to treat Apps/Bundles as single files
-        let options: FileManager.DirectoryEnumerationOptions = [.skipsHiddenFiles, .skipsPackageDescendants]
+        let options: FileManager.DirectoryEnumerationOptions = [.skipsPackageDescendants]
         
         guard let enumerator = fileManager.enumerator(
             at: directory,
             includingPropertiesForKeys: [.fileSizeKey, .isDirectoryKey, .contentAccessDateKey],
             options: options
-        ) else { return (files, scannedCount) }
+        ) else { return }
         
         while let fileURL = enumerator.nextObject() as? URL {
-            // Check for cancellation
-            if self.shouldStop || self.isStopped { break } // Simple check, though running in sync loop
+            if isStopRequested || Task.isCancelled { break }
             
-            scannedCount += 1
+            pendingCount += 1
+            currentPath = fileURL.path
             
             // Exclusion check
             if excludedDirs.contains(fileURL.lastPathComponent) {
@@ -239,14 +399,67 @@ class LargeFileScanner: ObservableObject {
                         type: fileURL.pathExtension.isEmpty ? "File" : fileURL.pathExtension.uppercased(),
                         accessDate: accessDate
                     )
-                    files.append(item)
+                    if ScanResultIgnoreStore.shouldInclude(item.url) {
+                        pendingFiles.append(item)
+                    }
                 }
             } catch {
                 continue
             }
+
+            let now = Date()
+            if pendingCount >= 128 || now.timeIntervalSince(lastFlushTime) >= 0.14 {
+                if let snapshot = await accumulator.record(
+                    processed: pendingCount,
+                    discoveredFiles: pendingFiles,
+                    currentPath: currentPath
+                ) {
+                    await publish(snapshot, scanStartTime: scanStartTime)
+                }
+                pendingFiles.removeAll(keepingCapacity: true)
+                pendingCount = 0
+                lastFlushTime = now
+            }
         }
-        
-        return (files, scannedCount)
+
+        if pendingCount > 0 || !pendingFiles.isEmpty {
+            if let snapshot = await accumulator.record(
+                processed: pendingCount,
+                discoveredFiles: pendingFiles,
+                currentPath: currentPath,
+                forcePublish: true
+            ) {
+                await publish(snapshot, scanStartTime: scanStartTime)
+            }
+        }
+    }
+
+    private func publish(_ snapshot: LargeFileScanAccumulator.Snapshot, scanStartTime: Date) async {
+        let elapsedTime = Date().timeIntervalSince(scanStartTime)
+        await uiUpdater.batch {
+            guard self.isScanning else { return }
+            self.foundFiles = snapshot.files.sorted(by: { $0.size > $1.size })
+            self.totalSize = snapshot.totalSize
+            self.scannedCount = snapshot.filesProcessed
+            self.scanProgress = ScanProgress(
+                filesProcessed: snapshot.filesProcessed,
+                totalEstimated: max(snapshot.filesProcessed + 512, 1),
+                currentPath: snapshot.currentPath,
+                elapsedTime: elapsedTime
+            )
+        }
+    }
+
+    private var isStopRequested: Bool {
+        stopLock.lock()
+        defer { stopLock.unlock() }
+        return stopRequested
+    }
+
+    private func setStopRequested(_ value: Bool) {
+        stopLock.lock()
+        stopRequested = value
+        stopLock.unlock()
     }
     
     // Check single file
@@ -322,4 +535,3 @@ class LargeFileScanner: ObservableObject {
         return result
     }
 }
-

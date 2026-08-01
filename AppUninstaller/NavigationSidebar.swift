@@ -25,13 +25,13 @@ enum SidebarSection: String, CaseIterable {
         case .main:
             return [.monitor, .smartClean]
         case .cleanup:
-            return [.cleaner, .deepClean, .trash]
+            return [.cleaner, .mailAttachments, .trash, .deepClean]
         case .protection:
             return [.malware, .privacy]
         case .speed:
             return [.optimizer, .maintenance]
         case .apps:
-            return [.uninstaller, .updater]
+            return [.uninstaller, .updater, .extensions]
         case .files:
             return [.fileExplorer, .spaceLens, .largeFiles, .shredder]
         }
@@ -71,13 +71,13 @@ struct NavigationSidebar: View {
                     }
                     
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(localization.currentLanguage == .chinese ? "Mac优化大师" : "MacOptimizer")
+                        Text(localization.text("Mac优化大师", "MacOptimizer"))
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(.white)
                         
                         // 显示版本更新提示
                         if updateService.hasUpdate {
-                            Text(localization.currentLanguage == .chinese ? "发现新版本" : "New Version")
+                            Text(localization.text("发现新版本", "New Version"))
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 6)
@@ -159,7 +159,7 @@ struct NavigationSidebar: View {
                             .clipShape(Circle())
                     }
                     .buttonStyle(.plain)
-                    .help(localization.currentLanguage == .chinese ? "设置" : "Settings")
+                    .help(localization.text("设置", "Settings"))
                 }
                 
                 HStack(spacing: 6) {
@@ -200,21 +200,44 @@ struct SidebarMenuItem: View {
     // 获取本地化的模块名称
     private var localizedName: String {
         switch module {
-        case .monitor: return localization.currentLanguage == .chinese ? "控制台" : "Monitor"
-        case .uninstaller: return localization.currentLanguage == .chinese ? "卸载器" : "Uninstaller"
-        case .updater: return localization.currentLanguage == .chinese ? "更新程序" : "Updater"
-        case .deepClean: return localization.currentLanguage == .chinese ? "深度清理" : "Deep Clean"
-        case .cleaner: return localization.currentLanguage == .chinese ? "系统垃圾" : "System Junk"
-        case .maintenance: return localization.currentLanguage == .chinese ? "维护" : "Maintenance"
-        case .optimizer: return localization.currentLanguage == .chinese ? "优化" : "Optimization"
-        case .shredder: return localization.currentLanguage == .chinese ? "碎纸机" : "Shredder"
-        case .largeFiles: return localization.currentLanguage == .chinese ? "大型和旧文件" : "Large & Old Files"
-        case .fileExplorer: return localization.currentLanguage == .chinese ? "文件管理" : "File Management"
-        case .spaceLens: return localization.currentLanguage == .chinese ? "空间透镜" : "Space Lens"
-        case .trash: return localization.currentLanguage == .chinese ? "废纸篓" : "Trash Bins"
-        case .privacy: return localization.currentLanguage == .chinese ? "隐私" : "Privacy"
-        case .malware: return localization.currentLanguage == .chinese ? "移除恶意软件" : "Malware Removal"
-        case .smartClean: return localization.currentLanguage == .chinese ? "智能扫描" : "Smart Scan"
+        case .monitor: return localization.text("控制台", "Monitor")
+        case .uninstaller: return localization.text(
+    simplifiedChinese: "卸载器",
+    traditionalChinese: "解除安裝器",
+    english: "Uninstaller",
+    japanese: "アンインストーラー",
+    korean: "제거 프로그램",
+    russian: "Удалитель"
+)
+        case .updater: return localization.text(
+    simplifiedChinese: "更新程序",
+    traditionalChinese: "更新程式",
+    english: "Updater",
+    japanese: "Updater",
+    korean: "업데이터",
+    russian: "Обновления"
+)
+        case .extensions: return localization.text("扩展", "Extensions")
+        case .mailAttachments: return localization.text("邮件附件", "Mail Attachments")
+        case .deepClean: return localization.text(
+    simplifiedChinese: "深度清理",
+    traditionalChinese: "深度清理",
+    english: "Deep Clean",
+    japanese: "ディープクリーン",
+    korean: "철저한 세척",
+    russian: "Глубокая очистка"
+)
+        case .cleaner: return localization.text("系统垃圾", "System Junk")
+        case .maintenance: return localization.text("维护", "Maintenance")
+        case .optimizer: return localization.text("优化", "Optimization")
+        case .shredder: return localization.text("碎纸机", "Shredder")
+        case .largeFiles: return localization.text("大型和旧文件", "Large & Old Files")
+        case .fileExplorer: return localization.text("文件管理", "File Management")
+        case .spaceLens: return localization.text("空间透镜", "Space Lens")
+        case .trash: return localization.text("废纸篓", "Trash Bins")
+        case .privacy: return localization.text("隐私", "Privacy")
+        case .malware: return localization.text("移除恶意软件", "Malware Removal")
+        case .smartClean: return localization.text("智能扫描", "Smart Scan")
         }
     }
     

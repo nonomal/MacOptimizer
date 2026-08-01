@@ -4,6 +4,8 @@ import AppKit
 // MARK: - Console Dashboard
 struct MonitorView: View {
     @State private var viewState: DashboardState = .dashboard
+    @State private var processSortMode: ConsoleProcessSortMode = .memory
+    @StateObject private var systemMonitor = SystemMonitorService()
     @ObservedObject var loc = LocalizationManager.shared
     
     enum DashboardState {
@@ -28,29 +30,35 @@ struct MonitorView: View {
             ZStack {
                 switch viewState {
                 case .dashboard:
-                    ConsoleOverviewView(viewState: $viewState, systemMonitor: SystemMonitorService())
-                        .transition(.opacity)
+                    ConsoleOverviewView(
+                        viewState: $viewState,
+                        processSortMode: $processSortMode,
+                        systemMonitor: systemMonitor
+                    )
                 case .protection:
-                    ConsoleProtectionView(viewState: $viewState)
-                        .transition(.opacity)
+                    ConsoleProtectionDetailView(viewState: $viewState)
                 case .appManager:
-                    ConsoleAppManagerView(viewState: $viewState)
-                        .transition(.opacity)
+                    ConsoleAppManagerDetailView(viewState: $viewState)
                 case .portManager:
-                    ConsolePortManagerView(viewState: $viewState)
-                        .transition(.opacity)
+                    ConsolePortManagerDetailView(viewState: $viewState)
                 case .processManager:
-                    ConsoleProcessManagerView(viewState: $viewState)
-                        .transition(.opacity)
+                    ConsoleProcessManagerDetailView(
+                        viewState: $viewState,
+                        sortMode: $processSortMode
+                    )
                 case .networkOptimize:
-                    ConsoleNetworkOptimizeView(viewState: $viewState)
-                        .transition(.opacity)
+                    ConsoleNetworkDetailView(viewState: $viewState, systemService: systemMonitor)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.clear) // Gradient is in main window
         }
-        .animation(.easeInOut(duration: 0.2), value: viewState)
+        .onAppear {
+            systemMonitor.startMonitoring()
+        }
+        .onDisappear {
+            systemMonitor.stopMonitoring()
+        }
     }
 }
 
@@ -66,11 +74,18 @@ struct ConsoleDashboardView: View {
             // Header
             HStack {
                 VStack(alignment: .leading) {
-                    Text(loc.currentLanguage == .chinese ? "控制台" : "Console")
+                    Text(loc.text(
+    simplifiedChinese: "控制台",
+    traditionalChinese: "主控台",
+    english: "Console",
+    japanese: "ゲーム機:",
+    korean: "콘솔",
+    russian: "Консоль"
+))
                         .font(.largeTitle)
                         .bold()
                         .foregroundColor(.white)
-                    Text(loc.currentLanguage == .chinese ? "系统概览与管理" : "System Overview & Management")
+                    Text(loc.text("系统概览与管理", "System Overview & Management"))
                         .foregroundColor(.white.opacity(0.7))
                 }
                 Spacer()
@@ -82,7 +97,7 @@ struct ConsoleDashboardView: View {
                     // Top Stats: System Stats, Network (Reorganized)
                     HStack(spacing: 16) {
                         // CPU & Memory Circle
-                        MonitorCard(title: loc.currentLanguage == .chinese ? "系统负载" : "System Load", icon: "cpu", color: .blue) {
+                        MonitorCard(title: loc.text("系统负载", "System Load"), icon: "cpu", color: .blue) {
                             HStack(spacing: 20) {
                                 UsageRing(percentage: systemService.cpuUsage, label: "CPU", subLabel: String(format: "%.0f%%", systemService.cpuUsage * 100))
                                 UsageRing(percentage: systemService.memoryUsage, label: "RAM", subLabel: String(format: "%.0f%%", systemService.memoryUsage * 100))
@@ -93,7 +108,7 @@ struct ConsoleDashboardView: View {
                         Button(action: {
                             viewState = .networkOptimize
                         }) {
-                            MonitorCard(title: loc.currentLanguage == .chinese ? "网络速度" : "Network", icon: "wifi", color: .green) {
+                            MonitorCard(title: loc.text("网络速度", "Network"), icon: "wifi", color: .green) {
                                 VStack(spacing: 8) {
                                     // 波形图
                                     NetworkWaveform(downloadHistory: systemService.downloadSpeedHistory, uploadHistory: systemService.uploadSpeedHistory)
@@ -132,7 +147,7 @@ struct ConsoleDashboardView: View {
                     }
                     .frame(height: 160)
                     
-                    Text(loc.currentLanguage == .chinese ? "管理工具" : "Management Tools")
+                    Text(loc.text("管理工具", "Management Tools"))
                         .font(.headline)
                         .foregroundColor(.white.opacity(0.8))
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -142,8 +157,15 @@ struct ConsoleDashboardView: View {
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
                         // App Management
                         DashboardButton(
-                            title: loc.currentLanguage == .chinese ? "应用管理" : "App Manager",
-                            description: loc.currentLanguage == .chinese ? "管理应用、强制退出、重置" : "Manage apps, force quit, reset",
+                            title: loc.text(
+    simplifiedChinese: "应用管理",
+    traditionalChinese: "應用管理",
+    english: "App Manager",
+    japanese: "アプリマネージャー",
+    korean: "앱 관리자",
+    russian: "Диспетчер приложений"
+),
+                            description: loc.text("管理应用、强制退出、重置", "Manage apps, force quit, reset"),
                             icon: "square.grid.2x2.fill",
                             color: .cyan
                         ) {
@@ -152,8 +174,15 @@ struct ConsoleDashboardView: View {
                         
                         // Port Management
                         DashboardButton(
-                            title: loc.currentLanguage == .chinese ? "端口管理" : "Port Manager",
-                            description: loc.currentLanguage == .chinese ? "查看和关闭网络端口" : "View and close network ports",
+                            title: loc.text(
+    simplifiedChinese: "端口管理",
+    traditionalChinese: "連接埠管理",
+    english: "Port Manager",
+    japanese: "港湾管理者",
+    korean: "포트 관리자",
+    russian: "Менеджер порта"
+),
+                            description: loc.text("查看和关闭网络端口", "View and close network ports"),
                             icon: "network",
                             color: .purple
                         ) {
@@ -162,8 +191,15 @@ struct ConsoleDashboardView: View {
                         
                         // Process Management
                         DashboardButton(
-                            title: loc.currentLanguage == .chinese ? "进程管理" : "Process Manager",
-                            description: loc.currentLanguage == .chinese ? "监控和结束后台进程" : "Monitor and kill background processes",
+                            title: loc.text(
+    simplifiedChinese: "进程管理",
+    traditionalChinese: "行程管理",
+    english: "Process Manager",
+    japanese: "プロセスマネージャー",
+    korean: "진행관리자",
+    russian: "Менеджер по технологиям"
+),
+                            description: loc.text("监控和结束后台进程", "Monitor and kill background processes"),
                             icon: "waveform.path.ecg",
                             color: .green
                         ) {
@@ -172,8 +208,15 @@ struct ConsoleDashboardView: View {
                         
                         // Protection Center
                         DashboardButton(
-                            title: loc.currentLanguage == .chinese ? "安全中心" : "Safety Center",
-                            description: ProtectionService.shared.isMonitoring ? (loc.currentLanguage == .chinese ? "实时保护已开启" : "Real-time protection on") : (loc.currentLanguage == .chinese ? "实时保护未开启" : "Protection disabled"),
+                            title: loc.text(
+    simplifiedChinese: "安全中心",
+    traditionalChinese: "安全中心",
+    english: "Safety Center",
+    japanese: "セーフティセンター",
+    korean: "CCTV 안전센터",
+    russian: "Центр безопасности"
+),
+                            description: ProtectionService.shared.isMonitoring ? (loc.text("实时保护已开启", "Real-time protection on")) : (loc.text("实时保护未开启", "Protection disabled")),
                             icon: "shield.checkerboard",
                             color: ProtectionService.shared.isMonitoring ? .green : .orange
                         ) {
@@ -215,7 +258,14 @@ struct ConsoleAppManagerView: View {
         VStack(spacing: 0) {
             // Header with Back Button
             ConsoleHeader(
-                title: loc.currentLanguage == .chinese ? "应用管理" : "App Manager",
+                title: loc.text(
+    simplifiedChinese: "应用管理",
+    traditionalChinese: "應用管理",
+    english: "App Manager",
+    japanese: "アプリマネージャー",
+    korean: "앱 관리자",
+    russian: "Диспетчер приложений"
+),
                 backAction: { viewState = .dashboard }
             )
             
@@ -223,7 +273,7 @@ struct ConsoleAppManagerView: View {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondaryText)
-                TextField(loc.currentLanguage == .chinese ? "搜索应用..." : "Search apps...", text: $searchText)
+                TextField(loc.text("搜索应用...", "Search apps..."), text: $searchText)
                     .textFieldStyle(.plain)
                     .foregroundColor(.white)
                 
@@ -245,7 +295,7 @@ struct ConsoleAppManagerView: View {
             if isScanning {
                 Spacer()
                 ProgressView()
-                Text(loc.currentLanguage == .chinese ? "正在加载应用..." : "Loading apps...")
+                Text(loc.text("正在加载应用...", "Loading apps..."))
                     .foregroundColor(.secondaryText)
                     .padding(.top)
                 Spacer()
@@ -253,11 +303,11 @@ struct ConsoleAppManagerView: View {
                 List {
                     // Header Row
                     HStack {
-                        Text(loc.currentLanguage == .chinese ? "应用名称" : "App Name")
+                        Text(loc.text("应用名称", "App Name"))
                             .frame(maxWidth: .infinity, alignment: .leading)
-                        Text(loc.currentLanguage == .chinese ? "状态" : "Status")
+                        Text(loc.text("状态", "Status"))
                             .frame(width: 80, alignment: .leading)
-                        Text(loc.currentLanguage == .chinese ? "操作" : "Actions")
+                        Text(loc.text("操作", "Actions"))
                             .frame(width: 200, alignment: .trailing)
                     }
                     .font(.caption)
@@ -387,7 +437,7 @@ struct AppManagerRow: View {
             Text(installedApp.name)
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.white)
-            Text((loc.currentLanguage == .chinese ? "应用大小: " : "App Size: ") + installedApp.formattedSize)
+            Text((loc.text("应用大小: ", "App Size: ")) + installedApp.formattedSize)
                 .font(.caption)
                 .foregroundColor(.white.opacity(0.6))
         }
@@ -397,11 +447,18 @@ struct AppManagerRow: View {
         HStack {
             if isRunningLocal {
                 Circle().fill(Color.green).frame(width: 8, height: 8)
-                Text(loc.currentLanguage == .chinese ? "运行中" : "Running")
+                Text(loc.text("运行中", "Running"))
                     .font(.caption)
                     .foregroundColor(.green)
             } else {
-                Text(loc.currentLanguage == .chinese ? "未运行" : "Stopped")
+                Text(loc.text(
+    simplifiedChinese: "未运行",
+    traditionalChinese: "未運行",
+    english: "Stopped",
+    japanese: "中止中",
+    korean: "중지됨",
+    russian: "Остановлено"
+))
                     .font(.caption)
                     .foregroundColor(.secondaryText)
             }
@@ -424,13 +481,27 @@ struct AppManagerRow: View {
             HStack(spacing: 4) {
                 if isSpinning {
                     ProgressView().scaleEffect(0.5).frame(width: 10, height: 10)
-                    Text(loc.currentLanguage == .chinese ? "清理中..." : "Cleaning...")
+                    Text(loc.text("清理中...", "Cleaning..."))
                 } else if showSuccess {
                     Image(systemName: "checkmark")
-                    Text(loc.currentLanguage == .chinese ? "完成" : "Done")
+                    Text(loc.text(
+    simplifiedChinese: "完成",
+    traditionalChinese: "完成",
+    english: "Done",
+    japanese: "完了",
+    korean: "완료",
+    russian: "Готово"
+))
                 } else {
                     Image(systemName: "eraser")
-                    Text(loc.currentLanguage == .chinese ? "清理" : "Clean")
+                    Text(loc.text(
+    simplifiedChinese: "清理",
+    traditionalChinese: "清理",
+    english: "Clean",
+    japanese: "洗う",
+    korean: "지우기",
+    russian: "Очистить"
+))
                 }
             }
             .padding(.horizontal, 10)
@@ -442,12 +513,12 @@ struct AppManagerRow: View {
         }
         .disabled(isSpinning)
         .buttonStyle(.plain)
-        .help(loc.currentLanguage == .chinese ? "清理应用残留数据（不删除应用本身）" : "Clean app data (keeps app installed)")
+        .help(loc.text("清理应用残留数据（不删除应用本身）", "Clean app data (keeps app installed)"))
         .alert(isPresented: $showCleanConfirmation) {
             Alert(
-                title: Text(loc.currentLanguage == .chinese ? "确认清理" : "Confirm Clean"),
-                message: Text(loc.currentLanguage == .chinese ? "该操作将清理应用的所有缓存、日志和配置数据。\n应用本身（\(app.installedApp.formattedSize)）将被保留。" : "This will clean all cache, logs, and config data.\nThe app itself (\(app.installedApp.formattedSize)) will be kept."),
-                primaryButton: .destructive(Text(loc.currentLanguage == .chinese ? "确认清理" : "Clean Data")) {
+                title: Text(loc.text("确认清理", "Confirm Clean")),
+                message: Text(loc.text("该操作将清理应用的所有缓存、日志和配置数据。\n应用本身（\(app.installedApp.formattedSize)）将被保留。", "This will clean all cache, logs, and config data.\nThe app itself (\(app.installedApp.formattedSize)) will be kept.")),
+                primaryButton: .destructive(Text(loc.text("确认清理", "Clean Data"))) {
                     Task {
                         isSpinning = true
                         showSuccess = false
@@ -491,7 +562,7 @@ struct AppManagerRow: View {
                         }
                     }
                 },
-                secondaryButton: .cancel(Text(loc.currentLanguage == .chinese ? "取消" : "Cancel"))
+                secondaryButton: .cancel(Text(loc.text("取消", "Cancel")))
             )
         }
     }
@@ -507,7 +578,7 @@ struct AppManagerRow: View {
                 }) {
                     HStack(spacing: 4) {
                         Image(systemName: "xmark.octagon.fill")
-                        Text(loc.currentLanguage == .chinese ? "强制退出" : "Force Quit")
+                        Text(loc.text("强制退出", "Force Quit"))
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
@@ -534,7 +605,14 @@ struct ConsolePortManagerView: View {
     var body: some View {
         VStack(spacing: 0) {
             ConsoleHeader(
-                title: loc.currentLanguage == .chinese ? "端口管理" : "Port Manager",
+                title: loc.text(
+    simplifiedChinese: "端口管理",
+    traditionalChinese: "連接埠管理",
+    english: "Port Manager",
+    japanese: "港湾管理者",
+    korean: "포트 관리자",
+    russian: "Менеджер порта"
+),
                 backAction: { viewState = .dashboard },
                 refreshAction: { Task { await portService.scanPorts() } }
             )
@@ -542,7 +620,7 @@ struct ConsolePortManagerView: View {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondaryText)
-                TextField(loc.currentLanguage == .chinese ? "搜索端口、PID..." : "Search ports, PID...", text: $searchText)
+                TextField(loc.text("搜索端口、PID...", "Search ports, PID..."), text: $searchText)
                     .textFieldStyle(.plain)
                     .foregroundColor(.white)
             }
@@ -561,16 +639,16 @@ struct ConsolePortManagerView: View {
                 ScrollView {
                     VStack(spacing: 1) {
                         HStack {
-                            Text(loc.currentLanguage == .chinese ? "程序" : "Process")
+                            Text(loc.text("程序", "Process"))
                                 .frame(width: 150, alignment: .leading)
                             Text("PID")
                                 .frame(width: 60, alignment: .leading)
-                            Text(loc.currentLanguage == .chinese ? "端口" : "Port")
+                            Text(loc.text("端口", "Port"))
                                 .frame(width: 80, alignment: .leading)
-                            Text(loc.currentLanguage == .chinese ? "协议" : "Proto")
+                            Text(loc.text("协议", "Proto"))
                                 .frame(width: 60, alignment: .leading)
                             Spacer()
-                            Text(loc.currentLanguage == .chinese ? "操作" : "Action")
+                            Text(loc.text("操作", "Action"))
                                 .frame(width: 60)
                         }
                         .font(.caption)
@@ -611,7 +689,7 @@ struct ConsolePortManagerView: View {
                                 Spacer()
                                 
                                 Button(action: { portService.terminateProcess(port) }) {
-                                    Text(loc.currentLanguage == .chinese ? "结束" : "Kill")
+                                    Text(loc.text("结束", "Kill"))
                                         .font(.caption)
                                         .foregroundColor(.white)
                                         .padding(.horizontal, 10)
@@ -647,7 +725,7 @@ struct ConsoleProcessManagerView: View {
     var body: some View {
         VStack(spacing: 0) {
             ConsoleHeader(
-                title: loc.currentLanguage == .chinese ? "后台进程管理" : "Background Processes",
+                title: loc.text("后台进程管理", "Background Processes"),
                 backAction: { viewState = .dashboard },
                 refreshAction: { Task { await processService.scanProcesses(showApps: false) } }
             )
@@ -655,7 +733,7 @@ struct ConsoleProcessManagerView: View {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondaryText)
-                TextField(loc.currentLanguage == .chinese ? "搜索进程..." : "Search processes...", text: $searchText)
+                TextField(loc.text("搜索进程...", "Search processes..."), text: $searchText)
                     .textFieldStyle(.plain)
                     .foregroundColor(.white)
             }
@@ -703,7 +781,7 @@ struct ConsoleProcessManagerView: View {
                                         .font(.system(size: 16))
                                 }
                                 .buttonStyle(.plain)
-                                .help(loc.currentLanguage == .chinese ? "强制结束" : "Force Quit")
+                                .help(loc.text("强制结束", "Force Quit"))
                             }
                             .padding(12)
                             .background(Color.white.opacity(0.02))
@@ -922,10 +1000,17 @@ struct ConsoleJunkCleanView: View {
             )
         }
         .confirmationDialog(
-            loc.currentLanguage == .chinese ? "确认删除" : "Confirm Delete",
+            loc.text("确认删除", "Confirm Delete"),
             isPresented: $showDeleteConfirmation
         ) {
-            Button(loc.currentLanguage == .chinese ? "开始清理" : "Start Cleaning", role: .destructive) {
+            Button(loc.text(
+    simplifiedChinese: "开始清理",
+    traditionalChinese: "開始清理",
+    english: "Start Cleaning",
+    japanese: "清掃を開始",
+    korean: "청소 시작",
+    russian: "Начало уборки"
+), role: .destructive) {
                 Task {
                     let result = await service.cleanAll()
                     deleteResult = (result.success, result.failed, result.size)
@@ -940,12 +1025,10 @@ struct ConsoleJunkCleanView: View {
             }
             Button(loc.L("cancel"), role: .cancel) {}
         } message: {
-            Text(loc.currentLanguage == .chinese ?
-                 "将清理所有选中的垃圾文件，释放空间。" :
-                 "Clean all selected files to free up space.")
+            Text(loc.text("将清理所有选中的垃圾文件，释放空间。", "Clean all selected files to free up space."))
         }
-        .alert(loc.currentLanguage == .chinese ? "部分文件需要管理员权限" : "Some Files Require Admin Privileges", isPresented: $showRetryWithAdmin) {
-            Button(loc.currentLanguage == .chinese ? "使用管理员权限删除" : "Delete with Admin", role: .destructive) {
+        .alert(loc.text("部分文件需要管理员权限", "Some Files Require Admin Privileges"), isPresented: $showRetryWithAdmin) {
+            Button(loc.text("使用管理员权限删除", "Delete with Admin"), role: .destructive) {
                 Task {
                     let adminResult = await service.cleanWithPrivileges(files: failedFiles)
                     if let currentResult = deleteResult {
@@ -964,9 +1047,7 @@ struct ConsoleJunkCleanView: View {
             }
         } message: {
             let totalFailedSize = failedFiles.reduce(0) { $0 + $1.size }
-            Text(loc.currentLanguage == .chinese ?
-                 "有 \(failedFiles.count) 个文件（共 \(ByteCountFormatter.string(fromByteCount: totalFailedSize, countStyle: .file))）因权限不足无法删除。\n\n是否使用管理员权限强制删除？" :
-                 "\(failedFiles.count) files (\(ByteCountFormatter.string(fromByteCount: totalFailedSize, countStyle: .file))) could not be deleted.")
+            Text(loc.text("有 \(failedFiles.count) 个文件（共 \(ByteCountFormatter.string(fromByteCount: totalFailedSize, countStyle: .file))）因权限不足无法删除。\n\n是否使用管理员权限强制删除？", "\(failedFiles.count) files (\(ByteCountFormatter.string(fromByteCount: totalFailedSize, countStyle: .file))) could not be deleted."))
         }
     }
     
@@ -974,7 +1055,7 @@ struct ConsoleJunkCleanView: View {
     private var noDataView: some View {
         VStack(spacing: 0) {
             ConsoleHeader(
-                title: loc.currentLanguage == .chinese ? "垃圾清理" : "Junk Cleanup",
+                title: loc.text("垃圾清理", "Junk Cleanup"),
                 backAction: { viewState = .dashboard }
             )
             
@@ -991,12 +1072,12 @@ struct ConsoleJunkCleanView: View {
             }
             .padding(.bottom, 30)
             
-            Text(loc.currentLanguage == .chinese ? "暂无垃圾数据" : "No junk data yet")
+            Text(loc.text("暂无垃圾数据", "No junk data yet"))
                 .font(.title2)
                 .foregroundColor(.white)
                 .padding(.bottom, 8)
             
-            Text(loc.currentLanguage == .chinese ? "请先进行系统扫描以检测可清理的垃圾文件" : "Run a system scan to detect cleanable junk files")
+            Text(loc.text("请先进行系统扫描以检测可清理的垃圾文件", "Run a system scan to detect cleanable junk files"))
                 .font(.body)
                 .foregroundColor(.secondaryText)
                 .padding(.bottom, 40)
@@ -1008,7 +1089,7 @@ struct ConsoleJunkCleanView: View {
             }) {
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass")
-                    Text(loc.currentLanguage == .chinese ? "开始扫描" : "Start Scan")
+                    Text(loc.text("开始扫描", "Start Scan"))
                 }
                 .font(.headline)
                 .foregroundColor(.white)
@@ -1027,13 +1108,13 @@ struct ConsoleJunkCleanView: View {
     private var scanningView: some View {
         VStack(spacing: 0) {
             ConsoleHeader(
-                title: loc.currentLanguage == .chinese ? "垃圾清理" : "Junk Cleanup",
+                title: loc.text("垃圾清理", "Junk Cleanup"),
                 backAction: { viewState = .dashboard }
             )
             
             Spacer()
             
-            Text(loc.currentLanguage == .chinese ? "正在扫描..." : "Scanning...")
+            Text(loc.text("正在扫描...", "Scanning..."))
                 .font(.system(size: 24, weight: .semibold))
                 .foregroundColor(.white)
                 .padding(.bottom, 40)
@@ -1056,7 +1137,14 @@ struct ConsoleJunkCleanView: View {
             Spacer()
             
             CircularActionButton(
-                title: loc.currentLanguage == .chinese ? "停止" : "Stop",
+                title: loc.text(
+    simplifiedChinese: "停止",
+    traditionalChinese: "停止",
+    english: "Stop",
+    japanese: "停止",
+    korean: "정지",
+    russian: "Остановить"
+),
                 gradient: CircularActionButton.stopGradient,
                 progress: service.scanProgress,
                 showProgress: true,
@@ -1081,7 +1169,7 @@ struct ConsoleJunkCleanView: View {
     private var resultsView: some View {
         VStack(spacing: 0) {
             ConsoleHeader(
-                title: loc.currentLanguage == .chinese ? "垃圾清理" : "Junk Cleanup",
+                title: loc.text("垃圾清理", "Junk Cleanup"),
                 backAction: { viewState = .dashboard },
                 refreshAction: {
                     Task {
@@ -1093,12 +1181,12 @@ struct ConsoleJunkCleanView: View {
             
             Spacer()
             
-            Text(loc.currentLanguage == .chinese ? "扫描完成" : "Scan Complete")
+            Text(loc.text("扫描完成", "Scan Complete"))
                 .font(.system(size: 24, weight: .semibold))
                 .foregroundColor(.white)
                 .padding(.bottom, 8)
             
-            Text(loc.currentLanguage == .chinese ? "发现以下可清理的垃圾文件" : "Found the following junk files")
+            Text(loc.text("发现以下可清理的垃圾文件", "Found the following junk files"))
                 .font(.body)
                 .foregroundColor(.secondaryText)
                 .padding(.bottom, 30)
@@ -1108,8 +1196,8 @@ struct ConsoleJunkCleanView: View {
                 ResultCategoryCard(
                     icon: "internaldrive.fill",
                     iconColor: .blue,
-                    title: loc.currentLanguage == .chinese ? "清理" : "Cleanup",
-                    subtitle: loc.currentLanguage == .chinese ? "移除不需要的垃圾" : "Remove junk",
+                    title: loc.text("清理", "Cleanup"),
+                    subtitle: loc.text("移除不需要的垃圾", "Remove junk"),
                     value: ByteCountFormatter.string(fromByteCount: totalScannedSize, countStyle: .file),
                     hasDetails: true,
                     onDetailTap: {
@@ -1122,7 +1210,7 @@ struct ConsoleJunkCleanView: View {
             Spacer()
             
             CircularActionButton(
-                title: loc.currentLanguage == .chinese ? "清理" : "Cleanup",
+                title: loc.text("清理", "Cleanup"),
                 gradient: CircularActionButton.greenGradient,
                 action: {
                     showDeleteConfirmation = true
@@ -1136,13 +1224,20 @@ struct ConsoleJunkCleanView: View {
     private var cleaningView: some View {
         VStack(spacing: 0) {
             ConsoleHeader(
-                title: loc.currentLanguage == .chinese ? "垃圾清理" : "Junk Cleanup",
+                title: loc.text("垃圾清理", "Junk Cleanup"),
                 backAction: { viewState = .dashboard }
             )
             
             Spacer()
             
-            Text(loc.currentLanguage == .chinese ? "正在清理系统..." : "Cleaning System...")
+            Text(loc.text(
+    simplifiedChinese: "正在清理系统...",
+    traditionalChinese: "正在清理系統...",
+    english: "Cleaning System...",
+    japanese: "システムのクリーニング",
+    korean: "세척 시스템(cleaning system)",
+    russian: "Процедура уборки"
+))
                 .font(.system(size: 24, weight: .semibold))
                 .foregroundColor(.white)
                 .padding(.bottom, 40)
@@ -1175,7 +1270,7 @@ struct ConsoleJunkCleanView: View {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle(tint: .green))
                 
-                Text(loc.currentLanguage == .chinese ? "清理中" : "Cleaning")
+                Text(loc.text("清理中", "Cleaning"))
                     .font(.caption)
                     .foregroundColor(.white)
             }
@@ -1187,7 +1282,7 @@ struct ConsoleJunkCleanView: View {
     private var cleaningFinishedView: some View {
         VStack(spacing: 0) {
             ConsoleHeader(
-                title: loc.currentLanguage == .chinese ? "垃圾清理" : "Junk Cleanup",
+                title: loc.text("垃圾清理", "Junk Cleanup"),
                 backAction: {
                     showCleaningFinished = false
                     viewState = .dashboard
@@ -1210,13 +1305,20 @@ struct ConsoleJunkCleanView: View {
             .padding(.bottom, 40)
             
             // 结果标题
-            Text(loc.currentLanguage == .chinese ? "做得不错！" : "Well Done!")
+            Text(loc.text("做得不错！", "Well Done!"))
                 .font(.title)
                 .bold()
                 .foregroundColor(.white)
                 .padding(.bottom, 8)
             
-            Text(loc.currentLanguage == .chinese ? "您的 Mac 状态很好。" : "Your Mac is in good shape.")
+            Text(loc.text(
+    simplifiedChinese: "您的 Mac 状态很好。",
+    traditionalChinese: "您的Mac 狀態很好。",
+    english: "Your Mac is in good shape.",
+    japanese: "お使いのMacは良好な状態です。",
+    korean: "Mac의 상태가 양호합니다.",
+    russian: "Ваш Mac в хорошей форме."
+))
                 .font(.body)
                 .foregroundColor(.secondaryText)
                 .padding(.bottom, 30)
@@ -1238,7 +1340,7 @@ struct ConsoleJunkCleanView: View {
                             .font(.headline)
                             .foregroundColor(.white)
                     }
-                    Text(loc.currentLanguage == .chinese ? "不需要的垃圾已移除" : "Junk removed")
+                    Text(loc.text("不需要的垃圾已移除", "Junk removed"))
                         .font(.caption)
                         .foregroundColor(.secondaryText)
                 }
@@ -1255,7 +1357,7 @@ struct ConsoleJunkCleanView: View {
                 }
                 viewState = .dashboard
             }) {
-                Text(loc.currentLanguage == .chinese ? "返回控制台" : "Back to Console")
+                Text(loc.text("返回控制台", "Back to Console"))
                     .font(.headline)
                     .foregroundColor(.white)
                     .padding(.horizontal, 24)
@@ -1372,7 +1474,7 @@ struct NetworkWaveform: View {
 // MARK: - 6. Network Optimize View
 struct ConsoleNetworkOptimizeView: View {
     @Binding var viewState: MonitorView.DashboardState
-    @StateObject private var systemService = SystemMonitorService()
+    @ObservedObject var systemService: SystemMonitorService
     @ObservedObject private var loc = LocalizationManager.shared
     
     @State private var isOptimizing = false
@@ -1383,7 +1485,7 @@ struct ConsoleNetworkOptimizeView: View {
     var body: some View {
         VStack(spacing: 0) {
             ConsoleHeader(
-                title: loc.currentLanguage == .chinese ? "网络优化" : "Network Optimization",
+                title: loc.text("网络优化", "Network Optimization"),
                 backAction: { viewState = .dashboard }
             )
             
@@ -1417,7 +1519,7 @@ struct ConsoleNetworkOptimizeView: View {
             
             // 当前网速显示
             VStack(spacing: 16) {
-                Text(loc.currentLanguage == .chinese ? "当前网络速度" : "Current Network Speed")
+                Text(loc.text("当前网络速度", "Current Network Speed"))
                     .font(.title2)
                     .foregroundColor(.white)
                 
@@ -1426,7 +1528,14 @@ struct ConsoleNetworkOptimizeView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "arrow.down.circle.fill")
                                 .foregroundColor(.green)
-                            Text(loc.currentLanguage == .chinese ? "下载" : "Download")
+                            Text(loc.text(
+    simplifiedChinese: "下载",
+    traditionalChinese: "下載",
+    english: "Download",
+    japanese: "ダウンロード",
+    korean: "다운로드",
+    russian: "Загрузить"
+))
                                 .font(.caption)
                                 .foregroundColor(.secondaryText)
                         }
@@ -1439,7 +1548,14 @@ struct ConsoleNetworkOptimizeView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "arrow.up.circle.fill")
                                 .foregroundColor(.cyan)
-                            Text(loc.currentLanguage == .chinese ? "上传" : "Upload")
+                            Text(loc.text(
+    simplifiedChinese: "上传",
+    traditionalChinese: "上傳",
+    english: "Upload",
+    japanese: "アップロード",
+    korean: "업로드",
+    russian: "Загрузить"
+))
                                 .font(.caption)
                                 .foregroundColor(.secondaryText)
                         }
@@ -1460,7 +1576,7 @@ struct ConsoleNetworkOptimizeView: View {
             Button(action: { startOptimization() }) {
                 HStack(spacing: 8) {
                     Image(systemName: "bolt.fill")
-                    Text(loc.currentLanguage == .chinese ? "优化网络" : "Optimize Network")
+                    Text(loc.text("优化网络", "Optimize Network"))
                 }
                 .font(.headline)
                 .foregroundColor(.white)
@@ -1474,14 +1590,14 @@ struct ConsoleNetworkOptimizeView: View {
             
             // 优化说明
             VStack(alignment: .leading, spacing: 8) {
-                Text(loc.currentLanguage == .chinese ? "网络优化将执行：" : "Network optimization will:")
+                Text(loc.text("网络优化将执行：", "Network optimization will:"))
                     .font(.caption)
                     .foregroundColor(.secondaryText)
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    OptimizationItem(text: loc.currentLanguage == .chinese ? "刷新 DNS 缓存" : "Flush DNS cache")
-                    OptimizationItem(text: loc.currentLanguage == .chinese ? "清理网络临时文件" : "Clear network temp files")
-                    OptimizationItem(text: loc.currentLanguage == .chinese ? "优化网络设置" : "Optimize network settings")
+                    OptimizationItem(text: loc.text("刷新 DNS 缓存", "Flush DNS cache"))
+                    OptimizationItem(text: loc.text("清理网络临时文件", "Clear network temp files"))
+                    OptimizationItem(text: loc.text("优化网络设置", "Optimize network settings"))
                 }
             }
             .padding(.top, 30)
@@ -1510,7 +1626,7 @@ struct ConsoleNetworkOptimizeView: View {
                     .foregroundColor(.green)
             }
             
-            Text(loc.currentLanguage == .chinese ? "正在优化网络..." : "Optimizing Network...")
+            Text(loc.text("正在优化网络...", "Optimizing Network..."))
                 .font(.title2)
                 .foregroundColor(.white)
             
@@ -1533,16 +1649,16 @@ struct ConsoleNetworkOptimizeView: View {
                     .foregroundColor(.green)
             }
             
-            Text(loc.currentLanguage == .chinese ? "网络优化完成" : "Network Optimization Complete")
+            Text(loc.text("网络优化完成", "Network Optimization Complete"))
                 .font(.title2)
                 .foregroundColor(.white)
             
-            Text(loc.currentLanguage == .chinese ? "您的网络已优化完毕" : "Your network has been optimized")
+            Text(loc.text("您的网络已优化完毕", "Your network has been optimized"))
                 .font(.body)
                 .foregroundColor(.secondaryText)
             
             Button(action: { viewState = .dashboard }) {
-                Text(loc.currentLanguage == .chinese ? "返回控制台" : "Back to Console")
+                Text(loc.text("返回控制台", "Back to Console"))
                     .font(.headline)
                     .foregroundColor(.white)
                     .padding(.horizontal, 24)
@@ -1560,9 +1676,9 @@ struct ConsoleNetworkOptimizeView: View {
         optimizationProgress = 0
         
         let steps = [
-            (loc.currentLanguage == .chinese ? "刷新 DNS 缓存..." : "Flushing DNS cache...", "sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder"),
-            (loc.currentLanguage == .chinese ? "清理网络临时文件..." : "Cleaning network temp files...", "rm -rf ~/Library/Caches/com.apple.network* 2>/dev/null"),
-            (loc.currentLanguage == .chinese ? "优化网络设置..." : "Optimizing network settings...", "networksetup -setairportpower en0 off 2>/dev/null; sleep 1; networksetup -setairportpower en0 on 2>/dev/null")
+            (loc.text("刷新 DNS 缓存...", "Flushing DNS cache..."), "sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder"),
+            (loc.text("清理网络临时文件...", "Cleaning network temp files..."), "rm -rf ~/Library/Caches/com.apple.network* 2>/dev/null"),
+            (loc.text("优化网络设置...", "Optimizing network settings..."), "networksetup -setairportpower en0 off 2>/dev/null; sleep 1; networksetup -setairportpower en0 on 2>/dev/null")
         ]
         
         Task {
@@ -1612,7 +1728,14 @@ struct ConsoleProtectionView: View {
     var body: some View {
         VStack(spacing: 0) {
             ConsoleHeader(
-                title: loc.currentLanguage == .chinese ? "安全中心" : "Safety Center",
+                title: loc.text(
+    simplifiedChinese: "安全中心",
+    traditionalChinese: "安全中心",
+    english: "Safety Center",
+    japanese: "セーフティセンター",
+    korean: "CCTV 안전센터",
+    russian: "Центр безопасности"
+),
                 backAction: { viewState = .dashboard }
             )
             
@@ -1621,12 +1744,12 @@ struct ConsoleProtectionView: View {
                     // Status Card
                     HStack {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(protectionService.isMonitoring ? (loc.currentLanguage == .chinese ? "实时保护已开启" : "Real-time Protection: ON") : (loc.currentLanguage == .chinese ? "实时保护已关闭" : "Real-time Protection: OFF"))
+                            Text(protectionService.isMonitoring ? (loc.text("实时保护已开启", "Real-time Protection: ON")) : (loc.text("实时保护已关闭", "Real-time Protection: OFF")))
                                 .font(.title3)
                                 .bold()
                                 .foregroundColor(protectionService.isMonitoring ? .green : .white)
                             
-                            Text(loc.currentLanguage == .chinese ? "正在监控下载文件夹和拦截网页广告" : "Monitoring downloads and blocking ads")
+                            Text(loc.text("正在监控下载文件夹和拦截网页广告", "Monitoring downloads and blocking ads"))
                                 .font(.caption)
                                 .foregroundColor(.white.opacity(0.6))
                         }
@@ -1653,7 +1776,7 @@ struct ConsoleProtectionView: View {
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
                         // Downloads Monitored
                         MonitorStatCard(
-                            title: loc.currentLanguage == .chinese ? "下载监控" : "Downloads",
+                            title: loc.text("下载监控", "Downloads"),
                             value: "Active",
                             icon: "arrow.down.circle.fill",
                             color: .blue
@@ -1661,7 +1784,7 @@ struct ConsoleProtectionView: View {
                         
                         // Ads Blocked
                         MonitorStatCard(
-                            title: loc.currentLanguage == .chinese ? "拦截广告" : "Ads Blocked",
+                            title: loc.text("拦截广告", "Ads Blocked"),
                             value: "\(protectionService.adBlockedCount)",
                             icon: "hand.raised.fill",
                             color: .orange
@@ -1669,7 +1792,7 @@ struct ConsoleProtectionView: View {
                         
                         // Threats
                         MonitorStatCard(
-                            title: loc.currentLanguage == .chinese ? "拦截威胁" : "Threats",
+                            title: loc.text("拦截威胁", "Threats"),
                             value: "\(protectionService.threatHistory.count)",
                             icon: "exclamationmark.shield.fill",
                             color: .red
@@ -1680,8 +1803,8 @@ struct ConsoleProtectionView: View {
                     VStack(spacing: 16) {
                         // Tab Picker
                         Picker("", selection: $selectedTab) {
-                            Text(loc.currentLanguage == .chinese ? "广告拦截记录" : "Blocked Ads").tag(0)
-                            Text(loc.currentLanguage == .chinese ? "威胁记录" : "Detected Threats").tag(1)
+                            Text(loc.text("广告拦截记录", "Blocked Ads")).tag(0)
+                            Text(loc.text("威胁记录", "Detected Threats")).tag(1)
                         }
                         .pickerStyle(.segmented)
                         .padding(.horizontal)
@@ -1691,8 +1814,8 @@ struct ConsoleProtectionView: View {
                             if protectionService.blockedAds.isEmpty {
                                 EmptyStateView(
                                     icon: "hand.raised",
-                                    title: loc.currentLanguage == .chinese ? "暂无拦截记录" : "No Ads Blocked",
-                                    subtitle: loc.currentLanguage == .chinese ? "浏览网页时将自动拦截广告" : "Ads will be blocked while browsing"
+                                    title: loc.text("暂无拦截记录", "No Ads Blocked"),
+                                    subtitle: loc.text("浏览网页时将自动拦截广告", "Ads will be blocked while browsing")
                                 )
                             } else {
                                 LazyVStack(spacing: 8) {
@@ -1713,7 +1836,7 @@ struct ConsoleProtectionView: View {
                                             
                                             Spacer()
                                             
-                                            Text(loc.currentLanguage == .chinese ? "已拦截" : "Blocked")
+                                            Text(loc.text("已拦截", "Blocked"))
                                                 .font(.caption2)
                                                 .foregroundColor(.green)
                                                 .padding(.horizontal, 6)
@@ -1733,8 +1856,8 @@ struct ConsoleProtectionView: View {
                             if protectionService.threatHistory.isEmpty {
                                 EmptyStateView(
                                     icon: "checkmark.shield",
-                                    title: loc.currentLanguage == .chinese ? "未发现威胁" : "No Threats Detected",
-                                    subtitle: loc.currentLanguage == .chinese ? "您的系统目前是安全的" : "Your system is currently safe"
+                                    title: loc.text("未发现威胁", "No Threats Detected"),
+                                    subtitle: loc.text("您的系统目前是安全的", "Your system is currently safe")
                                 )
                             } else {
                                 ForEach(protectionService.threatHistory) { threat in

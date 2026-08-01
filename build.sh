@@ -50,6 +50,10 @@ echo -e "${GREEN}✓ 目录准备完成${NC}"
 # 4. 复制资源
 echo -e "${YELLOW}[3/7] 复制资源文件...${NC}"
 cp "${SOURCE_DIR}/Info.plist" "${BUILD_DIR}/${BUNDLE_NAME}/Contents/"
+if [ -d "${SOURCE_DIR}/Localizations" ]; then
+    cp -R "${SOURCE_DIR}/Localizations/"*.lproj "${BUILD_DIR}/${BUNDLE_NAME}/Contents/Resources/"
+    echo -e "${GREEN}✓ 六语言 InfoPlist.strings 已复制${NC}"
+fi
 if [ -f "${SOURCE_DIR}/AppIcon.icns" ]; then
     cp "${SOURCE_DIR}/AppIcon.icns" "${BUILD_DIR}/${BUNDLE_NAME}/Contents/Resources/"
     echo -e "${GREEN}✓ AppIcon.icns 已复制${NC}"

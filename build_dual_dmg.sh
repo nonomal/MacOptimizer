@@ -73,6 +73,10 @@ build_architecture() {
     # b) 复制资源文件
     echo -e "${YELLOW}  复制资源文件...${NC}"
     cp "${SOURCE_DIR}/Info.plist" "${APP_DIR}/Contents/"
+    if [ -d "${SOURCE_DIR}/Localizations" ]; then
+        cp -R "${SOURCE_DIR}/Localizations/"*.lproj "${APP_DIR}/Contents/Resources/"
+        echo -e "${GREEN}  ✓ 六语言 InfoPlist.strings 已复制${NC}"
+    fi
     
     # 复制图标
     if [ -f "${SOURCE_DIR}/AppIcon.icns" ]; then

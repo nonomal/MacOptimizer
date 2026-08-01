@@ -37,9 +37,13 @@ class PortScannerService: ObservableObject {
     @Published var ports: [PortItem] = []
     @Published var isScanning = false
     @Published var filterListeningOnly = true
+    @Published var lastError: String?
     
     func scanPorts() async {
-        await MainActor.run { isScanning = true }
+        await MainActor.run {
+            isScanning = true
+            lastError = nil
+        }
         
         let task = Process()
         task.launchPath = "/usr/sbin/lsof"
@@ -54,6 +58,14 @@ class PortScannerService: ObservableObject {
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
             task.waitUntilExit()
             
+            if task.terminationStatus != 0 {
+                await MainActor.run {
+                    self.lastError = "lsof exited with status \(task.terminationStatus)"
+                    self.isScanning = false
+                }
+                return
+            }
+
             if let output = String(data: data, encoding: .utf8) {
                 let lines = output.components(separatedBy: "\n")
                 var items: [PortItem] = []
@@ -69,21 +81,18 @@ class PortScannerService: ObservableObject {
                     let command = String(parts[0])
                     let pidStr = String(parts[1])
                     let user = String(parts[2])
+                    let node = String(parts[7])
                     let name = parts[8...].joined(separator: " ")
                     
                     guard let pid = Int(pidStr) else { continue }
                     
                     // 解析 NAME 字段: *:8080 或 127.0.0.1:3306 或 *:3306 (LISTEN)
                     var port: Int? = nil
-                    var proto = "TCP"
+                    let proto = node.uppercased().contains("UDP") ? "UDP" : "TCP"
                     var state = ""
                     var address = "*"
                     
                     // 检查协议类型
-                    if name.contains("UDP") {
-                        proto = "UDP"
-                    }
-                    
                     // 解析状态
                     if name.contains("(LISTEN)") {
                         state = "LISTEN"
@@ -116,7 +125,7 @@ class PortScannerService: ObservableObject {
                     }
                     
                     // 去重：同一进程同一端口只显示一次
-                    let uniqueKey = "\(pid)-\(port ?? 0)"
+                    let uniqueKey = "\(pid)-\(proto)-\(address)-\(port ?? 0)"
                     if seenPorts.contains(uniqueKey) { continue }
                     seenPorts.insert(uniqueKey)
                     
@@ -142,12 +151,16 @@ class PortScannerService: ObservableObject {
             }
         } catch {
             print("Port Scan Error: \(error)")
-            await MainActor.run { isScanning = false }
+            await MainActor.run {
+                lastError = error.localizedDescription
+                isScanning = false
+            }
         }
     }
     
     /// 终止进程释放端口
     func terminateProcess(_ item: PortItem) {
+        lastError = nil
         let task = Process()
         task.launchPath = "/bin/kill"
         task.arguments = ["-9", String(item.pid)]
@@ -155,11 +168,17 @@ class PortScannerService: ObservableObject {
         do {
             try task.run()
             task.waitUntilExit()
+
+            guard task.terminationStatus == 0 else {
+                lastError = "kill exited with status \(task.terminationStatus)"
+                return
+            }
             
             // 刷新列表
             Task { await scanPorts() }
         } catch {
             print("Failed to terminate process: \(error)")
+            lastError = error.localizedDescription
         }
     }
 }

@@ -26,6 +26,9 @@ class MenuBarManager: NSObject, ObservableObject {
     
     // 标记是否已完成初始化
     private var isSetupComplete = false
+    private var isClosing = false
+    private var localMouseMonitor: Any?
+    private var appResignObserver: NSObjectProtocol?
     
     override init() {
         super.init()
@@ -96,6 +99,7 @@ class MenuBarManager: NSObject, ObservableObject {
         let window = MenuBarWindow(contentViewController: hostingController)
         self.popoverWindow = window
         window.level = .floating
+        window.setContentSize(NSSize(width: 430, height: 743))
         
         // 初始化内存警告控制器
         memoryAlertController = MemoryAlertWindowController(
@@ -116,6 +120,10 @@ class MenuBarManager: NSObject, ObservableObject {
     
     private func showWindow(relativeTo button: NSStatusBarButton) {
         guard let window = popoverWindow else { return }
+
+        isClosing = false
+        systemMonitor.startMonitoring()
+        DiskSpaceManager.shared.updateDiskSpace()
         
         // Position Logic
         let padding: CGFloat = 12
@@ -143,10 +151,17 @@ class MenuBarManager: NSObject, ObservableObject {
     }
     
     func closeWindow() {
+        guard !isClosing else { return }
+        isClosing = true
+
         // Close Detail First
         closeDetail()
         
-        guard let window = popoverWindow else { return }
+        guard let window = popoverWindow else {
+            isClosing = false
+            systemMonitor.stopMonitoring()
+            return
+        }
         
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = 0.15
@@ -154,6 +169,8 @@ class MenuBarManager: NSObject, ObservableObject {
         }, completionHandler: {
             window.orderOut(nil)
             self.isOpen = false
+            self.isClosing = false
+            self.systemMonitor.stopMonitoring()
         })
     }
     
@@ -244,7 +261,11 @@ class MenuBarManager: NSObject, ObservableObject {
     
     // MARK: - Open Main App
     
-    func openMainApp() {
+    func openMainApp(module: AppModule? = nil) {
+        if let module {
+            AppNavigationController.shared.selectedModule = module
+        }
+
         // Close menu bar windows
         closeWindow()
         
@@ -305,7 +326,7 @@ class MenuBarWindow: NSWindow {
 extension MenuBarManager {
     func setupAutoClose() {
         // Monitor global clicks to close if clicked outside
-        NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+        localMouseMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
             guard let self = self, self.isOpen else { return event }
             
             if let window = event.window, (window == self.popoverWindow || window == self.detailWindow) {
@@ -324,34 +345,8 @@ extension MenuBarManager {
             return event
         }
         
-        // Also listen for ResignKey
-        NotificationCenter.default.addObserver(forName: NSWindow.didResignKeyNotification, object: nil, queue: .main) { [weak self] notification in
-            guard let self = self, self.isOpen else { return }
-            guard let resignedWindow = notification.object as? NSWindow else { return }
-            
-            // Only care if one of OUR windows resigned key
-            if resignedWindow == self.popoverWindow || resignedWindow == self.detailWindow {
-                // Check what the NEW key window is.
-                // It might need a slight delay to be set?
-                DispatchQueue.main.async {
-                    let newKeyWindow = NSApp.keyWindow
-                    
-                    // If the new key window is one of ours, don't close.
-                    if newKeyWindow == self.popoverWindow || newKeyWindow == self.detailWindow {
-                        return
-                    }
-                    
-                    // If we are still "active" app but focus shifted to maybe a dialog? 
-                    // Or if user clicked desktop (newKeyWindow might be nil or Finder).
-                    
-                    // Simple rule: If neither of our windows is key, close.
-                    self.closeWindow()
-                }
-            }
-        }
-        
         // Listen for App Deactivation (switching to another app)
-        NotificationCenter.default.addObserver(forName: NSApplication.didResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
+        appResignObserver = NotificationCenter.default.addObserver(forName: NSApplication.didResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
             self?.closeWindow()
         }
     }
