@@ -139,7 +139,7 @@ class FileExplorerService: ObservableObject {
                 }
             } catch {
                 DispatchQueue.main.async {
-                    self.error = "无法访问此目录: \(error.localizedDescription)"
+                    self.error = LocalizationManager.shared.text("无法访问此目录：\(error.localizedDescription)", "Cannot access this folder: \(error.localizedDescription)")
                     self.isLoading = false
                 }
             }

@@ -18,6 +18,11 @@ struct AppUninstallerApp: App {
             }
                 .frame(minWidth: 980, minHeight: 600)
                 .preferredColorScheme(.dark)
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                        AppMenuLocalizer.apply(localization.currentLanguage)
+                    }
+                }
                 .task {
                     if localization.hasSelectedLanguage {
                         await UpdateCheckerService.shared.checkForUpdates()

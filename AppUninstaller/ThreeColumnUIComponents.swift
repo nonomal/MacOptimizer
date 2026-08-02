@@ -91,7 +91,7 @@ struct MainCategoryRow: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 1) { // Tighter spacing
-                    Text(loc.currentLanguage == .chinese ? mainCategory.rawValue : mainCategory.englishName)
+                    Text(mainCategory.localizedName(for: loc.currentLanguage))
                         .font(.system(size: 12, weight: .medium)) // Smaller 13->12
                         .foregroundColor(.white)
                     
@@ -164,11 +164,18 @@ struct SubCategoryRow: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(loc.currentLanguage == .chinese ? subcategory.rawValue : subcategory.englishName)
+                    Text(subcategory.localizedName(for: loc.currentLanguage))
                         .font(.system(size: 12, weight: .medium)) // Smaller 13->12
                         .foregroundColor(.white)
                     
-                    Text("\(fileCount) files")
+                    Text(loc.text(
+                        simplifiedChinese: "\(fileCount) 个文件",
+                        traditionalChinese: "\(fileCount) 個檔案",
+                        english: "\(fileCount) files",
+                        japanese: "\(fileCount)個のファイル",
+                        korean: "파일 \(fileCount)개",
+                        russian: "Файлов: \(fileCount)"
+                    ))
                         .font(.system(size: 10)) // Smaller 11->10
                         .foregroundColor(.secondaryText)
                 }
@@ -253,7 +260,7 @@ struct SubCategoryListView: View {
         VStack(alignment: .leading, spacing: 4) {
             // 标题
             HStack {
-                Text(loc.currentLanguage == .chinese ? mainCategory.rawValue : mainCategory.englishName)
+                Text(mainCategory.localizedName(for: loc.currentLanguage))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
                 

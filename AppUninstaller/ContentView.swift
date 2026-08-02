@@ -5,7 +5,8 @@ import AVKit
 struct ContentView: View {
     @ObservedObject private var navigation = AppNavigationController.shared
     @ObservedObject private var loc = LocalizationManager.shared
-    @StateObject private var uninstallerScanner = AppScanner()
+    @ObservedObject private var assistant = AIAssistantCoordinator.shared
+    @ObservedObject private var uninstallerScanner = ScanServiceManager.shared.appScanner
     @State private var displayedModule: AppModule = AppNavigationController.shared.selectedModule
     @State private var isModuleLoading = false
     @State private var moduleSwitchToken = UUID()
@@ -22,6 +23,10 @@ struct ContentView: View {
         }
         .onAppear(perform: updateApplicationTitle)
         .onChange(of: loc.currentLanguage) { _ in updateApplicationTitle() }
+        .sheet(isPresented: $assistant.isPresented) {
+            AIAssistantView(currentModule: displayedModule)
+                .preferredColorScheme(.dark)
+        }
     }
 
     /// CleanMyMac's window is one continuous gradient surface. The sidebar
@@ -70,38 +75,33 @@ struct ContentView: View {
             .offset(x: sidebarLeft, y: sidebarTop)
             .zIndex(30)
 
-            if showsAssistant(for: displayedModule) {
-                Button {
-                    navigation.selectedModule = .smartClean
-                } label: {
-                    HStack(spacing: 6) {
-                        Circle().fill(Color.cyan.opacity(0.92)).frame(width: 8, height: 8)
-                        Circle().fill(Color.cyan.opacity(0.72)).frame(width: 3, height: 3)
-                        Text(LocalizationManager.shared.text(
-    simplifiedChinese: "助手",
-    traditionalChinese: "助理",
-    english: "Assistant",
-    japanese: "アシスタント",
-    korean: "협조자",
-    russian: "Ассистент"
-))
-                            .font(.system(size: 12, weight: .semibold))
-                    }
-                    .foregroundColor(.white.opacity(0.86))
-                    .padding(.horizontal, 13)
-                    .frame(height: 30)
-                    .background(Color.black.opacity(0.25), in: Capsule())
+            Button {
+                assistant.open(currentModule: displayedModule)
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.cyan)
+                    Text(loc.text(
+                        simplifiedChinese: "Mac 优化智能体",
+                        traditionalChinese: "Mac 最佳化智慧代理",
+                        english: "Mac Optimization Agent",
+                        japanese: "Mac最適化エージェント",
+                        korean: "Mac 최적화 에이전트",
+                        russian: "Агент оптимизации Mac"
+                    ))
+                    .font(.system(size: 12, weight: .semibold))
                 }
-                .buttonStyle(.plain)
-                .position(x: size.width - 28 - 46, y: 27 + titlebarInset)
-                .zIndex(25)
+                .foregroundColor(.white.opacity(0.88))
+                .padding(.horizontal, 13)
+                .frame(height: 30)
+                .background(Color.black.opacity(0.28), in: Capsule())
             }
+            .buttonStyle(.plain)
+            .position(x: size.width - 92, y: 27 + titlebarInset)
+            .zIndex(25)
         }
         .frame(width: size.width, height: size.height, alignment: .topLeading)
-    }
-
-    private func showsAssistant(for module: AppModule) -> Bool {
-        module == .spaceLens || module == .largeFiles || module == .updater
     }
 
     @ViewBuilder
@@ -164,11 +164,9 @@ struct ContentView: View {
     }
 
     private func updateApplicationTitle() {
-        let localizedName = (loc.currentLanguage == .chinese || loc.currentLanguage == .traditionalChinese)
-            ? "Mac优化大师"
-            : "MacOptimizer"
+        let localizedName = loc.currentLanguage.productName
         NSApp.mainWindow?.title = localizedName
-        NSApp.mainMenu?.items.first?.title = localizedName
+        AppMenuLocalizer.apply(loc.currentLanguage)
     }
 }
 
@@ -203,6 +201,7 @@ private struct ModuleContentLoadingView: View {
 // MARK: - 开场视频视图
 struct IntroVideoView: View {
     let onComplete: () -> Void
+    @ObservedObject private var loc = LocalizationManager.shared
     @State private var player: AVPlayer?
     
     var body: some View {
@@ -220,7 +219,7 @@ struct IntroVideoView: View {
                 HStack {
                     Spacer()
                     Button(action: onComplete) {
-                        Text("跳过")
+                        Text(loc.text("跳过", "Skip"))
                             .font(.system(size: 14))
                             .foregroundColor(.white.opacity(0.7))
                             .padding(.horizontal, 16)

@@ -23,6 +23,7 @@ extension View {
 // MARK: - Storage Widget
 struct StorageWidget: View {
     @ObservedObject var diskManager = DiskSpaceManager.shared
+    @ObservedObject private var loc = LocalizationManager.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -36,15 +37,15 @@ struct StorageWidget: View {
             
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("可用: \(diskManager.formattedFree)")
+                    Text(loc.text("可用：\(diskManager.formattedFree)", "Available: \(diskManager.formattedFree)"))
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
-                    Text("共: \(diskManager.formattedTotal)")
+                    Text(loc.text("共：\(diskManager.formattedTotal)", "Total: \(diskManager.formattedTotal)"))
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
                 }
                 Spacer()
-                Text("释放")
+                Text(loc.text("释放", "Free Up"))
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.white)
                     .padding(.horizontal, 10)
@@ -60,28 +61,29 @@ struct StorageWidget: View {
 // MARK: - Memory Widget
 struct MemoryWidget: View {
     @ObservedObject var systemMonitor: SystemMonitorService
+    @ObservedObject private var loc = LocalizationManager.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "memorychip")
                     .font(.system(size: 16))
-                Text("内存")
+                Text(loc.text("内存", "Memory"))
                     .font(.system(size: 12, weight: .medium))
                 Spacer()
             }
             
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("可用: \(systemMonitor.memoryTotalString) (总)") // Showing Total for now as "Available" logic in Swift is tricky without more math
+                    Text(loc.text("总计：\(systemMonitor.memoryTotalString)", "Total: \(systemMonitor.memoryTotalString)"))
                      // Ideally we show "Available" calculated from Total - Used.
                      // But let's just stick to "Used / Total" format or similar.
-                    Text("已用: \(systemMonitor.memoryUsedString)")
+                    Text(loc.text("已用：\(systemMonitor.memoryUsedString)", "Used: \(systemMonitor.memoryUsedString)"))
                          .font(.system(size: 10))
                          .foregroundColor(.secondary)
                 }
                 Spacer()
-                Text("释放")
+                Text(loc.text("释放", "Free Up"))
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.white)
                     .padding(.horizontal, 10)
@@ -97,13 +99,14 @@ struct MemoryWidget: View {
 // MARK: - Battery Widget
 struct BatteryWidget: View {
     @ObservedObject var systemMonitor: SystemMonitorService
+    @ObservedObject private var loc = LocalizationManager.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: systemMonitor.isCharging ? "battery.100.bolt" : "battery.100")
                     .font(.system(size: 16))
-                Text("电池")
+                Text(loc.text("电池", "Battery"))
                     .font(.system(size: 12, weight: .medium))
                 Spacer()
                 Text("\(Int(systemMonitor.batteryLevel * 100))%")
@@ -121,6 +124,7 @@ struct BatteryWidget: View {
 // MARK: - CPU Widget
 struct CPUWidget: View {
     @ObservedObject var systemMonitor: SystemMonitorService
+    @ObservedObject private var loc = LocalizationManager.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -135,7 +139,7 @@ struct CPUWidget: View {
                     .foregroundColor(systemMonitor.cpuUsage > 0.8 ? .red : .primary)
             }
             
-            Text("加载: \(Int(systemMonitor.cpuUsage * 100))%") // Simplified label
+            Text(loc.text("负载：\(Int(systemMonitor.cpuUsage * 100))%", "Load: \(Int(systemMonitor.cpuUsage * 100))%"))
                 .font(.system(size: 10))
                 .foregroundColor(.secondary)
         }
@@ -146,6 +150,7 @@ struct CPUWidget: View {
 // MARK: - Network Widget
 struct NetworkWidget: View {
     @ObservedObject var systemMonitor: SystemMonitorService
+    @ObservedObject private var loc = LocalizationManager.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -174,7 +179,7 @@ struct NetworkWidget: View {
             
             HStack {
                 Spacer()
-                Text("测试速度")
+                Text(loc.text("测试速度", "Test Speed"))
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
             }
@@ -185,12 +190,13 @@ struct NetworkWidget: View {
 
 // MARK: - Connected Devices Widget (Placeholder)
 struct ConnectedDevicesWidget: View {
+    @ObservedObject private var loc = LocalizationManager.shared
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("已连接的设备")
+            Text(loc.text("已连接的设备", "Connected Devices"))
                 .font(.system(size: 12, weight: .medium))
             
-            Text("尚未连接任何设备")
+            Text(loc.text("尚未连接任何设备", "No devices connected"))
                 .font(.system(size: 10))
                 .foregroundColor(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)

@@ -4,6 +4,7 @@ struct SettingsView: View {
     @ObservedObject var loc = LocalizationManager.shared
     @StateObject private var updateService = UpdateCheckerService.shared
     @AppStorage("autoCheckUpdates") private var autoCheckUpdates = true
+    @State private var showAISettings = false
     
     // Environment to close the sheet/window
     @Environment(\.presentationMode) var presentationMode
@@ -50,6 +51,30 @@ struct SettingsView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     
+                    Divider().opacity(0.5)
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(t("Mac 优化智能体", "Mac 最佳化智慧代理", "Mac Optimization Agent", "Mac最適化エージェント", "Mac 최적화 에이전트", "Агент оптимизации Mac"))
+                            .font(.headline)
+
+                        HStack {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(AIProviderSettingsStore.shared.activeProvider.displayName)
+                                    .font(.system(size: 13, weight: .medium))
+                                Text(t("配置服务地址、模型和 API Key", "設定服務位址、模型與 API Key", "Configure endpoint, model, and API key", "エンドポイント、モデル、APIキーを設定", "서비스 주소, 모델 및 API 키 설정", "Настройка адреса, модели и API-ключа"))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                            Button(t("打开设置", "開啟設定", "Open Settings", "設定を開く", "설정 열기", "Открыть настройки")) {
+                                showAISettings = true
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                        .padding(12)
+                        .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 9))
+                    }
+
                     Divider().opacity(0.5)
 
                     VStack(alignment: .leading, spacing: 12) {
@@ -182,14 +207,25 @@ struct SettingsView: View {
                 .padding(24)
             }
         }
-        .frame(width: 500, height: 400)
+        .frame(width: 520, height: 520)
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear {
+            DispatchQueue.main.async {
+                AppMenuLocalizer.apply(loc.currentLanguage)
+            }
             if autoCheckUpdates && !updateService.hasUpdate && !updateService.isChecking {
                 Task {
                     await updateService.checkForUpdates()
                 }
             }
+        }
+        .sheet(isPresented: $showAISettings) {
+            AIAssistantSettingsView {
+                showAISettings = false
+            }
+            .frame(width: 620, height: 540)
+            .background(Color(nsColor: .windowBackgroundColor))
+            .preferredColorScheme(.dark)
         }
     }
 

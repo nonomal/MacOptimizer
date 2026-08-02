@@ -26,3 +26,4 @@ dist/
 .build/
 Packages/
 .strict-localization-cache.json
+.wavespeed-localization-cache.json

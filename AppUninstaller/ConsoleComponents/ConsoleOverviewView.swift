@@ -65,7 +65,7 @@ struct ConsoleOverviewView: View {
     simplifiedChinese: "系统概览",
     traditionalChinese: "系統概覽",
     english: "System Overview",
-    japanese: "（システムの概説）",
+    japanese: "システム概要",
     korean: "시스템 개요",
     russian: "Общие сведения о системе"
 ))
@@ -76,9 +76,9 @@ struct ConsoleOverviewView: View {
     simplifiedChinese: "实时查看这台 Mac 的负载、应用与网络状态",
     traditionalChinese: "即時查看這台Mac 的負載、應用程式與網路狀態",
     english: "Live load, application and network status for this Mac",
-    japanese: "このMacのライブロード、アプリケーション、およびネットワークステータス",
-    korean: "이 Mac의 라이브 로드, 응용 프로그램 및 네트워크 상태",
-    russian: "Текущая нагрузка, состояние приложения и сети для этого Mac"
+    japanese: "この Mac の負荷、アプリ、ネットワーク状態をリアルタイム表示",
+    korean: "이 Mac의 부하, 앱 및 네트워크 상태를 실시간으로 표시",
+    russian: "Нагрузка, приложения и сеть этого Mac в реальном времени"
 ))
                     .font(.system(size: 11))
                     .foregroundColor(.white.opacity(0.52))
@@ -119,7 +119,7 @@ struct ConsoleOverviewView: View {
     traditionalChinese: "記憶體",
     english: "Memory",
     japanese: "メモリ",
-    korean: "기억력",
+    korean: "메모리",
     russian: "Память"
 ),
                 value: systemMonitor.memoryUsedString,
@@ -136,7 +136,7 @@ struct ConsoleOverviewView: View {
     english: "Download",
     japanese: "ダウンロード",
     korean: "다운로드",
-    russian: "Загрузить"
+    russian: "Загрузка"
 ),
                 value: systemMonitor.formatSpeed(systemMonitor.downloadSpeed),
                 detail: loc.text(
@@ -144,7 +144,7 @@ struct ConsoleOverviewView: View {
     traditionalChinese: "目前速度",
     english: "Current speed",
     japanese: "現在の速度",
-    korean: "현재속도",
+    korean: "현재 속도",
     russian: "Текущая скорость"
 ),
                 symbol: "arrow.down",
@@ -159,7 +159,7 @@ struct ConsoleOverviewView: View {
     english: "Upload",
     japanese: "アップロード",
     korean: "업로드",
-    russian: "Загрузить"
+    russian: "Отправка"
 ),
                 value: systemMonitor.formatSpeed(systemMonitor.uploadSpeed),
                 detail: loc.text(
@@ -167,7 +167,7 @@ struct ConsoleOverviewView: View {
     traditionalChinese: "目前速度",
     english: "Current speed",
     japanese: "現在の速度",
-    korean: "현재속도",
+    korean: "현재 속도",
     russian: "Текущая скорость"
 ),
                 symbol: "arrow.up",
@@ -232,16 +232,16 @@ struct ConsoleOverviewView: View {
     traditionalChinese: "網路流量",
     english: "Network Traffic",
     japanese: "ネットワークトラフィック",
-    korean: "트래픽에 사용하는 것입니다.",
+    korean: "네트워크 트래픽",
     russian: "Сетевой трафик"
 ),
                 subtitle: loc.text(
     simplifiedChinese: "最近 40 秒的实时收发趋势",
     traditionalChinese: "最近40 秒的即時收發趨勢",
     english: "Live transfer trend for the last 40 seconds",
-    japanese: "直近40秒間のライブ転送トレンド",
-    korean: "지난 40초 동안의 실시간 이체 추세",
-    russian: "Тенденция передачи в реальном времени за последние 40 секунд"
+    japanese: "直近40秒間のリアルタイム通信量",
+    korean: "최근 40초간 실시간 송수신 추이",
+    russian: "Передача данных в реальном времени за последние 40 секунд"
 ),
                 symbol: "network"
             ) {
@@ -309,9 +309,9 @@ struct ConsoleOverviewView: View {
     simplifiedChinese: "应用管理",
     traditionalChinese: "應用管理",
     english: "Applications",
-    japanese: "用途",
-    korean: "적용 분야",
-    russian: "Сферы применения"
+    japanese: "アプリケーション",
+    korean: "애플리케이션",
+    russian: "Приложения"
 ),
                 subtitle: loc.text(
     simplifiedChinese: "运行状态与应用信息",
@@ -337,9 +337,9 @@ struct ConsoleOverviewView: View {
     simplifiedChinese: "监听地址与占用进程",
     traditionalChinese: "監聽位址與佔用進程",
     english: "Listeners and owning processes",
-    japanese: "リスナーと所有プロセス",
-    korean: "청취자 및 소유 프로세스",
-    russian: "Слушатели и процессы владения"
+    japanese: "待受アドレスと使用中のプロセス",
+    korean: "수신 주소 및 사용 중인 프로세스",
+    russian: "Адреса прослушивания и использующие их процессы"
 ),
                 symbol: "point.3.connected.trianglepath.dotted"
             ) { viewState = .portManager }
@@ -349,8 +349,8 @@ struct ConsoleOverviewView: View {
     simplifiedChinese: "安全中心",
     traditionalChinese: "安全中心",
     english: "Safety Center",
-    japanese: "セーフティセンター",
-    korean: "CCTV 안전센터",
+    japanese: "セキュリティセンター",
+    korean: "보안 센터",
     russian: "Центр безопасности"
 ),
                 subtitle: loc.text(
@@ -459,7 +459,7 @@ private struct ConsoleCardHeader: View {
     traditionalChinese: "查看詳情",
     english: "Details",
     japanese: "詳細",
-    korean: "세부사항",
+    korean: "상세 정보",
     russian: "Подробнее"
 ))
                     Image(systemName: "chevron.right")
@@ -585,7 +585,7 @@ private struct ConsoleModuleEntry: View {
     traditionalChinese: "查看詳情",
     english: "Details",
     japanese: "詳細",
-    korean: "세부사항",
+    korean: "상세 정보",
     russian: "Подробнее"
 ))
                     .font(.system(size: 9, weight: .medium))

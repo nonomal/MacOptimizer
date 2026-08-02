@@ -1,7 +1,7 @@
 import SwiftUI
 import AppKit
 
-private enum ExtensionGroup: String, CaseIterable, Identifiable {
+enum ExtensionGroup: String, CaseIterable, Identifiable {
     case safari
     case internet
     case preferences
@@ -24,12 +24,30 @@ private enum ExtensionGroup: String, CaseIterable, Identifiable {
         case .spotlight: return "Spotlight Plugins"
         }
     }
+    var localizedTitle: String {
+        let loc = LocalizationManager.shared
+        switch self {
+        case .safari: return loc.text(simplifiedChinese: "Safari 扩展", traditionalChinese: "Safari 延伸功能", english: "Safari Extensions", japanese: "Safari機能拡張", korean: "Safari 확장 프로그램", russian: "Расширения Safari")
+        case .internet: return loc.text(simplifiedChinese: "互联网插件", traditionalChinese: "網際網路外掛模組", english: "Internet Plug-ins", japanese: "インターネットプラグイン", korean: "인터넷 플러그인", russian: "Интернет-плагины")
+        case .preferences: return loc.text(simplifiedChinese: "偏好设置面板", traditionalChinese: "偏好設定面板", english: "Preference Panes", japanese: "環境設定パネル", korean: "환경설정 패널", russian: "Панели настроек")
+        case .spotlight: return loc.text(simplifiedChinese: "聚焦插件", traditionalChinese: "Spotlight 外掛模組", english: "Spotlight Plugins", japanese: "Spotlightプラグイン", korean: "Spotlight 플러그인", russian: "Плагины Spotlight")
+        }
+    }
     var chineseDescription: String {
         switch self {
         case .safari: return "Safari 浏览器为许多扩展和附加项目提供了一个平台，您可以轻松进行管理，无需进入 Safari 浏览器的偏好设置。"
         case .internet: return "Mac 的所有浏览器以及其他联网应用程序共享插件。通过 CleanMyMac，您可以在一个地方管理它们。"
         case .preferences: return "这里列出了以系统偏好设置面板形式存在的所有应用程序。在 CleanMyMac 内轻松管理它们。"
         case .spotlight: return "Spotlight 作为您 Mac 的主要搜索工具会安装一些不需要的插件，您可以轻松地对这些插件进行完整移除或临时禁用。"
+        }
+    }
+    var localizedDescription: String {
+        let loc = LocalizationManager.shared
+        switch self {
+        case .safari: return loc.text(simplifiedChinese: "集中管理 Safari 扩展和附加组件，无需打开 Safari 设置。", traditionalChinese: "集中管理 Safari 延伸功能和附加元件，無需開啟 Safari 設定。", english: "Manage Safari extensions and add-ons in one place without opening Safari settings.", japanese: "Safariの設定を開かずに、機能拡張とアドオンをまとめて管理できます。", korean: "Safari 설정을 열지 않고 확장 프로그램과 추가 기능을 한곳에서 관리합니다.", russian: "Управляйте расширениями и дополнениями Safari в одном месте, не открывая настройки Safari.")
+        case .internet: return loc.text(simplifiedChinese: "管理浏览器和其他联网应用共享的插件。", traditionalChinese: "管理瀏覽器和其他網路應用程式共用的外掛模組。", english: "Manage plug-ins shared by browsers and other internet applications.", japanese: "ブラウザやその他のインターネットアプリで共有されるプラグインを管理します。", korean: "브라우저와 기타 인터넷 앱에서 공유하는 플러그인을 관리합니다.", russian: "Управляйте плагинами, общими для браузеров и других сетевых приложений.")
+        case .preferences: return loc.text(simplifiedChinese: "管理以系统偏好设置面板形式安装的应用组件。", traditionalChinese: "管理以系統偏好設定面板形式安裝的應用程式元件。", english: "Manage application components installed as system preference panes.", japanese: "システム環境設定パネルとしてインストールされたアプリ部品を管理します。", korean: "시스템 환경설정 패널로 설치된 앱 구성 요소를 관리합니다.", russian: "Управляйте компонентами приложений, установленными как панели системных настроек.")
+        case .spotlight: return loc.text(simplifiedChinese: "管理 Spotlight 搜索插件，可将其移除或暂时禁用。", traditionalChinese: "管理 Spotlight 搜尋外掛模組，可將其移除或暫時停用。", english: "Manage Spotlight search plugins by removing or temporarily disabling them.", japanese: "Spotlight検索プラグインを削除または一時的に無効化できます。", korean: "Spotlight 검색 플러그인을 제거하거나 일시적으로 비활성화합니다.", russian: "Удаляйте или временно отключайте плагины поиска Spotlight.")
         }
     }
     var asset: String {
@@ -51,7 +69,7 @@ private enum ExtensionGroup: String, CaseIterable, Identifiable {
     }
 }
 
-private struct ExtensionItem: Identifiable, Equatable {
+struct ExtensionItem: Identifiable, Equatable {
     let id: URL
     let name: String
     let url: URL
@@ -60,12 +78,15 @@ private struct ExtensionItem: Identifiable, Equatable {
     var isSelected = false
 }
 
-private final class ExtensionsService: ObservableObject {
+final class ExtensionsService: ObservableObject {
+    static let shared = ExtensionsService()
+
     @Published var items: [ExtensionItem] = []
     @Published var isScanning = false
     @Published var isRemoving = false
 
     func scan() {
+        guard !isScanning else { return }
         isScanning = true
         let fileManager = FileManager.default
         let home = fileManager.homeDirectoryForCurrentUser
@@ -119,6 +140,13 @@ private final class ExtensionsService: ObservableObject {
         }
     }
 
+    func scanAndWait() async {
+        scan()
+        while isScanning {
+            try? await Task.sleep(nanoseconds: 80_000_000)
+        }
+    }
+
     func removeSelected() async {
         await MainActor.run { isRemoving = true }
         let selected = items.filter(\.isSelected)
@@ -133,7 +161,7 @@ private final class ExtensionsService: ObservableObject {
 }
 
 struct ExtensionsReplicaView: View {
-    @StateObject private var service = ExtensionsService()
+    @ObservedObject private var service = ExtensionsService.shared
     @ObservedObject private var loc = LocalizationManager.shared
     @State private var screen = 0
     @State private var selectedGroup: ExtensionGroup = .safari
@@ -153,7 +181,7 @@ struct ExtensionsReplicaView: View {
             }
             Button(localized("取消", "Cancel"), role: .cancel) {}
         } message: {
-            Text(localized("选中的扩展将被移入废纸篓，可从废纸篓恢复。", "Selected extensions will be moved to Trash and can be restored."))
+            Text(localized("选中的扩展将移到废纸篓，可从中恢复。", "所選延伸功能將移到垃圾桶，可從中復原。", "Selected extensions will be moved to Trash and can be restored.", "選択した機能拡張はゴミ箱に移動され、復元できます。", "선택한 확장 프로그램은 휴지통으로 이동하며 복원할 수 있습니다.", "Выбранные расширения будут перемещены в Корзину, откуда их можно восстановить."))
         }
     }
 
@@ -164,15 +192,15 @@ struct ExtensionsReplicaView: View {
                     .font(.system(size: 24, weight: .bold))
                     .foregroundColor(.white)
                     .offset(y: 0)
-                Text(localized("控制各种系统扩展，包括小部件、插件、词典和其他项目。", "Control system extensions, widgets, plug-ins, dictionaries and more."))
+                Text(localized("管理系统扩展、小组件、插件、词典等项目。", "管理系統延伸功能、小工具、外掛模組、辭典等項目。", "Control system extensions, widgets, plug-ins, dictionaries and more.", "システム機能拡張、ウィジェット、プラグイン、辞書などを管理します。", "시스템 확장 프로그램, 위젯, 플러그인, 사전 등을 관리합니다.", "Управляйте системными расширениями, виджетами, плагинами, словарями и другими компонентами."))
                     .font(.system(size: 13))
                     .foregroundColor(.white.opacity(0.80))
                     .frame(width: 300, alignment: .leading)
                     .offset(y: 40)
 
-                benefit(asset: "extensions_benefit_remove", title: localized("正确移除扩展", "Remove extensions correctly"), detail: localized("允许安全移除任何不想要的扩展以及所有相关项目。", "Safely remove unwanted extensions and related items."))
+                benefit(asset: "extensions_benefit_remove", title: localized("正确移除扩展", "正確移除延伸功能", "Remove extensions correctly", "機能拡張を正しく削除", "확장 프로그램 올바르게 제거", "Корректное удаление расширений"), detail: localized("安全移除不需要的扩展及其相关项目。", "安全移除不需要的延伸功能及其相關項目。", "Safely remove unwanted extensions and related items.", "不要な機能拡張と関連項目を安全に削除します。", "불필요한 확장 프로그램과 관련 항목을 안전하게 제거합니다.", "Безопасно удаляйте ненужные расширения и связанные компоненты."))
                     .offset(y: 110)
-                benefit(asset: "extensions_benefit_disable", title: localized("按照需要禁用扩展", "Disable extensions as needed"), detail: localized("不仅能彻底移除扩展，而且还能根据需要临时禁用它们。", "Temporarily disable extensions without removing them."))
+                benefit(asset: "extensions_benefit_disable", title: localized("按需禁用扩展", "依需求停用延伸功能", "Disable extensions as needed", "必要に応じて機能拡張を無効化", "필요에 따라 확장 프로그램 비활성화", "Отключение расширений при необходимости"), detail: localized("无需移除即可暂时禁用扩展。", "無需移除即可暫時停用延伸功能。", "Temporarily disable extensions without removing them.", "削除せずに機能拡張を一時的に無効化できます。", "제거하지 않고 확장 프로그램을 일시적으로 비활성화합니다.", "Временно отключайте расширения без их удаления."))
                     .offset(y: 208)
 
                 Button { screen = 1 } label: {
@@ -247,7 +275,7 @@ struct ExtensionsReplicaView: View {
             HStack(spacing: 12) {
                 extensionGroupCheckBox(selectedCount: selectedCount, totalCount: count)
                 asset(group.asset).frame(width: 40, height: 40)
-                Text(loc.currentLanguage == .chinese ? group.chineseTitle : group.englishTitle).font(.system(size: 12, weight: .semibold)).foregroundColor(.white.opacity(count == 0 ? 0.30 : 0.84))
+                Text(group.localizedTitle).font(.system(size: 12, weight: .semibold)).foregroundColor(.white.opacity(count == 0 ? 0.30 : 0.84))
                 Spacer()
                 if count > 0 { Text("\(count)").font(.system(size: 10, weight: .semibold)).foregroundColor(.white.opacity(0.72)) }
             }
@@ -282,9 +310,9 @@ struct ExtensionsReplicaView: View {
             }
             .padding(.horizontal, 38).padding(.top, 14)
 
-            Text(loc.currentLanguage == .chinese ? selectedGroup.chineseTitle : selectedGroup.englishTitle)
+            Text(selectedGroup.localizedTitle)
                 .font(.system(size: 22, weight: .bold)).foregroundColor(.white).padding(.horizontal, 38).padding(.top, 15)
-            Text(loc.currentLanguage == .chinese ? selectedGroup.chineseDescription : selectedGroup.englishTitle)
+            Text(selectedGroup.localizedDescription)
                 .font(.system(size: 11)).foregroundColor(.white.opacity(0.76)).lineSpacing(3).fixedSize(horizontal: false, vertical: true).padding(.horizontal, 38).padding(.top, 5)
 
             ScrollView(showsIndicators: false) {
@@ -293,7 +321,7 @@ struct ExtensionsReplicaView: View {
                         itemRow(item)
                     }
                     if filteredItems.isEmpty {
-                        Text(localized("没有项目需要清理或修复，一切正常。", "No items need cleaning or repair."))
+                        Text(localized("没有需要清理或修复的项目。", "沒有需要清理或修復的項目。", "No items need cleaning or repair.", "クリーニングや修復が必要な項目はありません。", "정리하거나 수정할 항목이 없습니다.", "Нет элементов, требующих очистки или исправления."))
                             .font(.system(size: 12)).foregroundColor(.white.opacity(0.36)).frame(maxWidth: .infinity).padding(.top, 46)
                     }
                 }
@@ -362,6 +390,7 @@ struct ExtensionsReplicaView: View {
         }
     }
     private func localized(_ chinese: String, _ english: String) -> String { loc.text(chinese, english) }
+    private func localized(_ simplifiedChinese: String, _ traditionalChinese: String, _ english: String, _ japanese: String, _ korean: String, _ russian: String) -> String { loc.text(simplifiedChinese: simplifiedChinese, traditionalChinese: traditionalChinese, english: english, japanese: japanese, korean: korean, russian: russian) }
 }
 
 private struct ExtensionsCompactButtonStyle: ButtonStyle { func makeBody(configuration: Configuration) -> some View { configuration.label.scaleEffect(configuration.isPressed ? 0.965 : 1).brightness(configuration.isPressed ? -0.05 : 0) } }

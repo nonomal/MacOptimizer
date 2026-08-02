@@ -83,24 +83,28 @@ struct TrashBinsReplicaView: View {
             wasScanning = scanning
         }
         .confirmationDialog(
-            localized("确定清倒所选废纸篓？", "Empty the selected Trash items?"),
+            localized("确定清倒所选废纸篓？", "確定清空所選垃圾桶項目？", "Empty the selected Trash items?", "選択したゴミ箱の項目を完全に削除しますか？", "선택한 휴지통 항목을 완전히 비우시겠습니까?", "Удалить выбранные элементы из Корзины?"),
             isPresented: $showEmptyConfirmation,
             titleVisibility: .visible
         ) {
-            Button(localized("永久清倒", "Empty Permanently"), role: .destructive) {
+            Button(localized("永久清倒", "永久清空", "Empty Permanently", "完全に削除", "영구적으로 비우기", "Удалить навсегда"), role: .destructive) {
                 performCleaning()
             }
             Button(localized("取消", "Cancel"), role: .cancel) {}
         } message: {
             Text(localized(
                 "此操作不可撤销。只有成功永久删除的项目才会从结果中移除。",
-                "This cannot be undone. Only items permanently deleted successfully will be removed from the results."
+                "此操作無法還原。只有成功永久刪除的項目才會從結果中移除。",
+                "This cannot be undone. Only items permanently deleted successfully will be removed from the results.",
+                "この操作は取り消せません。完全に削除できた項目のみ結果から除外されます。",
+                "이 작업은 취소할 수 없습니다. 영구 삭제에 성공한 항목만 결과에서 제거됩니다.",
+                "Это действие нельзя отменить. Из результатов исчезнут только успешно удалённые элементы."
             ))
         }
-        .alert(localized("部分项目未能清倒", "Some items could not be emptied"), isPresented: $showCleaningFailure) {
+        .alert(localized("部分项目未能清倒", "部分項目未能清空", "Some items could not be emptied", "一部の項目を削除できませんでした", "일부 항목을 비우지 못했습니다", "Некоторые элементы не удалось удалить"), isPresented: $showCleaningFailure) {
             Button(localized("完成", "Done"), role: .cancel) {}
         } message: {
-            Text(localized("这些项目可能正在使用中，或当前账户没有访问权限。", "These items may be in use or inaccessible to the current account."))
+            Text(localized("这些项目可能正在使用中，或当前账户没有访问权限。", "這些項目可能正在使用中，或目前帳號沒有存取權限。", "These items may be in use or inaccessible to the current account.", "これらの項目は使用中か、現在のアカウントではアクセスできない可能性があります。", "이 항목은 사용 중이거나 현재 계정에서 접근할 수 없을 수 있습니다.", "Возможно, эти элементы используются или недоступны текущей учётной записи."))
         }
     }
 
@@ -131,22 +135,6 @@ struct TrashBinsReplicaView: View {
 
                     if showingDetails {
                         searchField
-                    } else if pageState == .initial {
-                        Button(action: {}) {
-                            HStack(spacing: 6) {
-                                Circle()
-                                    .fill(Color(red: 0.32, green: 0.86, blue: 0.94))
-                                    .frame(width: 5, height: 5)
-                                Text(localized("助手", "Assistant"))
-                                    .font(.system(size: 11, weight: .semibold))
-                            }
-                            .foregroundColor(.white.opacity(0.74))
-                            .padding(.horizontal, 17)
-                            .frame(height: 25)
-                            .background(Color.black.opacity(0.30), in: Capsule())
-                        }
-                        .buttonStyle(TrashHeaderButtonStyle())
-                        .padding(.trailing, 12)
                     }
                 }
             }
@@ -195,8 +183,12 @@ struct TrashBinsReplicaView: View {
                         .foregroundColor(.white.opacity(0.96))
 
                     Text(localized(
-                        "倾倒 Mac 上所有废纸篓，包括邮件和照片图库垃圾。",
-                        "Empty all Trash on your Mac, including Mail and Photos trash."
+                        "清倒 Mac 上所有废纸篓，包括邮件和照片中的废纸篓。",
+                        "清空 Mac 上所有垃圾桶，包括郵件和照片中的垃圾桶。",
+                        "Empty all Trash on your Mac, including Mail and Photos trash.",
+                        "メールや写真を含む、Mac上のすべてのゴミ箱を空にします。",
+                        "Mail과 사진을 포함하여 Mac의 모든 휴지통을 비웁니다.",
+                        "Очистите все Корзины на Mac, включая корзины Почты и Фото."
                     ))
                     .font(.system(size: 13))
                     .foregroundColor(.white.opacity(0.62))
@@ -204,20 +196,28 @@ struct TrashBinsReplicaView: View {
 
                     benefit(
                         image: "trash_benefit_empty",
-                        title: localized("立即倾倒所有垃圾", "Empty all Trash instantly"),
+                        title: localized("立即清倒所有废纸篓", "立即清空所有垃圾桶", "Empty all Trash instantly", "すべてのゴミ箱をすぐに空にする", "모든 휴지통 즉시 비우기", "Мгновенная очистка всех Корзин"),
                         description: localized(
-                            "无需浏览所有驱动器和应用查找它们的废纸篓。",
-                            "No need to browse drives and apps looking for their Trash."
+                            "无需逐个浏览驱动器和应用来查找废纸篓。",
+                            "無需逐一瀏覽磁碟和應用程式來尋找垃圾桶。",
+                            "No need to browse drives and apps looking for their Trash.",
+                            "ドライブやアプリごとにゴミ箱を探す必要はありません。",
+                            "드라이브와 앱을 하나씩 확인하며 휴지통을 찾을 필요가 없습니다.",
+                            "Не нужно искать Корзину отдельно на каждом диске и в каждом приложении."
                         )
                     )
                     .padding(.top, 39)
 
                     benefit(
                         image: "trash_benefit_finder",
-                        title: localized("避免各种“访达”错误", "Avoid all kinds of Finder errors"),
+                        title: localized("避免各种“访达”错误", "避免各種 Finder 錯誤", "Avoid all kinds of Finder errors", "Finderのさまざまなエラーを回避", "다양한 Finder 오류 방지", "Защита от ошибок Finder"),
                         description: localized(
-                            "确保倾倒您的废纸篓，不管是否有任何问题。",
-                            "Make sure your Trash is emptied regardless of any issues."
+                            "即使遇到问题，也能可靠地清倒废纸篓。",
+                            "即使遇到問題，也能可靠地清空垃圾桶。",
+                            "Make sure your Trash is emptied regardless of any issues.",
+                            "問題があっても、ゴミ箱を確実に空にします。",
+                            "문제가 있어도 휴지통을 확실하게 비웁니다.",
+                            "Надёжно очищает Корзину даже при возникновении проблем."
                         )
                     )
                     .padding(.top, 41)
@@ -261,7 +261,7 @@ struct TrashBinsReplicaView: View {
             trashImage(size: 285)
                 .modifier(TrashFloatMotion(active: true))
 
-            Text(localized("正在计算废纸篓文件夹的大小…", "Calculating the size of Trash folders…"))
+            Text(localized("正在计算废纸篓大小…", "正在計算垃圾桶大小…", "Calculating the size of Trash folders…", "ゴミ箱のサイズを計算中…", "휴지통 크기 계산 중…", "Вычисление размера Корзин…"))
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.white.opacity(0.96))
                 .padding(.top, 4)
@@ -309,7 +309,7 @@ struct TrashBinsReplicaView: View {
                     Text(localized("非常干净！", "Very clean!"))
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.white.opacity(0.96))
-                    Text(localized("任何废纸篓中都没有文件。", "There are no files in any Trash folder."))
+                    Text(localized("所有废纸篓都是空的。", "所有垃圾桶都是空的。", "There are no files in any Trash folder.", "すべてのゴミ箱は空です。", "모든 휴지통이 비어 있습니다.", "Все Корзины пусты."))
                         .font(.system(size: 12))
                         .foregroundColor(.white.opacity(0.52))
                 }
@@ -346,7 +346,7 @@ struct TrashBinsReplicaView: View {
                     .foregroundColor(.white.opacity(0.48))
                     .padding(.top, 2)
 
-                Text(localized("包括", "Including"))
+                Text(localized("包括", "包括", "Including", "含まれる項目", "포함 항목", "Включая"))
                     .font(.system(size: 11))
                     .foregroundColor(.white.opacity(0.42))
                     .padding(.top, 14)
@@ -370,7 +370,7 @@ struct TrashBinsReplicaView: View {
                     }
                     .buttonStyle(TrashHeaderButtonStyle())
 
-                    Text(localized("共发现 ", "Found ") + formatBytes(scanner.totalSize))
+                    Text(localized("共发现 ", "共找到 ", "Found ", "検出：", "발견: ", "Найдено: ") + formatBytes(scanner.totalSize))
                         .font(.system(size: 11))
                         .foregroundColor(.white.opacity(0.38))
                 }
@@ -393,10 +393,10 @@ struct TrashBinsReplicaView: View {
                 Image(systemName: "externaldrive.badge.exclamationmark")
                     .font(.system(size: 32, weight: .light))
                     .foregroundColor(.white.opacity(0.78))
-                Text(localized("授予完全磁盘访问权限，清理更多内容", "Grant Full Disk Access to clean more"))
+                Text(localized("授予完全磁盘访问权限以清理更多内容", "授予完整磁碟存取權限以清理更多內容", "Grant Full Disk Access to clean more", "フルディスクアクセスを許可して、さらにクリーニング", "전체 디스크 접근 권한을 허용하여 더 많이 정리", "Предоставьте полный доступ к диску для более полной очистки"))
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(.white.opacity(0.96))
-                Text(localized("CleanMyMac 需要完全磁盘访问权限才能查找废纸篓。", "Full Disk Access is required to find Trash folders."))
+                Text(localized("Mac优化大师需要完全磁盘访问权限才能查找废纸篓。", "Mac最佳化大師需要完整磁碟存取權限才能尋找垃圾桶。", "MacOptimizer needs Full Disk Access to find Trash folders.", "ゴミ箱を検索するには、Macオプティマイザーにフルディスクアクセスが必要です。", "휴지통을 찾으려면 Mac 최적화 도구에 전체 디스크 접근 권한이 필요합니다.", "Для поиска Корзин MacOptimizer требуется полный доступ к диску."))
                     .font(.system(size: 12))
                     .foregroundColor(.white.opacity(0.52))
                     .fixedSize(horizontal: false, vertical: true)
@@ -591,7 +591,7 @@ struct TrashBinsReplicaView: View {
             trashImage(size: 285)
                 .modifier(TrashFloatMotion(active: true))
 
-            Text(localized("正在清倒废纸篓…", "Emptying Trash…"))
+            Text(localized("正在清倒废纸篓…", "正在清空垃圾桶…", "Emptying Trash…", "ゴミ箱を空にしています…", "휴지통 비우는 중…", "Очистка Корзины…"))
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.white.opacity(0.96))
                 .padding(.top, 4)
@@ -617,10 +617,10 @@ struct TrashBinsReplicaView: View {
                     .foregroundColor(Color(red: 0.39, green: 0.88, blue: 0.65))
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(localized("清倒完成！", "Trash emptied!"))
+                    Text(localized("清倒完成！", "垃圾桶已清空！", "Trash emptied!", "ゴミ箱を空にしました！", "휴지통을 비웠습니다!", "Корзина очищена!"))
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.white.opacity(0.96))
-                    Text(localized("已释放 ", "Freed ") + formatBytes(cleanedAmount))
+                    Text(localized("已释放 ", "已釋放 ", "Freed ", "解放した容量：", "확보한 공간: ", "Освобождено: ") + formatBytes(cleanedAmount))
                         .font(.system(size: 12))
                         .foregroundColor(.white.opacity(0.52))
                 }
@@ -760,20 +760,20 @@ struct TrashBinsReplicaView: View {
 
     private func categoryTitle(_ category: TrashCategory) -> String {
         switch category {
-        case .system: return localized("mac 上的废纸篓", "Trash on mac")
-        case .external: return localized("外置驱动器", "External Drives")
-        case .mail: return localized("本地邮件垃圾", "Local Mail Trash")
+        case .system: return localized("Mac 上的废纸篓", "Mac 上的垃圾桶", "Trash on Mac", "Macのゴミ箱", "Mac 휴지통", "Корзина Mac")
+        case .external: return localized("外置驱动器", "外接磁碟", "External Drives", "外部ドライブ", "외장 드라이브", "Внешние диски")
+        case .mail: return localized("本地邮件废纸篓", "本機郵件垃圾桶", "Local Mail Trash", "ローカルメールのゴミ箱", "로컬 메일 휴지통", "Локальная корзина Почты")
         }
     }
 
     private func categoryDescription(_ category: TrashCategory) -> String {
         switch category {
         case .system:
-            return localized("系统废纸篓文件夹储存先前删除的项目，但是它们仍然占用磁盘空间。", "The system Trash stores previously deleted items, but they still take up disk space.")
+            return localized("系统废纸篓储存先前删除的项目，但它们仍占用磁盘空间。", "系統垃圾桶儲存先前刪除的項目，但它們仍占用磁碟空間。", "The system Trash stores previously deleted items, but they still take up disk space.", "システムのゴミ箱には以前削除した項目が保存され、ディスク容量を使用し続けます。", "시스템 휴지통에는 이전에 삭제한 항목이 저장되어 계속 디스크 공간을 차지합니다.", "В системной Корзине хранятся удалённые элементы, и они продолжают занимать место на диске.")
         case .external:
-            return localized("所有类型的外置驱动器均有自己的废纸篓文件夹，用来储存先前删除的项目。", "External drives have their own Trash folders for previously deleted items.")
+            return localized("外置驱动器有自己的废纸篓，用于储存先前删除的项目。", "外接磁碟有自己的垃圾桶，用於儲存先前刪除的項目。", "External drives have their own Trash folders for previously deleted items.", "外部ドライブには、以前削除した項目を保存する専用のゴミ箱があります。", "외장 드라이브에는 이전에 삭제한 항목을 보관하는 자체 휴지통이 있습니다.", "На внешних дисках есть собственные Корзины для ранее удалённых элементов.")
         case .mail:
-            return localized("您在邮件应用程序中删除的电子邮件被移到本地邮件的废纸篓文件夹中，因此仍留在磁盘上。", "Deleted email is moved to a local Mail Trash folder and remains on disk.")
+            return localized("在邮件应用中删除的邮件会移到本地邮件废纸篓，因此仍保留在磁盘上。", "在郵件應用程式中刪除的郵件會移到本機郵件垃圾桶，因此仍保留在磁碟上。", "Deleted email is moved to a local Mail Trash folder and remains on disk.", "メールアプリで削除したメールはローカルのメールゴミ箱に移動され、ディスクに残ります。", "메일 앱에서 삭제한 이메일은 로컬 메일 휴지통으로 이동되어 디스크에 남아 있습니다.", "Удалённые письма перемещаются в локальную корзину Почты и остаются на диске.")
         }
     }
 
@@ -887,6 +887,24 @@ struct TrashBinsReplicaView: View {
 
     private func localized(_ chinese: String, _ english: String) -> String {
         loc.text(chinese, english)
+    }
+
+    private func localized(
+        _ simplifiedChinese: String,
+        _ traditionalChinese: String,
+        _ english: String,
+        _ japanese: String,
+        _ korean: String,
+        _ russian: String
+    ) -> String {
+        loc.text(
+            simplifiedChinese: simplifiedChinese,
+            traditionalChinese: traditionalChinese,
+            english: english,
+            japanese: japanese,
+            korean: korean,
+            russian: russian
+        )
     }
 }
 

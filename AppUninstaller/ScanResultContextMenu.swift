@@ -95,19 +95,21 @@ extension View {
             Button {
                 onToggleSelection()
             } label: {
-                Text(isSelected ? "取消选择 \"\(displayName)\"" : "选择 \"\(displayName)\"")
+                Text(isSelected
+                    ? LocalizationManager.shared.text("取消选择“\(displayName)”", "Deselect \"\(displayName)\"")
+                    : LocalizationManager.shared.text("选择“\(displayName)”", "Select \"\(displayName)\""))
             }
 
             Button {
                 NSWorkspace.shared.activateFileViewerSelecting([url])
             } label: {
-                Text("在“访达”中显示")
+                Text(LocalizationManager.shared.text("在“访达”中显示", "Show in Finder"))
             }
 
             Button {
                 ScanResultQuickLookController.shared.present(url)
             } label: {
-                Text("快速查看 \"\(displayName)\"")
+                Text(LocalizationManager.shared.text("快速查看“\(displayName)”", "Quick Look \"\(displayName)\""))
             }
 
             Button {
@@ -115,7 +117,7 @@ extension View {
                 ScanResultIgnoreStore.shared.ignore(url)
                 onIgnore?()
             } label: {
-                Text("忽略")
+                Text(LocalizationManager.shared.text("忽略", "Ignore"))
             }
         }
     }

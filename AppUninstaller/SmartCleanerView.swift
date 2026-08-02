@@ -2001,7 +2001,7 @@ struct DashboardCard: View {
                 
                 Spacer()
                 
-                Button("查看") { action() } // View Button
+                Button(LocalizationManager.shared.text("查看", "View")) { action() } // View Button
                 .buttonStyle(SmallGlassButtonStyle())
             }
         }

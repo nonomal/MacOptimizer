@@ -150,6 +150,159 @@ enum MaintenanceTask: String, CaseIterable, Identifiable {
             return ["Need to free disk space", "Not using Time Machine"]
         }
     }
+
+    func localizedTitle(for language: AppLanguage) -> String {
+        switch language {
+        case .chinese: return title
+        case .traditionalChinese:
+            switch self {
+            case .freeRam: return "釋放 RAM"
+            case .purgeableSpace: return "釋放可清除空間"
+            case .flushDns: return "清除 DNS 快取"
+            case .speedUpMail: return "加速郵件"
+            case .rebuildSpotlight: return "重建 Spotlight 索引"
+            case .repairPermissions: return "修復磁碟權限"
+            case .repairApps: return "修復應用程式"
+            case .timeMachine: return "精簡 Time Machine 快照"
+            }
+        case .english: return englishTitle
+        case .japanese:
+            switch self {
+            case .freeRam: return "RAMを解放"
+            case .purgeableSpace: return "消去可能領域を解放"
+            case .flushDns: return "DNSキャッシュを消去"
+            case .speedUpMail: return "メールを高速化"
+            case .rebuildSpotlight: return "Spotlightのインデックスを再作成"
+            case .repairPermissions: return "ディスクアクセス権を修復"
+            case .repairApps: return "アプリケーションを修復"
+            case .timeMachine: return "Time Machineスナップショットを整理"
+            }
+        case .korean:
+            switch self {
+            case .freeRam: return "RAM 확보"
+            case .purgeableSpace: return "제거 가능한 공간 확보"
+            case .flushDns: return "DNS 캐시 지우기"
+            case .speedUpMail: return "Mail 속도 향상"
+            case .rebuildSpotlight: return "Spotlight 색인 재구성"
+            case .repairPermissions: return "디스크 권한 복구"
+            case .repairApps: return "애플리케이션 복구"
+            case .timeMachine: return "Time Machine 스냅샷 정리"
+            }
+        case .russian:
+            switch self {
+            case .freeRam: return "Освободить ОЗУ"
+            case .purgeableSpace: return "Освободить очищаемое место"
+            case .flushDns: return "Очистить кэш DNS"
+            case .speedUpMail: return "Ускорить Почту"
+            case .rebuildSpotlight: return "Переиндексировать Spotlight"
+            case .repairPermissions: return "Исправить права доступа"
+            case .repairApps: return "Восстановить приложения"
+            case .timeMachine: return "Очистить снимки Time Machine"
+            }
+        }
+    }
+
+    func localizedDescription(for language: AppLanguage) -> String {
+        switch language {
+        case .chinese: return description
+        case .english: return englishDescription
+        case .traditionalChinese:
+            switch self {
+            case .freeRam: return "Mac 的記憶體經常被佔滿，會讓應用程式和開啟的檔案反應遲緩。MacOptimizer 可清除記憶體中未使用的資料，為目前需要的應用程式騰出空間。"
+            case .purgeableSpace: return "Mac 可能會把大量可清除的檔案保留在磁碟上，通常只有系統需要空間時才會釋放。若您現在需要這些空間，只需按一下即可釋放。"
+            case .flushDns: return "macOS 會暫時保留 DNS 查詢的本機快取。在伺服器變更等情況下，可能需要立即清除快取。"
+            case .speedUpMail: return "Apple Mail 使用一段時間後可能變慢，尤其是在郵件和附件很多時。此任務會最佳化 Mail 資料庫，提高搜尋和瀏覽速度。"
+            case .rebuildSpotlight: return "如果 Spotlight 搜尋變慢或找不到檔案，重建索引可修復問題。macOS 將重新掃描檔案並建立新的搜尋索引。"
+            case .repairPermissions: return "驗證並修復損壞的檔案與資料夾權限，確保應用程式正常執行，並解決常見的存取問題。"
+            case .repairApps: return "掃描並修復容易當機的應用程式。清理損壞的快取與暫存檔案，重設應用程式權限，協助恢復正常執行。"
+            case .timeMachine: return "macOS 會建立佔用磁碟空間的本機 Time Machine 快照。若不需要這些快照，可刪除以釋放空間。"
+            }
+        case .japanese:
+            switch self {
+            case .freeRam: return "Macのメモリがいっぱいになると、アプリや開いているファイルの反応が遅くなります。MacOptimizerは未使用データをメモリから解放し、必要なアプリのための領域を確保します。"
+            case .purgeableSpace: return "Macは消去可能と判断したファイルを、空き容量が必要になるまでディスクに保持することがあります。今すぐ領域が必要な場合は、ワンクリックで解放できます。"
+            case .flushDns: return "macOSはDNS問い合わせの結果を一時的にローカルへ保存します。サーバー変更後など、キャッシュをすぐにリセットしたい場合に使用します。"
+            case .speedUpMail: return "Apple Mailはメールや添付ファイルが増えると遅くなることがあります。Mailのデータベースを最適化して、検索と閲覧を高速化します。"
+            case .rebuildSpotlight: return "Spotlightの検索が遅い、またはファイルが見つからない場合は、インデックスの再作成で改善できます。macOSがファイルを再スキャンして検索索引を作り直します。"
+            case .repairPermissions: return "破損したファイルやフォルダのアクセス権を検証して修復し、アプリが正常に動作できるようにします。アクセス関連の問題の解決に役立ちます。"
+            case .repairApps: return "クラッシュするアプリをスキャンして修復します。破損したキャッシュや一時ファイルを削除し、アプリの権限をリセットします。"
+            case .timeMachine: return "macOSが作成するローカルのTime Machineスナップショットはディスク領域を使用します。不要なスナップショットを削除して空き容量を増やせます。"
+            }
+        case .korean:
+            switch self {
+            case .freeRam: return "Mac의 메모리가 가득 차면 앱과 열린 파일의 반응이 느려집니다. MacOptimizer가 사용하지 않는 데이터를 메모리에서 정리하여 필요한 앱을 위한 공간을 확보합니다."
+            case .purgeableSpace: return "Mac은 제거 가능하다고 판단한 파일을 공간이 필요할 때까지 디스크에 보관할 수 있습니다. 지금 공간이 필요하면 한 번의 클릭으로 확보할 수 있습니다."
+            case .flushDns: return "macOS는 DNS 조회 결과를 일정 시간 로컬에 캐시합니다. 서버 변경 후와 같이 캐시를 즉시 초기화해야 할 때 사용합니다."
+            case .speedUpMail: return "Apple Mail은 메일과 첨부 파일이 많아지면 느려질 수 있습니다. Mail 데이터베이스를 최적화하여 검색과 탐색 속도를 높입니다."
+            case .rebuildSpotlight: return "Spotlight 검색이 느리거나 파일을 찾지 못하면 색인을 재구성하여 문제를 해결할 수 있습니다. macOS가 파일을 다시 스캔해 새 검색 색인을 만듭니다."
+            case .repairPermissions: return "손상된 파일 및 폴더 권한을 확인하고 복구하여 앱이 정상적으로 실행되도록 합니다. 접근 관련 문제 해결에 도움이 됩니다."
+            case .repairApps: return "충돌하는 앱을 스캔하고 복구합니다. 손상된 캐시와 임시 파일을 정리하고 앱 권한을 재설정하여 정상 실행을 돕습니다."
+            case .timeMachine: return "macOS가 만드는 로컬 Time Machine 스냅샷은 디스크 공간을 사용합니다. 필요하지 않은 스냅샷을 삭제하여 공간을 확보할 수 있습니다."
+            }
+        case .russian:
+            switch self {
+            case .freeRam: return "Когда память Mac заполнена, приложения и открытые файлы реагируют медленнее. MacOptimizer удаляет неиспользуемые данные из памяти и освобождает место для нужных приложений."
+            case .purgeableSpace: return "Mac может хранить на диске файлы, которые считает очищаемыми, пока системе не понадобится свободное место. Если место нужно сейчас, его можно освободить одним нажатием."
+            case .flushDns: return "macOS некоторое время хранит локальный кэш DNS-запросов. Иногда его требуется сбросить немедленно, например после изменения сервера."
+            case .speedUpMail: return "Apple Mail со временем может замедляться, особенно при большом количестве писем и вложений. Эта задача оптимизирует базу данных Mail и ускоряет поиск и просмотр."
+            case .rebuildSpotlight: return "Если поиск Spotlight работает медленно или не находит файлы, переиндексация может устранить проблему. macOS повторно просканирует файлы и создаст новый поисковый индекс."
+            case .repairPermissions: return "Проверяет и исправляет повреждённые права доступа к файлам и папкам, чтобы приложения работали правильно. Помогает устранить проблемы с доступом."
+            case .repairApps: return "Сканирует и восстанавливает приложения, которые завершаются с ошибкой. Очищает повреждённый кэш и временные файлы, а также сбрасывает права приложения."
+            case .timeMachine: return "macOS создаёт локальные снимки Time Machine, занимающие место на диске. Ненужные снимки можно удалить, чтобы освободить пространство."
+            }
+        }
+    }
+
+    func localizedRecommendations(for language: AppLanguage) -> [String] {
+        switch language {
+        case .chinese: return recommendations
+        case .english: return englishRecommendations
+        case .traditionalChinese:
+            switch self {
+            case .freeRam: return ["系統感覺很慢", "需要開啟大型應用程式或檔案"]
+            case .purgeableSpace: return ["最多可從磁碟清除數 GB", "請注意，此任務可能需要較長時間"]
+            case .flushDns: return ["無法連線到某些網站", "網路偶爾無故變慢"]
+            case .speedUpMail: return ["Mail 啟動緩慢", "搜尋郵件需要很長時間"]
+            case .rebuildSpotlight: return ["搜尋找不到已知檔案", "Spotlight 索引已損壞"]
+            case .repairPermissions: return ["應用程式運作異常", "無法移動或刪除檔案"]
+            case .repairApps: return ["應用程式經常當機", "應用程式無法正常啟動"]
+            case .timeMachine: return ["需要釋放磁碟空間", "不使用 Time Machine 備份"]
+            }
+        case .japanese:
+            switch self {
+            case .freeRam: return ["システムの動作が遅い", "大きなアプリやファイルを開く必要がある"]
+            case .purgeableSpace: return ["ディスクから数GBを解放できる可能性がある", "この処理には時間がかかる場合がある"]
+            case .flushDns: return ["一部のWebサイトに接続できない", "ネットワークが不規則に遅くなる"]
+            case .speedUpMail: return ["Mailの起動が遅い", "メール検索に時間がかかる"]
+            case .rebuildSpotlight: return ["既知のファイルが検索で見つからない", "Spotlightのインデックスが破損している"]
+            case .repairPermissions: return ["アプリが正常に動作しない", "ファイルを移動または削除できない"]
+            case .repairApps: return ["アプリが頻繁にクラッシュする", "アプリが正常に起動しない"]
+            case .timeMachine: return ["ディスクの空き容量を増やしたい", "Time Machineバックアップを使用していない"]
+            }
+        case .korean:
+            switch self {
+            case .freeRam: return ["시스템이 느리게 느껴짐", "대용량 앱 또는 파일을 열어야 함"]
+            case .purgeableSpace: return ["디스크에서 수 GB를 확보할 수 있음", "이 작업은 시간이 오래 걸릴 수 있음"]
+            case .flushDns: return ["일부 웹사이트에 연결할 수 없음", "네트워크가 불규칙하게 느려짐"]
+            case .speedUpMail: return ["Mail 앱 실행이 느림", "메일 검색에 시간이 오래 걸림"]
+            case .rebuildSpotlight: return ["알고 있는 파일이 검색되지 않음", "Spotlight 색인이 손상됨"]
+            case .repairPermissions: return ["앱이 비정상적으로 작동함", "파일을 이동하거나 삭제할 수 없음"]
+            case .repairApps: return ["앱이 자주 충돌함", "앱이 정상적으로 실행되지 않음"]
+            case .timeMachine: return ["디스크 공간을 확보해야 함", "Time Machine 백업을 사용하지 않음"]
+            }
+        case .russian:
+            switch self {
+            case .freeRam: return ["Система работает медленно", "Нужно открыть большое приложение или файл"]
+            case .purgeableSpace: return ["Можно освободить несколько ГБ на диске", "Эта задача может занять много времени"]
+            case .flushDns: return ["Не удаётся открыть некоторые сайты", "Сеть периодически замедляется"]
+            case .speedUpMail: return ["Приложение «Почта» запускается медленно", "Поиск писем занимает много времени"]
+            case .rebuildSpotlight: return ["Поиск не находит известные файлы", "Индекс Spotlight повреждён"]
+            case .repairPermissions: return ["Приложения работают неправильно", "Не удаётся переместить или удалить файлы"]
+            case .repairApps: return ["Приложения часто завершаются с ошибкой", "Приложения не запускаются"]
+            case .timeMachine: return ["Нужно освободить место на диске", "Резервные копии Time Machine не используются"]
+            }
+        }
+    }
     
     var lastRunKey: String {
         return "maintenance_lastrun_\(rawValue)"
@@ -188,14 +341,21 @@ class MaintenanceService: ObservableObject {
     
     private init() {}
     
-    func getLastRunDate(for task: MaintenanceTask, chinese: Bool) -> String {
+    func getLastRunDate(for task: MaintenanceTask, language: AppLanguage) -> String {
         if let date = UserDefaults.standard.object(forKey: task.lastRunKey) as? Date {
             let formatter = RelativeDateTimeFormatter()
             formatter.unitsStyle = .full
-            if !chinese { formatter.locale = Locale(identifier: "en") }
+            formatter.locale = Locale(identifier: language.localeIdentifier)
             return formatter.localizedString(for: date, relativeTo: Date())
         }
-        return chinese ? "从未" : "Never"
+        switch language {
+        case .chinese: return "从未"
+        case .traditionalChinese: return "從未"
+        case .english: return "Never"
+        case .japanese: return "未実行"
+        case .korean: return "실행 안 함"
+        case .russian: return "Никогда"
+        }
     }
     
     func getDescription(for task: MaintenanceTask, chinese: Bool) -> String {
@@ -268,11 +428,12 @@ class MaintenanceService: ObservableObject {
                     // 如果用户取消，跳过此任务
                     if !userConfirmed {
                         await MainActor.run {
+                            let loc = LocalizationManager.shared
                             taskResults.append(TaskResult(
                                 task: task,
                                 success: false,
-                                message: "已跳过",
-                                details: "用户取消操作"
+                                message: loc.text("已跳过", "Skipped"),
+                                details: loc.text("用户取消了操作", "The operation was canceled by the user")
                             ))
                         }
                         continue
@@ -316,14 +477,15 @@ class MaintenanceService: ObservableObject {
     // 请求用户确认
     @MainActor
     private func requestConfirmation(for task: MaintenanceTask) async {
+        let loc = LocalizationManager.shared
         let message: String
         switch task {
         case .repairApps:
-            message = "此操作将清理所有应用的保存状态和崩溃日志。这是安全的，但某些应用可能需要重新登录。"
+            message = loc.text("此操作将清理所有应用的保存状态和崩溃日志。这是安全的，但某些应用可能需要重新登录。", "This will clean saved states and crash logs for all apps. It is safe, but some apps may require you to sign in again.")
         case .timeMachine:
-            message = "此操作将删除所有旧的时间机器快照（保留最新的一个）。这将释放磁盘空间，但无法恢复。"
+            message = loc.text("此操作将删除所有旧的 Time Machine 快照（保留最新的一个）。这会释放磁盘空间，但无法撤销。", "This will delete all old Time Machine snapshots while keeping the latest one. It will free disk space and cannot be undone.")
         default:
-            message = "是否继续执行此操作？"
+            message = loc.text("是否继续执行此操作？", "Continue with this operation?")
         }
         
         confirmDialogTask = task
@@ -376,6 +538,7 @@ class MaintenanceService: ObservableObject {
     
     // MARK: - 释放 RAM (使用 purge 命令)
     private func freeRAM() async -> (success: Bool, message: String, details: String?) {
+        let loc = LocalizationManager.shared
         // 获取执行前的内存使用情况
         let beforeMemory = getMemoryUsage()
         
@@ -403,9 +566,9 @@ class MaintenanceService: ObservableObject {
         let freedMemoryGB = max(0, beforeMemory - afterMemory)
         
         if freedMemoryGB > 0.1 {
-            return (true, "已释放 \(String(format: "%.2f", freedMemoryGB)) GB 内存", "内存压力已降低")
+            return (true, loc.text("已释放 \(String(format: "%.2f", freedMemoryGB)) GB 内存", "Freed \(String(format: "%.2f", freedMemoryGB)) GB of memory"), loc.text("内存压力已降低", "Memory pressure has been reduced"))
         } else {
-            return (true, "内存优化完成", "系统内存已经比较充足")
+            return (true, loc.text("内存优化完成", "Memory Optimization Complete"), loc.text("系统已有充足的可用内存", "The system already has sufficient available memory"))
         }
     }
     
@@ -429,6 +592,7 @@ class MaintenanceService: ObservableObject {
     
     // MARK: - 释放可清除空间
     private func freePurgeableSpace() async -> (success: Bool, message: String, details: String?) {
+        let loc = LocalizationManager.shared
         var totalCleaned: Int64 = 0
         var filesDeleted = 0
         
@@ -477,9 +641,9 @@ class MaintenanceService: ObservableObject {
         
         let cleanedGB = Double(totalCleaned) / (1024 * 1024 * 1024)
         if cleanedGB > 0.1 {
-            return (true, "已释放 \(String(format: "%.2f", cleanedGB)) GB 空间", "删除了 \(filesDeleted) 个旧文件")
+            return (true, loc.text("已释放 \(String(format: "%.2f", cleanedGB)) GB 空间", "Freed \(String(format: "%.2f", cleanedGB)) GB of space"), loc.text("删除了 \(filesDeleted) 个旧文件", "Deleted \(filesDeleted) old files"))
         } else {
-            return (true, "清理完成", "系统较为干净，未发现大量可清除文件")
+            return (true, loc.text("清理完成", "Cleanup Complete"), loc.text("系统较为干净，未发现大量可清除文件", "The system is already clean; no large amount of purgeable data was found"))
         }
     }
     
@@ -507,6 +671,7 @@ class MaintenanceService: ObservableObject {
     
     // MARK: - 刷新 DNS 缓存
     private func flushDNS() async -> (success: Bool, message: String, details: String?) {
+        let loc = LocalizationManager.shared
         var success = true
         
         // 刷新 DNS 缓存
@@ -527,11 +692,12 @@ class MaintenanceService: ObservableObject {
             success = false
         }
         
-        return (success, "DNS 缓存已刷新", "网络连接问题应该得到解决")
+        return (success, loc.text("DNS 缓存已刷新", "DNS Cache Flushed"), loc.text("网络连接问题现在应该已经解决", "Network connection issues should now be resolved"))
     }
     
     // MARK: - 加速邮件 (优化 Mail 数据库)
     private func speedUpMail() async -> (success: Bool, message: String, details: String?) {
+        let loc = LocalizationManager.shared
         let mailDataPath = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Library/Mail")
         
@@ -583,17 +749,18 @@ class MaintenanceService: ObservableObject {
         if dbOptimized {
             let cleanedMB = Double(cacheCleaned) / (1024 * 1024)
             if cleanedMB > 1 {
-                return (true, "邮件已优化", "数据库已重建，清理了 \(String(format: "%.1f", cleanedMB)) MB 缓存")
+                return (true, loc.text("邮件已优化", "Mail Optimized"), loc.text("数据库已重建，并清理了 \(String(format: "%.1f", cleanedMB)) MB 缓存", "The database was rebuilt and \(String(format: "%.1f", cleanedMB)) MB of cache was cleaned"))
             } else {
-                return (true, "邮件已优化", "数据库已重建索引")
+                return (true, loc.text("邮件已优化", "Mail Optimized"), loc.text("数据库索引已重建", "The database index was rebuilt"))
             }
         } else {
-            return (false, "未找到邮件数据库", "请确保已安装 Mail 应用")
+            return (false, loc.text("未找到邮件数据库", "Mail Database Not Found"), loc.text("请确保已安装 Mail 应用", "Make sure the Mail app is installed"))
         }
     }
     
     // MARK: - 重建 Spotlight 索引
     private func rebuildSpotlight() async -> (success: Bool, message: String, details: String?) {
+        let loc = LocalizationManager.shared
         // 重建用户主目录的 Spotlight 索引
         let homePath = FileManager.default.homeDirectoryForCurrentUser.path
         
@@ -613,14 +780,15 @@ class MaintenanceService: ObservableObject {
         // 不等待完成，因为索引需要很长时间
         
         if success {
-            return (true, "索引重建已启动", "Spotlight 将在后台重新索引您的文件")
+            return (true, loc.text("索引重建已启动", "Reindexing Started"), loc.text("Spotlight 将在后台重新索引您的文件", "Spotlight will reindex your files in the background"))
         } else {
-            return (false, "索引重建失败", "可能需要管理员权限")
+            return (false, loc.text("索引重建失败", "Reindexing Failed"), loc.text("可能需要管理员权限", "Administrator privileges may be required"))
         }
     }
     
     // MARK: - 修复磁盘权限
     private func repairPermissions() async -> (success: Bool, message: String, details: String?) {
+        let loc = LocalizationManager.shared
         let homePath = FileManager.default.homeDirectoryForCurrentUser.path
         var fixedCount = 0
         
@@ -669,12 +837,15 @@ class MaintenanceService: ObservableObject {
             sshFixed = true
         }
         
-        let details = sshFixed ? "修复了 \(fixedCount) 个目录权限（包括 SSH）" : "修复了 \(fixedCount) 个目录权限"
-        return (true, "权限修复完成", details)
+        let details = sshFixed
+            ? loc.text("修复了 \(fixedCount) 个目录的权限（包括 SSH）", "Repaired permissions for \(fixedCount) directories, including SSH")
+            : loc.text("修复了 \(fixedCount) 个目录的权限", "Repaired permissions for \(fixedCount) directories")
+        return (true, loc.text("权限修复完成", "Permission Repair Complete"), details)
     }
     
     // MARK: - 清理时间机器快照
     private func cleanTimeMachine() async -> (success: Bool, message: String, details: String?) {
+        let loc = LocalizationManager.shared
         // 列出所有本地快照
         let listTask = Process()
         listTask.executableURL = URL(fileURLWithPath: "/usr/bin/tmutil")
@@ -688,7 +859,7 @@ class MaintenanceService: ObservableObject {
         
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         guard let output = String(data: data, encoding: .utf8), !output.isEmpty else {
-            return (true, "无快照可删除", "未找到本地时间机器快照")
+            return (true, loc.text("没有可删除的快照", "No Snapshots to Delete"), loc.text("未找到本地 Time Machine 快照", "No local Time Machine snapshots were found"))
         }
         
         // 解析快照日期
@@ -706,7 +877,7 @@ class MaintenanceService: ObservableObject {
         }
         
         if snapshotDates.count <= 1 {
-            return (true, "无需清理", "只有一个快照，已保留")
+            return (true, loc.text("无需清理", "No Cleanup Needed"), loc.text("只有一个快照，已将其保留", "Only one snapshot exists, so it was kept"))
         }
         
         var deletedCount = 0
@@ -725,14 +896,15 @@ class MaintenanceService: ObservableObject {
         }
         
         if deletedCount > 0 {
-            return (true, "已删除 \(deletedCount) 个快照", "保留了最新的快照")
+            return (true, loc.text("已删除 \(deletedCount) 个快照", "Deleted \(deletedCount) snapshots"), loc.text("已保留最新的快照", "The latest snapshot was kept"))
         } else {
-            return (false, "删除失败", "可能需要管理员权限")
+            return (false, loc.text("删除失败", "Deletion Failed"), loc.text("可能需要管理员权限", "Administrator privileges may be required"))
         }
     }
     
     // MARK: - 修复应用程序
     private func repairApps() async -> (success: Bool, message: String, details: String?) {
+        let loc = LocalizationManager.shared
         let home = FileManager.default.homeDirectoryForCurrentUser
         let fileManager = FileManager.default
         var itemsFixed = 0
@@ -808,8 +980,8 @@ class MaintenanceService: ObservableObject {
         }
         
         let freedMB = Double(spaceFreed) / (1024 * 1024)
-        let details = "清理了 \(itemsFixed) 个问题项，释放 \(String(format: "%.1f", freedMB)) MB 空间"
-        return (true, "应用修复完成", details)
+        let details = loc.text("已修复 \(itemsFixed) 个问题项，并释放 \(String(format: "%.1f", freedMB)) MB 空间", "Fixed \(itemsFixed) issues and freed \(String(format: "%.1f", freedMB)) MB of space")
+        return (true, loc.text("应用修复完成", "Application Repair Complete"), details)
     }
 }
 
@@ -858,7 +1030,7 @@ struct MaintenanceView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "chevron.left")
                                 .font(.system(size: 11, weight: .bold))
-                            Text("简介")
+                            Text(loc.text("简介", "Overview"))
                                 .font(.system(size: 12))
                         }
                         .foregroundColor(.white.opacity(0.7))
@@ -886,16 +1058,30 @@ struct MaintenanceView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     // Header: Maintenance Label & Assistant
                     HStack {
-                        Text("维护")
+                        Text(loc.text(
+                            simplifiedChinese: "维护",
+                            traditionalChinese: "維護",
+                            english: "Maintenance",
+                            japanese: "メンテナンス",
+                            korean: "유지 관리",
+                            russian: "Обслуживание"
+                        ))
                             .font(.system(size: 11))
                             .foregroundColor(.white.opacity(0.5))
                         Spacer()
-                        Button(action: {}) {
+                        Button(action: { AIAssistantCoordinator.shared.open(currentModule: .maintenance) }) {
                             HStack(spacing: 4) {
                                 Circle()
                                     .fill(Color.blue)
                                     .frame(width: 5, height: 5)
-                                Text("助手")
+                                Text(loc.text(
+                                    simplifiedChinese: "Mac 优化智能体",
+                                    traditionalChinese: "Mac 最佳化智慧代理",
+                                    english: "Mac Optimization Agent",
+                                    japanese: "Mac最適化エージェント",
+                                    korean: "Mac 최적화 에이전트",
+                                    russian: "Агент оптимизации Mac"
+                                ))
                                     .font(.system(size: 11))
                             }
                             .padding(.horizontal, 8)
@@ -908,13 +1094,13 @@ struct MaintenanceView: View {
                     .padding(.bottom, 20)
                     
                     // Title
-                    Text(loc.currentLanguage == .chinese ? service.selectedTask.title : service.selectedTask.englishTitle)
+                    Text(service.selectedTask.localizedTitle(for: loc.currentLanguage))
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.white)
                         .padding(.bottom, 12)
                     
                     // Description
-                    Text(loc.currentLanguage == .chinese ? service.selectedTask.description : service.selectedTask.englishDescription)
+                    Text(service.selectedTask.localizedDescription(for: loc.currentLanguage))
                         .font(.system(size: 12))
                         .foregroundColor(.white.opacity(0.9))
                         .lineSpacing(3)
@@ -928,7 +1114,7 @@ struct MaintenanceView: View {
                         .padding(.bottom, 8)
                     
                     VStack(alignment: .leading, spacing: 6) {
-                        ForEach(loc.currentLanguage == .chinese ? service.selectedTask.recommendations : service.selectedTask.englishRecommendations, id: \.self) { rec in
+                        ForEach(service.selectedTask.localizedRecommendations(for: loc.currentLanguage), id: \.self) { rec in
                             HStack(alignment: .top, spacing: 6) {
                                 Text("•")
                                     .foregroundColor(.white.opacity(0.5))
@@ -944,7 +1130,14 @@ struct MaintenanceView: View {
                     // Footer: Last Run Date only (button moved to left panel)
                     HStack {
                         Spacer()
-                        Text(loc.text("上次运行：\(service.getLastRunDate(for: service.selectedTask, chinese: true))", "Last ran: \(service.getLastRunDate(for: service.selectedTask, chinese: false))"))
+                        Text(loc.text(
+                            simplifiedChinese: "上次运行：\(service.getLastRunDate(for: service.selectedTask, language: .chinese))",
+                            traditionalChinese: "上次執行：\(service.getLastRunDate(for: service.selectedTask, language: .traditionalChinese))",
+                            english: "Last run: \(service.getLastRunDate(for: service.selectedTask, language: .english))",
+                            japanese: "前回の実行：\(service.getLastRunDate(for: service.selectedTask, language: .japanese))",
+                            korean: "마지막 실행: \(service.getLastRunDate(for: service.selectedTask, language: .korean))",
+                            russian: "Последний запуск: \(service.getLastRunDate(for: service.selectedTask, language: .russian))"
+                        ))
                             .font(.system(size: 11))
                             .foregroundColor(.white.opacity(0.4))
                         Spacer()
@@ -1082,7 +1275,7 @@ struct MaintenanceView: View {
                         }
                         
                         // 任务名称
-                        Text(loc.currentLanguage == .chinese ? task.title : task.englishTitle)
+                        Text(task.localizedTitle(for: loc.currentLanguage))
                             .font(.system(size: 13))
                             .foregroundColor(.white)
                         
@@ -1167,7 +1360,7 @@ struct MaintenanceView: View {
                             // Task Info
                             VStack(alignment: .leading, spacing: 4) {
                                 HStack {
-                                    Text(loc.currentLanguage == .chinese ? result.task.title : result.task.englishTitle)
+                                    Text(result.task.localizedTitle(for: loc.currentLanguage))
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(.white)
                                     
@@ -1437,7 +1630,7 @@ struct MaintenanceConfirmDialog: View {
                     }
                     
                     if let task = service.confirmDialogTask {
-                        Text(loc.currentLanguage == .chinese ? task.title : task.englishTitle)
+                        Text(task.localizedTitle(for: loc.currentLanguage))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.white.opacity(0.7))
                     }
@@ -1570,34 +1763,26 @@ struct MaintenanceConfirmDialog: View {
     
     // 获取任务的具体操作列表
     private func getTaskOperations(_ task: MaintenanceTask) -> [String] {
-        let chinese = loc.currentLanguage == .chinese
-        
         switch task {
         case .repairApps:
-            return chinese ? [
-                "清理所有应用崩溃日志",
-                "删除所有应用保存状态（某些应用可能需要重新登录）",
-                "清理应用临时文件",
-                "重置 Launch Services 数据库",
-                "清理 Core Services 缓存"
-            ] : [
-                "Clean all app crash logs",
-                "Delete all app saved states (some apps may need re-login)",
-                "Clean app temporary files",
-                "Reset Launch Services database",
-                "Clean Core Services cache"
-            ]
+            switch loc.currentLanguage {
+            case .chinese: return ["清理所有应用崩溃日志", "删除所有应用保存状态（某些应用可能需要重新登录）", "清理应用临时文件", "重置 Launch Services 数据库", "清理 Core Services 缓存"]
+            case .traditionalChinese: return ["清理所有應用程式當機日誌", "刪除所有應用程式的儲存狀態（部分應用程式可能需要重新登入）", "清理應用程式暫存檔案", "重設 Launch Services 資料庫", "清理 Core Services 快取"]
+            case .english: return ["Clean all app crash logs", "Delete all app saved states (some apps may need to sign in again)", "Clean app temporary files", "Reset the Launch Services database", "Clean the Core Services cache"]
+            case .japanese: return ["すべてのアプリのクラッシュログを削除", "すべてのアプリの保存状態を削除（一部のアプリでは再ログインが必要です）", "アプリの一時ファイルを削除", "Launch Servicesデータベースをリセット", "Core Servicesキャッシュを削除"]
+            case .korean: return ["모든 앱 충돌 로그 정리", "모든 앱 저장 상태 삭제(일부 앱은 다시 로그인해야 할 수 있음)", "앱 임시 파일 정리", "Launch Services 데이터베이스 재설정", "Core Services 캐시 정리"]
+            case .russian: return ["Удалить все журналы сбоев приложений", "Удалить сохранённые состояния всех приложений (в некоторых приложениях потребуется войти снова)", "Удалить временные файлы приложений", "Сбросить базу данных Launch Services", "Очистить кэш Core Services"]
+            }
             
         case .timeMachine:
-            return chinese ? [
-                "列出所有本地时间机器快照",
-                "删除旧快照（保留最新的一个）",
-                "释放磁盘空间"
-            ] : [
-                "List all local Time Machine snapshots",
-                "Delete old snapshots (keep the latest one)",
-                "Free up disk space"
-            ]
+            switch loc.currentLanguage {
+            case .chinese: return ["列出所有本地 Time Machine 快照", "删除旧快照（保留最新的一个）", "释放磁盘空间"]
+            case .traditionalChinese: return ["列出所有本機 Time Machine 快照", "刪除舊快照（保留最新的一個）", "釋放磁碟空間"]
+            case .english: return ["List all local Time Machine snapshots", "Delete old snapshots (keep the latest one)", "Free up disk space"]
+            case .japanese: return ["ローカルのTime Machineスナップショットをすべて表示", "古いスナップショットを削除（最新の1件は保持）", "ディスク領域を解放"]
+            case .korean: return ["모든 로컬 Time Machine 스냅샷 표시", "오래된 스냅샷 삭제(최신 스냅샷 하나는 유지)", "디스크 공간 확보"]
+            case .russian: return ["Показать все локальные снимки Time Machine", "Удалить старые снимки (сохранить самый новый)", "Освободить место на диске"]
+            }
             
         default:
             return []

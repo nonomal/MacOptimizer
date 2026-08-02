@@ -61,33 +61,33 @@ struct FileExplorerView: View {
             }
         }
         .sheet(isPresented: $showNewFolderDialog) {
-            newItemDialog(title: "新建文件夹", placeholder: "文件夹名称") {
+            newItemDialog(title: loc.text("新建文件夹", "New Folder"), placeholder: loc.text("文件夹名称", "Folder Name")) {
                 try service.createFolder(name: newItemName)
             }
         }
         .sheet(isPresented: $showNewFileDialog) {
-            newItemDialog(title: "新建文件", placeholder: "文件名称") {
+            newItemDialog(title: loc.text("新建文件", "New File"), placeholder: loc.text("文件名称", "File Name")) {
                 try service.createFile(name: newItemName)
             }
         }
         .sheet(isPresented: $showRenameDialog) {
             renameDialog
         }
-        .confirmationDialog("确认删除", isPresented: $showDeleteConfirmation) {
-            Button("移至废纸篓", role: .destructive) {
+        .confirmationDialog(loc.text("确认删除", "Confirm Deletion"), isPresented: $showDeleteConfirmation) {
+            Button(loc.text("移至废纸篓", "Move to Trash"), role: .destructive) {
                 if let item = selectedItem {
                     try? service.deleteItem(item, moveToTrash: true)
                 }
             }
-            Button("永久删除", role: .destructive) {
+            Button(loc.text("永久删除", "Delete Permanently"), role: .destructive) {
                 if let item = selectedItem {
                     try? service.deleteItem(item, moveToTrash: false)
                 }
             }
-            Button("取消", role: .cancel) {}
+            Button(loc.text("取消", "Cancel"), role: .cancel) {}
         } message: {
             if let item = selectedItem {
-                Text("确定要删除 \"\(item.name)\" 吗？")
+                Text(loc.text("确定要删除“\(item.name)”吗？", "Are you sure you want to delete \"\(item.name)\"?"))
             }
         }
     }
@@ -221,7 +221,7 @@ struct FileExplorerView: View {
         HStack(spacing: 8) {
             if isEditingPath {
                 // 编辑模式 - 显示输入框
-                TextField("输入路径...", text: $pathInputText)
+                TextField(loc.text("输入路径...", "Enter a path..."), text: $pathInputText)
                     .textFieldStyle(.plain)
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundColor(.white)
@@ -233,14 +233,14 @@ struct FileExplorerView: View {
                         navigateToInputPath()
                     }
                 
-                Button("跳转") {
+                Button(loc.text("跳转", "Go")) {
                     navigateToInputPath()
                 }
                 .buttonStyle(.plain)
                 .font(.caption)
                 .foregroundColor(.blue)
                 
-                Button("取消") {
+                Button(loc.text("取消", "Cancel")) {
                     isEditingPath = false
                 }
                 .buttonStyle(.plain)
@@ -300,7 +300,7 @@ struct FileExplorerView: View {
             service.navigateTo(url)
             isEditingPath = false
         } else {
-            service.error = "路径不存在或不是目录: \(path)"
+            service.error = loc.text("路径不存在或不是目录：\(path)", "The path does not exist or is not a folder: \(path)")
         }
     }
     
@@ -353,25 +353,25 @@ struct FileExplorerView: View {
     private func contextMenuContent(for item: ExplorerFileItem) -> some View {
         let svc = service
         
-        Button("打开", systemImage: "arrow.up.forward.square") {
+        Button(loc.text("打开", "Open"), systemImage: "arrow.up.forward.square") {
             svc.openItem(item)
         }
         
         if item.isDirectory {
-            Button("进入目录", systemImage: "folder") {
+            Button(loc.text("进入目录", "Open Folder"), systemImage: "folder") {
                 svc.navigateTo(item.url)
             }
         }
         
         Divider()
         
-        Button("在 Finder 中显示", systemImage: "folder.badge.gear") {
+        Button(loc.text("在 Finder 中显示", "Show in Finder"), systemImage: "folder.badge.gear") {
             svc.revealInFinder(item)
         }
         
         Divider()
         
-        Button("重命名", systemImage: "pencil") {
+        Button(loc.text("重命名", "Rename"), systemImage: "pencil") {
             selectedItem = item
             newItemName = item.name
             showRenameDialog = true
@@ -379,7 +379,7 @@ struct FileExplorerView: View {
         
         Divider()
         
-        Button("删除", systemImage: "trash", role: .destructive) {
+        Button(loc.text("删除", "Delete"), systemImage: "trash", role: .destructive) {
             selectedItem = item
             showDeleteConfirmation = true
         }
@@ -426,14 +426,14 @@ struct FileExplorerView: View {
                 .frame(width: 300)
             
             HStack {
-                Button("取消") {
+                Button(loc.text("取消", "Cancel")) {
                     showNewFolderDialog = false
                     showNewFileDialog = false
                     newItemName = ""
                 }
                 .keyboardShortcut(.escape)
                 
-                Button("创建") {
+                Button(loc.text("创建", "Create")) {
                     do {
                         try action()
                         showNewFolderDialog = false
@@ -452,21 +452,21 @@ struct FileExplorerView: View {
     
     private var renameDialog: some View {
         VStack(spacing: 20) {
-            Text("重命名")
+            Text(loc.text("重命名", "Rename"))
                 .font(.headline)
             
-            TextField("新名称", text: $newItemName)
+            TextField(loc.text("新名称", "New Name"), text: $newItemName)
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 300)
             
             HStack {
-                Button("取消") {
+                Button(loc.text("取消", "Cancel")) {
                     showRenameDialog = false
                     newItemName = ""
                 }
                 .keyboardShortcut(.escape)
                 
-                Button("确定") {
+                Button(loc.text("确定", "OK")) {
                     if let item = selectedItem {
                         try? service.renameItem(item, to: newItemName)
                     }

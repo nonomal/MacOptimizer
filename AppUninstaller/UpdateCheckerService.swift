@@ -22,7 +22,7 @@ class UpdateCheckerService: ObservableObject {
     private var isNetworkAvailable: Bool = true
     
     var currentVersion: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "3.0.4"
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "5.0"
     }
     
     private init() {
@@ -53,7 +53,7 @@ class UpdateCheckerService: ObservableObject {
         guard isNetworkAvailable else {
             print("[UpdateChecker] ⚠️ Network not available, skipping update check")
             await MainActor.run {
-                self.errorMessage = "无网络连接"
+                self.errorMessage = LocalizationManager.shared.text("无网络连接", "No Network Connection")
             }
             return
         }
@@ -67,7 +67,7 @@ class UpdateCheckerService: ObservableObject {
         guard let url = URL(string: urlString) else {
             await MainActor.run {
                 self.isChecking = false
-                self.errorMessage = "Invalid URL"
+                self.errorMessage = LocalizationManager.shared.text("更新地址无效", "Invalid Update URL")
             }
             return
         }
@@ -125,4 +125,3 @@ struct GitHubRelease: Codable {
     let html_url: String
     let body: String
 }
-

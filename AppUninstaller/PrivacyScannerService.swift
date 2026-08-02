@@ -1441,63 +1441,82 @@ class PrivacyScannerService: ObservableObject {
     
     /// 本地化权限类型
     private func localizeService(_ service: String) -> (name: String, category: String) {
-        let isChinese = LocalizationManager.shared.currentLanguage == .chinese
+        let loc = LocalizationManager.shared
+        let privacy = loc.text(
+            simplifiedChinese: "隐私",
+            traditionalChinese: "隱私權",
+            english: "Privacy",
+            japanese: "プライバシー",
+            korean: "개인정보 보호",
+            russian: "Конфиденциальность"
+        )
+
+        func name(_ zh: String, _ hant: String, _ en: String, _ ja: String, _ ko: String, _ ru: String) -> String {
+            loc.text(
+                simplifiedChinese: zh,
+                traditionalChinese: hant,
+                english: en,
+                japanese: ja,
+                korean: ko,
+                russian: ru
+            )
+        }
         
         switch service {
         case "kTCCServiceCamera":
-            return (isChinese ? "相机" : "Camera", isChinese ? "隐私" : "Privacy")
+            return (name("相机", "相機", "Camera", "カメラ", "카메라", "Камера"), privacy)
         case "kTCCServiceMicrophone":
-            return (isChinese ? "麦克风" : "Microphone", isChinese ? "隐私" : "Privacy")
+            return (name("麦克风", "麥克風", "Microphone", "マイク", "마이크", "Микрофон"), privacy)
         case "kTCCServicePhotos", "kTCCServicePhotosAdd":
-            return (isChinese ? "照片" : "Photos", isChinese ? "隐私" : "Privacy")
+            return (name("照片", "照片", "Photos", "写真", "사진", "Фотографии"), privacy)
         case "kTCCServiceLocation":
-            return (isChinese ? "位置" : "Location", isChinese ? "隐私" : "Privacy")
+            return (name("位置", "位置", "Location", "位置情報", "위치", "Геопозиция"), privacy)
         case "kTCCServiceContacts":
-            return (isChinese ? "通讯录" : "Contacts", isChinese ? "隐私" : "Privacy")
+            return (name("通讯录", "聯絡人", "Contacts", "連絡先", "연락처", "Контакты"), privacy)
         case "kTCCServiceCalendar":
-            return (isChinese ? "日历" : "Calendar", isChinese ? "隐私" : "Privacy")
+            return (name("日历", "行事曆", "Calendar", "カレンダー", "캘린더", "Календарь"), privacy)
         case "kTCCServiceReminders":
-            return (isChinese ? "提醒事项" : "Reminders", isChinese ? "隐私" : "Privacy")
+            return (name("提醒事项", "提醒事項", "Reminders", "リマインダー", "미리 알림", "Напоминания"), privacy)
         case "kTCCServiceAddressBook":
-            return (isChinese ? "通讯录" : "Address Book", isChinese ? "隐私" : "Privacy")
+            return (name("通讯录", "通訊錄", "Address Book", "アドレスブック", "주소록", "Адресная книга"), privacy)
         case "kTCCServiceScreenCapture":
-            return (isChinese ? "屏幕录制" : "Screen Recording", isChinese ? "隐私" : "Privacy")
+            return (name("屏幕录制", "螢幕錄製", "Screen Recording", "画面収録", "화면 기록", "Запись экрана"), privacy)
         case "kTCCServiceAccessibility":
-            return (isChinese ? "辅助功能" : "Accessibility", isChinese ? "隐私" : "Privacy")
+            return (name("辅助功能", "輔助使用", "Accessibility", "アクセシビリティ", "손쉬운 사용", "Универсальный доступ"), privacy)
         case "kTCCServicePostEvent":
-            return (isChinese ? "输入监控" : "Input Monitoring", isChinese ? "隐私" : "Privacy")
+            return (name("输入监控", "輸入監控", "Input Monitoring", "入力監視", "입력 모니터링", "Мониторинг ввода"), privacy)
         case "kTCCServiceSystemPolicyAllFiles":
-            return (isChinese ? "完全磁盘访问" : "Full Disk Access", isChinese ? "隐私" : "Privacy")
+            return (name("完全磁盘访问", "完整磁碟存取權", "Full Disk Access", "フルディスクアクセス", "전체 디스크 접근 권한", "Полный доступ к диску"), privacy)
         case "kTCCServiceSystemPolicyDesktopFolder":
-            return (isChinese ? "桌面文件夹" : "Desktop Folder", isChinese ? "隐私" : "Privacy")
+            return (name("桌面文件夹", "桌面檔案夾", "Desktop Folder", "デスクトップフォルダ", "데스크탑 폴더", "Папка «Рабочий стол»"), privacy)
         case "kTCCServiceSystemPolicyDocumentsFolder":
-            return (isChinese ? "文稿文件夹" : "Documents Folder", isChinese ? "隐私" : "Privacy")
+            return (name("文稿文件夹", "文件檔案夾", "Documents Folder", "書類フォルダ", "문서 폴더", "Папка «Документы»"), privacy)
         case "kTCCServiceSystemPolicyDownloadsFolder":
-            return (isChinese ? "下载文件夹" : "Downloads Folder", isChinese ? "隐私" : "Privacy")
+            return (name("下载文件夹", "下載項目檔案夾", "Downloads Folder", "ダウンロードフォルダ", "다운로드 폴더", "Папка «Загрузки»"), privacy)
         case "kTCCServiceSystemPolicyNetworkVolumes":
-            return (isChinese ? "网络卷" : "Network Volumes", isChinese ? "隐私" : "Privacy")
+            return (name("网络卷", "網路卷宗", "Network Volumes", "ネットワークボリューム", "네트워크 볼륨", "Сетевые тома"), privacy)
         case "kTCCServiceSystemPolicyRemovableVolumes":
-            return (isChinese ? "可移动卷" : "Removable Volumes", isChinese ? "隐私" : "Privacy")
+            return (name("可移动卷", "卸除式卷宗", "Removable Volumes", "リムーバブルボリューム", "이동식 볼륨", "Съёмные тома"), privacy)
         case "kTCCServiceFileProviderDomain":
-            return (isChinese ? "文件提供程序" : "File Provider", isChinese ? "隐私" : "Privacy")
+            return (name("文件提供程序", "檔案供應者", "File Provider", "ファイルプロバイダ", "파일 제공자", "Поставщик файлов"), privacy)
         case "kTCCServiceFileProviderPresence":
-            return (isChinese ? "文件提供程序状态" : "File Provider Presence", isChinese ? "隐私" : "Privacy")
+            return (name("文件提供程序状态", "檔案供應者狀態", "File Provider Presence", "ファイルプロバイダの状態", "파일 제공자 상태", "Состояние поставщика файлов"), privacy)
         case "kTCCServiceMediaLibrary":
-            return (isChinese ? "媒体资料库" : "Media Library", isChinese ? "隐私" : "Privacy")
+            return (name("媒体资料库", "媒體資料庫", "Media Library", "メディアライブラリ", "미디어 보관함", "Медиатека"), privacy)
         case "kTCCServiceSiri":
-            return (isChinese ? "Siri" : "Siri", isChinese ? "隐私" : "Privacy")
+            return ("Siri", privacy)
         case "kTCCServiceSpeechRecognition":
-            return (isChinese ? "语音识别" : "Speech Recognition", isChinese ? "隐私" : "Privacy")
+            return (name("语音识别", "語音辨識", "Speech Recognition", "音声認識", "음성 인식", "Распознавание речи"), privacy)
         case "kTCCServiceAppleEvents":
-            return (isChinese ? "自动化" : "Automation", isChinese ? "隐私" : "Privacy")
+            return (name("自动化", "自動化", "Automation", "オートメーション", "자동화", "Автоматизация"), privacy)
         case "kTCCServiceBluetoothAlways":
-            return (isChinese ? "蓝牙" : "Bluetooth", isChinese ? "隐私" : "Privacy")
+            return (name("蓝牙", "藍牙", "Bluetooth", "Bluetooth", "Bluetooth", "Bluetooth"), privacy)
         case "kTCCServiceWillow":
-            return (isChinese ? "HomeKit" : "HomeKit", isChinese ? "隐私" : "Privacy")
+            return ("HomeKit", privacy)
         default:
             // 未知权限类型，显示原始名称
             let cleaned = service.replacingOccurrences(of: "kTCCService", with: "")
-            return (cleaned, isChinese ? "其他" : "Other")
+            return (cleaned, name("其他", "其他", "Other", "その他", "기타", "Другое"))
         }
     }
 }

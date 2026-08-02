@@ -28,6 +28,58 @@ enum JunkType: String, CaseIterable, Identifiable {
     case downloads = "下载"
     
     var id: String { rawValue }
+
+    var localizedName: String {
+        let loc = LocalizationManager.shared
+        switch self {
+        case .userCache: return loc.text(simplifiedChinese: "用户缓存", traditionalChinese: "使用者快取", english: "User Cache", japanese: "ユーザーキャッシュ", korean: "사용자 캐시", russian: "Пользовательский кэш")
+        case .systemCache: return loc.text(simplifiedChinese: "系统缓存", traditionalChinese: "系統快取", english: "System Cache", japanese: "システムキャッシュ", korean: "시스템 캐시", russian: "Системный кэш")
+        case .userLogs: return loc.text(simplifiedChinese: "用户日志", traditionalChinese: "使用者日誌", english: "User Logs", japanese: "ユーザーログ", korean: "사용자 로그", russian: "Пользовательские журналы")
+        case .systemLogs: return loc.text(simplifiedChinese: "系统日志", traditionalChinese: "系統日誌", english: "System Logs", japanese: "システムログ", korean: "시스템 로그", russian: "Системные журналы")
+        case .browserCache: return loc.text(simplifiedChinese: "浏览器缓存", traditionalChinese: "瀏覽器快取", english: "Browser Cache", japanese: "ブラウザキャッシュ", korean: "브라우저 캐시", russian: "Кэш браузеров")
+        case .appCache: return loc.text(simplifiedChinese: "应用缓存", traditionalChinese: "應用程式快取", english: "Application Cache", japanese: "アプリキャッシュ", korean: "앱 캐시", russian: "Кэш приложений")
+        case .chatCache: return loc.text(simplifiedChinese: "聊天缓存", traditionalChinese: "聊天快取", english: "Chat Cache", japanese: "チャットキャッシュ", korean: "채팅 캐시", russian: "Кэш мессенджеров")
+        case .mailAttachments: return loc.text(simplifiedChinese: "邮件附件", traditionalChinese: "郵件附件", english: "Mail Attachments", japanese: "メール添付ファイル", korean: "메일 첨부 파일", russian: "Почтовые вложения")
+        case .crashReports: return loc.text(simplifiedChinese: "崩溃报告", traditionalChinese: "當機報告", english: "Crash Reports", japanese: "クラッシュレポート", korean: "충돌 보고서", russian: "Отчёты о сбоях")
+        case .tempFiles: return loc.text(simplifiedChinese: "临时文件", traditionalChinese: "暫存檔案", english: "Temporary Files", japanese: "一時ファイル", korean: "임시 파일", russian: "Временные файлы")
+        case .xcodeDerivedData: return loc.text(simplifiedChinese: "Xcode 垃圾", traditionalChinese: "Xcode 垃圾", english: "Xcode Junk", japanese: "Xcode ジャンク", korean: "Xcode 정크", russian: "Мусор Xcode")
+        case .universalBinaries: return loc.text(simplifiedChinese: "通用二进制文件", traditionalChinese: "通用二進位檔案", english: "Universal Binaries", japanese: "ユニバーサルバイナリ", korean: "유니버설 바이너리", russian: "Универсальные бинарные файлы")
+        case .unusedDiskImages: return loc.text(simplifiedChinese: "未使用的磁盘映像", traditionalChinese: "未使用的磁碟映像", english: "Unused Disk Images", japanese: "未使用のディスクイメージ", korean: "사용하지 않는 디스크 이미지", russian: "Неиспользуемые образы дисков")
+        case .brokenLoginItems: return loc.text(simplifiedChinese: "损坏的登录项", traditionalChinese: "損壞的登入項目", english: "Broken Login Items", japanese: "無効なログイン項目", korean: "손상된 로그인 항목", russian: "Неисправные объекты входа")
+        case .languageFiles: return loc.text(simplifiedChinese: "语言文件", traditionalChinese: "語言檔案", english: "Language Files", japanese: "言語ファイル", korean: "언어 파일", russian: "Языковые файлы")
+        case .deletedUsers: return loc.text(simplifiedChinese: "已删除用户", traditionalChinese: "已刪除的使用者", english: "Deleted Users", japanese: "削除済みユーザー", korean: "삭제된 사용자", russian: "Удалённые пользователи")
+        case .iosBackups: return loc.text(simplifiedChinese: "iOS 设备备份", traditionalChinese: "iOS 裝置備份", english: "iOS Device Backups", japanese: "iOSデバイスのバックアップ", korean: "iOS 기기 백업", russian: "Резервные копии iOS")
+        case .oldUpdates: return loc.text(simplifiedChinese: "旧更新", traditionalChinese: "舊版更新", english: "Old Updates", japanese: "古いアップデート", korean: "이전 업데이트", russian: "Старые обновления")
+        case .documentVersions: return loc.text(simplifiedChinese: "文稿版本", traditionalChinese: "文件版本", english: "Document Versions", japanese: "書類のバージョン", korean: "문서 버전", russian: "Версии документов")
+        case .downloads: return loc.text(simplifiedChinese: "下载", traditionalChinese: "下載項目", english: "Downloads", japanese: "ダウンロード", korean: "다운로드", russian: "Загрузки")
+        }
+    }
+
+    var localizedDescription: String {
+        let loc = LocalizationManager.shared
+        switch self {
+        case .userCache: return loc.text(simplifiedChinese: "应用程序产生的临时缓存文件", traditionalChinese: "應用程式產生的暫存快取檔案", english: "Temporary cache files created by applications", japanese: "アプリが作成した一時キャッシュファイル", korean: "앱에서 생성한 임시 캐시 파일", russian: "Временные файлы кэша, созданные приложениями")
+        case .systemCache: return loc.text(simplifiedChinese: "macOS 系统产生的缓存", traditionalChinese: "macOS 系統產生的快取", english: "Cache files created by macOS", japanese: "macOSが作成したキャッシュファイル", korean: "macOS에서 생성한 캐시 파일", russian: "Файлы кэша, созданные macOS")
+        case .userLogs: return loc.text(simplifiedChinese: "应用程序运行日志", traditionalChinese: "應用程式執行日誌", english: "Application activity logs", japanese: "アプリケーションの動作ログ", korean: "애플리케이션 실행 로그", russian: "Журналы работы приложений")
+        case .systemLogs: return loc.text(simplifiedChinese: "macOS 系统日志文件", traditionalChinese: "macOS 系統日誌檔案", english: "macOS system log files", japanese: "macOSのシステムログファイル", korean: "macOS 시스템 로그 파일", russian: "Системные журналы macOS")
+        case .browserCache: return loc.text(simplifiedChinese: "Chrome、Safari、Firefox 等浏览器缓存", traditionalChinese: "Chrome、Safari、Firefox 等瀏覽器快取", english: "Caches from Chrome, Safari, Firefox, and other browsers", japanese: "Chrome、Safari、Firefoxなどのブラウザキャッシュ", korean: "Chrome, Safari, Firefox 등의 브라우저 캐시", russian: "Кэш Chrome, Safari, Firefox и других браузеров")
+        case .appCache: return loc.text(simplifiedChinese: "各种应用的临时文件", traditionalChinese: "各種應用程式的暫存檔案", english: "Temporary files from applications", japanese: "各アプリケーションの一時ファイル", korean: "여러 앱의 임시 파일", russian: "Временные файлы приложений")
+        case .chatCache: return loc.text(simplifiedChinese: "微信、QQ、Telegram 等聊天应用缓存", traditionalChinese: "微信、QQ、Telegram 等聊天應用程式快取", english: "Caches from WeChat, QQ, Telegram, and other messaging apps", japanese: "WeChat、QQ、Telegramなどのチャットアプリのキャッシュ", korean: "WeChat, QQ, Telegram 등의 메신저 캐시", russian: "Кэш WeChat, QQ, Telegram и других мессенджеров")
+        case .mailAttachments: return loc.text(simplifiedChinese: "邮件下载的附件文件", traditionalChinese: "郵件下載的附件檔案", english: "Attachments downloaded by mail applications", japanese: "メールアプリがダウンロードした添付ファイル", korean: "메일 앱에서 다운로드한 첨부 파일", russian: "Вложения, загруженные почтовыми приложениями")
+        case .crashReports: return loc.text(simplifiedChinese: "应用崩溃产生的诊断报告", traditionalChinese: "應用程式當機產生的診斷報告", english: "Diagnostic reports created when applications crash", japanese: "アプリのクラッシュ時に作成された診断レポート", korean: "앱 충돌 시 생성된 진단 보고서", russian: "Диагностические отчёты о сбоях приложений")
+        case .tempFiles: return loc.text(simplifiedChinese: "系统和应用产生的临时文件", traditionalChinese: "系統和應用程式產生的暫存檔案", english: "Temporary files created by the system and applications", japanese: "システムとアプリが作成した一時ファイル", korean: "시스템과 앱에서 생성한 임시 파일", russian: "Временные файлы системы и приложений")
+        case .xcodeDerivedData: return loc.text(simplifiedChinese: "Xcode 编译产生的中间文件", traditionalChinese: "Xcode 編譯產生的中間檔案", english: "Intermediate files created by Xcode builds", japanese: "Xcodeのビルドで作成された中間ファイル", korean: "Xcode 빌드에서 생성한 중간 파일", russian: "Промежуточные файлы сборок Xcode")
+        case .universalBinaries: return loc.text(simplifiedChinese: "包含多种架构代码的应用二进制文件", traditionalChinese: "包含多種架構程式碼的應用程式二進位檔案", english: "Application binaries containing code for multiple architectures", japanese: "複数のアーキテクチャを含むアプリのバイナリ", korean: "여러 아키텍처 코드를 포함한 앱 바이너리", russian: "Файлы приложений с кодом для нескольких архитектур")
+        case .unusedDiskImages: return loc.text(simplifiedChinese: "下载后未使用的 DMG、ISO 和 PKG 文件", traditionalChinese: "下載後未使用的 DMG、ISO 和 PKG 檔案", english: "Unused DMG, ISO, and PKG files in Downloads", japanese: "ダウンロード後に使用されていないDMG、ISO、PKGファイル", korean: "다운로드 후 사용하지 않은 DMG, ISO 및 PKG 파일", russian: "Неиспользуемые файлы DMG, ISO и PKG в папке загрузок")
+        case .brokenLoginItems: return loc.text(simplifiedChinese: "指向不存在的应用或文件的登录项", traditionalChinese: "指向不存在應用程式或檔案的登入項目", english: "Login items that point to missing applications or files", japanese: "存在しないアプリやファイルを参照するログイン項目", korean: "존재하지 않는 앱 또는 파일을 가리키는 로그인 항목", russian: "Объекты входа, ссылающиеся на отсутствующие приложения или файлы")
+        case .languageFiles: return loc.text(simplifiedChinese: "当前不使用的应用程序语言包", traditionalChinese: "目前未使用的應用程式語言套件", english: "Application language resources not currently in use", japanese: "現在使用していないアプリの言語リソース", korean: "현재 사용하지 않는 앱 언어 리소스", russian: "Неиспользуемые языковые ресурсы приложений")
+        case .deletedUsers: return loc.text(simplifiedChinese: "已删除用户留下的数据", traditionalChinese: "已刪除使用者留下的資料", english: "Data left behind by deleted user accounts", japanese: "削除済みユーザーアカウントの残存データ", korean: "삭제된 사용자 계정의 잔여 데이터", russian: "Данные, оставшиеся от удалённых учётных записей")
+        case .iosBackups: return loc.text(simplifiedChinese: "存储在本机的 iOS 设备备份", traditionalChinese: "儲存在本機的 iOS 裝置備份", english: "iOS device backups stored on this Mac", japanese: "このMacに保存されたiOSデバイスのバックアップ", korean: "이 Mac에 저장된 iOS 기기 백업", russian: "Резервные копии устройств iOS на этом Mac")
+        case .oldUpdates: return loc.text(simplifiedChinese: "已经安装的软件更新包", traditionalChinese: "已安裝的軟體更新套件", english: "Software update packages that are already installed", japanese: "インストール済みのソフトウェアアップデートパッケージ", korean: "이미 설치된 소프트웨어 업데이트 패키지", russian: "Пакеты уже установленных обновлений")
+        case .documentVersions: return loc.text(simplifiedChinese: "文稿的旧版本历史记录", traditionalChinese: "文件的舊版本歷史記錄", english: "History of older document versions", japanese: "書類の古いバージョン履歴", korean: "문서의 이전 버전 기록", russian: "История предыдущих версий документов")
+        case .downloads: return loc.text(simplifiedChinese: "下载文件夹中的文件", traditionalChinese: "下載項目檔案夾中的檔案", english: "Files in the Downloads folder", japanese: "ダウンロードフォルダ内のファイル", korean: "다운로드 폴더의 파일", russian: "Файлы в папке «Загрузки»")
+        }
+    }
     
     var icon: String {
         switch self {
@@ -579,7 +631,7 @@ class JunkCleaner: ObservableObject {
                     
                     await MainActor.run { 
                         self.currentScanningPath = expandedPath
-                        self.currentScanningCategory = type.rawValue 
+                        self.currentScanningCategory = type.localizedName
                     }
                     
                     guard self.fileManager.fileExists(atPath: url.path) else { return ([], false) }
@@ -607,7 +659,7 @@ class JunkCleaner: ObservableObject {
                                 if Int.random(in: 0...50) == 0 { 
                                     await MainActor.run { 
                                         self.currentScanningPath = fileURL.path 
-                                        self.currentScanningCategory = type.rawValue
+                                        self.currentScanningCategory = type.localizedName
                                     } 
                                 } // Throttle updates
                                 let ext = fileURL.pathExtension.lowercased()

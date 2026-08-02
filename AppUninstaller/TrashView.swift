@@ -777,12 +777,12 @@ struct TrashView: View {
                  HStack {
                     Circle().fill(Color.white.opacity(0.2)).frame(width: 6, height: 6)
                     Text(loc.text(
-    simplifiedChinese: "助手",
-    traditionalChinese: "助理",
-    english: "Assistant",
-    japanese: "アシスタント",
-    korean: "협조자",
-    russian: "Ассистент"
+    simplifiedChinese: "Mac 优化智能体",
+    traditionalChinese: "Mac 最佳化智慧代理",
+    english: "Mac Optimization Agent",
+    japanese: "Mac最適化エージェント",
+    korean: "Mac 최적화 에이전트",
+    russian: "Агент оптимизации Mac"
 ))
                 }
                 .padding(.horizontal, 10)
@@ -915,7 +915,7 @@ struct TrashView: View {
                 Spacer()
                 
                 // Placeholder
-                Text("Start Over")
+                Text(loc.text("重新开始", "Start Over"))
                     .opacity(0)
             }
             .padding(.horizontal, 24)

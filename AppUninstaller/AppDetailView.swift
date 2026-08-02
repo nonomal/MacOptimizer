@@ -347,7 +347,23 @@ struct AppDetailView: View {
                     HStack(spacing: 8) {
                         Image(systemName: includeApp ? "trash.fill" : "paintbrush.fill")
                             .font(.system(size: 14))
-                        Text(loc.currentLanguage == .chinese ? (includeApp ? "卸载应用" : "清理残留") : (includeApp ? "Uninstall" : "Clean"))
+                        Text(includeApp
+                            ? loc.text(
+                                simplifiedChinese: "卸载应用",
+                                traditionalChinese: "解除安裝應用程式",
+                                english: "Uninstall",
+                                japanese: "アンインストール",
+                                korean: "앱 제거",
+                                russian: "Удалить приложение"
+                            )
+                            : loc.text(
+                                simplifiedChinese: "清理残留",
+                                traditionalChinese: "清理殘留檔案",
+                                english: "Clean",
+                                japanese: "残留ファイルを削除",
+                                korean: "잔여 파일 정리",
+                                russian: "Очистить остатки"
+                            ))
                     }
                 }
                 .buttonStyle(PrimaryButtonStyle(isDestructive: includeApp))

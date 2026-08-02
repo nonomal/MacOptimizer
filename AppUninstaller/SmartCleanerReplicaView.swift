@@ -189,21 +189,6 @@ struct SmartCleanerReplicaView: View {
                     }
 
                     Spacer()
-
-                    if state == .initial {
-                        HStack(spacing: 6) {
-                            Circle()
-                                .fill(Color(red: 0.28, green: 0.82, blue: 0.95))
-                                .frame(width: 5, height: 5)
-                            Text(localized("助手", "Assistant"))
-                                .font(.system(size: 11, weight: .semibold))
-                        }
-                        .foregroundColor(.white.opacity(0.74))
-                        .padding(.horizontal, 17)
-                        .frame(height: 25)
-                        .background(Color.black.opacity(0.30), in: Capsule())
-                        .padding(.trailing, 12)
-                    }
                 }
             }
             .frame(height: 52)

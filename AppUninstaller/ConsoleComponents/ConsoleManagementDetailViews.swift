@@ -703,7 +703,7 @@ struct ConsoleProtectionDetailView: View {
                             Text(threat.name).font(.system(size: 12, weight: .semibold)).foregroundColor(.white)
                             Text(threat.path.path).font(.system(size: 9)).foregroundColor(.white.opacity(0.42)).lineLimit(1).truncationMode(.middle)
                         }
-                        Spacer(); Text(threat.type.rawValue).font(.system(size: 9)).foregroundColor(.red)
+                        Spacer(); Text(threat.type.localizedName).font(.system(size: 9)).foregroundColor(.red)
                     }.padding(12).consolePanel()
                 }
             }

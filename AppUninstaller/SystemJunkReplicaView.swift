@@ -333,7 +333,14 @@ struct SystemJunkReplicaView: View {
                     }
                     .buttonStyle(.plain)
 
-                    Text(localized("共发现 \(formatBytes(moduleTotalSize))", "Found \(formatBytes(moduleTotalSize)) in total"))
+                    Text(loc.text(
+                        simplifiedChinese: "共发现 \(formatBytes(moduleTotalSize))",
+                        traditionalChinese: "共發現 \(formatBytes(moduleTotalSize))",
+                        english: "Found \(formatBytes(moduleTotalSize)) in total",
+                        japanese: "合計 \(formatBytes(moduleTotalSize)) を検出",
+                        korean: "총 \(formatBytes(moduleTotalSize)) 발견",
+                        russian: "Всего найдено: \(formatBytes(moduleTotalSize))"
+                    ))
                         .font(.system(size: 10))
                         .foregroundColor(.white.opacity(0.38))
                 }
@@ -857,7 +864,7 @@ struct SystemJunkReplicaView: View {
     }
 
     private func displayTitle(_ type: JunkType) -> String {
-        categories.first(where: { $0.type == type }).map(title) ?? type.rawValue
+        categories.first(where: { $0.type == type }).map(title) ?? type.localizedName
     }
 
     private func totalSize(_ items: [JunkItem]) -> Int64 {

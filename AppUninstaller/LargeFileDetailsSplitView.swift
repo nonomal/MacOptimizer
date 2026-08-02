@@ -163,9 +163,9 @@ struct LargeFileDetailsSplitView: View {
                     
                     // Sort Menu
                     Menu {
-                        Button("Size") { sortOption = .size }
-                        Button("Name") { sortOption = .name }
-                        Button("Date") { sortOption = .date }
+                        Button(loc.text("大小", "Size")) { sortOption = .size }
+                        Button(loc.text("名称", "Name")) { sortOption = .name }
+                        Button(loc.text("日期", "Date")) { sortOption = .date }
                     } label: {
                         HStack(spacing: 4) {
                             Text(loc.text("排序方式按", "Sort by"))
@@ -308,12 +308,12 @@ struct LargeFileDetailsSplitView: View {
             }
         }
         .alert(loc.text("删除失败", "Deletion Failed"), isPresented: $showDeleteError) {
-            Button("OK") { }
+            Button(loc.text("确定", "OK")) { }
         } message: {
             Text(deleteErrorMessage)
         }
         .alert(loc.text("删除成功", "Deletion Successful"), isPresented: $showDeleteSuccess) {
-            Button("OK") { }
+            Button(loc.text("确定", "OK")) { }
         } message: {
             Text(successMessage)
         }
@@ -371,29 +371,27 @@ struct LargeFileDetailsSplitView: View {
     }
     
     private func categoryLocalized(_ title: String) -> String {
-        guard loc.currentLanguage == .chinese else { return title }
-        switch title {
-        case "All Files": return "所有文件"
-        case "Type": return "按类型"
-        case "Size": return "按大小"
-        case "Date": return "按访问日期"
-            
-        case "All": return "所有文件"
-        case "Movies": return "视频"
-        case "Archives": return "存档"
-        case "Music": return "音乐"
-        case "Pictures": return "图片"
-        case "Documents": return "文档"
-        case "Others": return "其他"
-        case "Huge": return "巨大"
-        case "Small": return "较小"
-        case "Medium": return "中等"
-        case "One Year Ago": return "一年前"
-        case "One Month Ago": return "一个月前"
-        case "One Week Ago": return "一周前"
-        default: return title
+        let translations: [String: [AppLanguage: String]] = [
+            "All Files": [.chinese: "所有文件", .traditionalChinese: "所有檔案", .english: "All Files", .japanese: "すべてのファイル", .korean: "모든 파일", .russian: "Все файлы"],
+            "Type": [.chinese: "按类型", .traditionalChinese: "依類型", .english: "Type", .japanese: "種類別", .korean: "유형별", .russian: "По типу"],
+            "Size": [.chinese: "按大小", .traditionalChinese: "依大小", .english: "Size", .japanese: "サイズ別", .korean: "크기별", .russian: "По размеру"],
+            "Date": [.chinese: "按访问日期", .traditionalChinese: "依存取日期", .english: "Date", .japanese: "アクセス日別", .korean: "접근 날짜별", .russian: "По дате доступа"],
+            "All": [.chinese: "所有文件", .traditionalChinese: "所有檔案", .english: "All", .japanese: "すべて", .korean: "전체", .russian: "Все"],
+            "Movies": [.chinese: "视频", .traditionalChinese: "影片", .english: "Movies", .japanese: "ムービー", .korean: "동영상", .russian: "Видео"],
+            "Archives": [.chinese: "存档", .traditionalChinese: "封存檔", .english: "Archives", .japanese: "アーカイブ", .korean: "압축 파일", .russian: "Архивы"],
+            "Music": [.chinese: "音乐", .traditionalChinese: "音樂", .english: "Music", .japanese: "ミュージック", .korean: "음악", .russian: "Музыка"],
+            "Pictures": [.chinese: "图片", .traditionalChinese: "圖片", .english: "Pictures", .japanese: "画像", .korean: "사진", .russian: "Изображения"],
+            "Documents": [.chinese: "文档", .traditionalChinese: "文件", .english: "Documents", .japanese: "書類", .korean: "문서", .russian: "Документы"],
+            "Others": [.chinese: "其他", .traditionalChinese: "其他", .english: "Others", .japanese: "その他", .korean: "기타", .russian: "Другие"],
+            "Huge": [.chinese: "巨大", .traditionalChinese: "超大", .english: "Huge", .japanese: "特大", .korean: "매우 큼", .russian: "Очень большие"],
+            "Small": [.chinese: "较小", .traditionalChinese: "較小", .english: "Small", .japanese: "小", .korean: "작음", .russian: "Небольшие"],
+            "Medium": [.chinese: "中等", .traditionalChinese: "中等", .english: "Medium", .japanese: "中", .korean: "중간", .russian: "Средние"],
+            "One Year Ago": [.chinese: "一年前", .traditionalChinese: "一年前", .english: "One Year Ago", .japanese: "1年以上前", .korean: "1년 전", .russian: "Год назад"],
+            "One Month Ago": [.chinese: "一个月前", .traditionalChinese: "一個月前", .english: "One Month Ago", .japanese: "1か月以上前", .korean: "1개월 전", .russian: "Месяц назад"],
+            "One Week Ago": [.chinese: "一周前", .traditionalChinese: "一週前", .english: "One Week Ago", .japanese: "1週間以上前", .korean: "1주 전", .russian: "Неделю назад"]
+        ]
+        return translations[title]?[loc.currentLanguage] ?? title
         }
-    }
     
     private func categoryTitle(_ title: String) -> String {
         return categoryLocalized(title)

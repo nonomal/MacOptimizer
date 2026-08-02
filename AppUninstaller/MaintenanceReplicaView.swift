@@ -266,12 +266,14 @@ struct MaintenanceReplicaView: View {
 
             Spacer()
 
-            Text(
-                localized(
-                    "上次运行日期： \(service.getLastRunDate(for: service.selectedTask, chinese: true))",
-                    "Last run: \(service.getLastRunDate(for: service.selectedTask, chinese: false))"
-                )
-            )
+            Text(loc.text(
+                simplifiedChinese: "上次运行：\(service.getLastRunDate(for: service.selectedTask, language: .chinese))",
+                traditionalChinese: "上次執行：\(service.getLastRunDate(for: service.selectedTask, language: .traditionalChinese))",
+                english: "Last run: \(service.getLastRunDate(for: service.selectedTask, language: .english))",
+                japanese: "前回の実行：\(service.getLastRunDate(for: service.selectedTask, language: .japanese))",
+                korean: "마지막 실행: \(service.getLastRunDate(for: service.selectedTask, language: .korean))",
+                russian: "Последний запуск: \(service.getLastRunDate(for: service.selectedTask, language: .russian))"
+            ))
             .font(.system(size: 11, weight: .medium))
             .foregroundColor(.white.opacity(0.68))
             .padding(.bottom, 108)
@@ -427,15 +429,15 @@ struct MaintenanceReplicaView: View {
     }
 
     private func localizedTaskTitle(_ task: MaintenanceTask) -> String {
-        loc.currentLanguage == .chinese ? task.title : task.englishTitle
+        task.localizedTitle(for: loc.currentLanguage)
     }
 
     private func localizedTaskDescription(_ task: MaintenanceTask) -> String {
-        loc.currentLanguage == .chinese ? task.description : task.englishDescription
+        task.localizedDescription(for: loc.currentLanguage)
     }
 
     private func localizedRecommendations(_ task: MaintenanceTask) -> [String] {
-        loc.currentLanguage == .chinese ? task.recommendations : task.englishRecommendations
+        task.localizedRecommendations(for: loc.currentLanguage)
     }
 
     private func taskAsset(_ task: MaintenanceTask) -> String {

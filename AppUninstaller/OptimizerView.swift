@@ -65,43 +65,31 @@ enum OptimizerTask: String, CaseIterable, Identifiable {
     
     // Localized properties
     func title(for language: AppLanguage) -> String {
-        switch language {
-        case .chinese:
-            switch self {
-            case .networkOptimize: return "网络优化"
-            case .bootOptimize: return "启动加速"
-            case .memoryOptimize: return "内存优化"
-            case .appAccelerate: return "应用加速"
-            case .heavyConsumers: return "占用较多资源的项目"
-            case .launchAgents: return "启动代理"
-            case .hungApps: return "挂起的应用程序"
-            }
-        case .traditionalChinese:
-            let simplified = title(for: .chinese)
-            return simplified.applyingTransform(StringTransform("Hans-Hant"), reverse: false) ?? simplified
-        case .english, .japanese, .korean, .russian:
-            return englishTitle
+        let values: [AppLanguage: String]
+        switch self {
+        case .networkOptimize: values = [.chinese: "网络优化", .traditionalChinese: "網路最佳化", .english: "Network Optimization", .japanese: "ネットワーク最適化", .korean: "네트워크 최적화", .russian: "Оптимизация сети"]
+        case .bootOptimize: values = [.chinese: "启动加速", .traditionalChinese: "啟動加速", .english: "Speed Up Boot", .japanese: "起動を高速化", .korean: "부팅 속도 향상", .russian: "Ускорение запуска"]
+        case .memoryOptimize: values = [.chinese: "内存优化", .traditionalChinese: "記憶體最佳化", .english: "Memory Optimization", .japanese: "メモリ最適化", .korean: "메모리 최적화", .russian: "Оптимизация памяти"]
+        case .appAccelerate: values = [.chinese: "应用加速", .traditionalChinese: "應用程式加速", .english: "App Acceleration", .japanese: "アプリ高速化", .korean: "앱 가속", .russian: "Ускорение приложений"]
+        case .heavyConsumers: values = [.chinese: "高资源占用应用", .traditionalChinese: "高資源佔用應用程式", .english: "Heavy Consumers", .japanese: "高負荷アプリ", .korean: "리소스 과다 사용 앱", .russian: "Ресурсоёмкие приложения"]
+        case .launchAgents: values = [.chinese: "启动代理", .traditionalChinese: "啟動代理程式", .english: "Launch Agents", .japanese: "起動エージェント", .korean: "시작 에이전트", .russian: "Агенты запуска"]
+        case .hungApps: values = [.chinese: "无响应的应用", .traditionalChinese: "無回應的應用程式", .english: "Hung Applications", .japanese: "応答しないアプリ", .korean: "응답하지 않는 앱", .russian: "Зависшие приложения"]
         }
+        return values[language] ?? englishTitle
     }
     
     func description(for language: AppLanguage) -> String {
-        switch language {
-        case .chinese:
-            switch self {
-            case .networkOptimize: return "刷新 DNS 缓存，清理网络缓存，解决网络连接问题和 DNS 解析错误。"
-            case .bootOptimize: return "禁用不必要的启动代理和登录项，加快 Mac 启动速度。"
-            case .memoryOptimize: return "释放内存，关闭高内存占用应用，提升系统响应速度。"
-            case .appAccelerate: return "清理应用缓存，优化数据库，让应用启动更快。"
-            case .heavyConsumers: return "通常，很难发现一些运行的进程开始占用太多 Mac 资源。如果您不是真正需要这样的应用程序运行，则将其找出来并关闭。"
-            case .launchAgents: return "通常，这些是其他软件产品的小辅助应用程序，可以扩展其主产品的功能。但是在一些情况下，您可以考虑移除或禁用它们。"
-            case .hungApps: return "如果应用程序停止响应，您可以强制将其关闭以释放资源。"
-            }
-        case .traditionalChinese:
-            let simplified = description(for: .chinese)
-            return simplified.applyingTransform(StringTransform("Hans-Hant"), reverse: false) ?? simplified
-        case .english, .japanese, .korean, .russian:
-            return englishDescription
+        let values: [AppLanguage: String]
+        switch self {
+        case .networkOptimize: values = [.chinese: "刷新 DNS 与网络缓存，帮助解决连接和域名解析问题。", .traditionalChinese: "重新整理 DNS 與網路快取，協助解決連線和網域解析問題。", .english: englishDescription, .japanese: "DNSとネットワークキャッシュを更新し、接続や名前解決の問題を改善します。", .korean: "DNS 및 네트워크 캐시를 새로 고쳐 연결과 도메인 확인 문제를 해결합니다.", .russian: "Обновляет кэш DNS и сети, помогая устранить проблемы подключения и разрешения имён."]
+        case .bootOptimize: values = [.chinese: "管理不必要的启动代理和登录项，加快 Mac 启动速度。", .traditionalChinese: "管理不必要的啟動代理程式和登入項目，加快 Mac 啟動速度。", .english: englishDescription, .japanese: "不要な起動エージェントとログイン項目を管理し、Macの起動を高速化します。", .korean: "불필요한 시작 에이전트와 로그인 항목을 관리하여 Mac 부팅 속도를 높입니다.", .russian: "Управляет ненужными агентами запуска и объектами входа, ускоряя запуск Mac."]
+        case .memoryOptimize: values = [.chinese: "释放内存并减少后台占用，提升系统响应速度。", .traditionalChinese: "釋放記憶體並減少背景佔用，提升系統回應速度。", .english: englishDescription, .japanese: "メモリを解放してバックグラウンドの使用量を減らし、応答性を向上させます。", .korean: "메모리를 확보하고 백그라운드 사용량을 줄여 시스템 반응 속도를 높입니다.", .russian: "Освобождает память и снижает фоновую нагрузку, повышая отзывчивость системы."]
+        case .appAccelerate: values = [.chinese: "清理应用缓存并优化数据，让应用启动更快。", .traditionalChinese: "清理應用程式快取並最佳化資料，讓應用程式啟動更快。", .english: englishDescription, .japanese: "アプリのキャッシュとデータを最適化し、起動を高速化します。", .korean: "앱 캐시와 데이터를 최적화하여 앱을 더 빠르게 실행합니다.", .russian: "Оптимизирует кэш и данные приложений, ускоряя их запуск."]
+        case .heavyConsumers: values = [.chinese: "找出占用过多处理器或内存的应用，并在不需要时将其关闭。", .traditionalChinese: "找出佔用過多處理器或記憶體的應用程式，並在不需要時將其關閉。", .english: englishDescription, .japanese: "CPUやメモリを大量に使用するアプリを見つけ、不要な場合は終了します。", .korean: "CPU 또는 메모리를 과도하게 사용하는 앱을 찾아 필요하지 않을 때 종료합니다.", .russian: "Находит приложения с высокой нагрузкой на процессор или память и позволяет завершить ненужные."]
+        case .launchAgents: values = [.chinese: "管理随应用自动启动的辅助程序。", .traditionalChinese: "管理隨應用程式自動啟動的輔助程式。", .english: englishDescription, .japanese: "アプリとともに自動起動する補助プログラムを管理します。", .korean: "앱과 함께 자동으로 실행되는 도우미 프로그램을 관리합니다.", .russian: "Управляет вспомогательными программами, запускаемыми автоматически."]
+        case .hungApps: values = [.chinese: "强制退出无响应的应用以释放系统资源。", .traditionalChinese: "強制結束無回應的應用程式以釋放系統資源。", .english: englishDescription, .japanese: "応答しないアプリを強制終了してシステムリソースを解放します。", .korean: "응답하지 않는 앱을 강제 종료하여 시스템 리소스를 확보합니다.", .russian: "Принудительно завершает зависшие приложения, освобождая ресурсы системы."]
         }
+        return values[language] ?? englishDescription
     }
     
     // 是否为一键优化（点击即执行）
@@ -136,6 +124,8 @@ struct LaunchAgentItem: Identifiable, Equatable {
 
 // MARK: - Service
 class OptimizerService: ObservableObject {
+    static let shared = OptimizerService()
+
     @Published var selectedTask: OptimizerTask = .heavyConsumers
     @Published var selectedTasks: Set<OptimizerTask> = []
     @Published var heavyProcesses: [OptimizerProcessItem] = []
@@ -178,12 +168,20 @@ class OptimizerService: ObservableObject {
     }
     
     func scan() {
+        guard !isScanning else { return }
         isScanning = true
         Task {
             await fetchHeavyConsumers()
             await fetchLaunchAgents()
             await fetchHungApps()
             await MainActor.run { self.isScanning = false }
+        }
+    }
+
+    func scanAndWait() async {
+        scan()
+        while isScanning {
+            try? await Task.sleep(nanoseconds: 80_000_000)
         }
     }
     
@@ -743,7 +741,7 @@ class OptimizerService: ObservableObject {
 
 // MARK: - Views
 struct OptimizerView: View {
-    @StateObject private var service = OptimizerService()
+    @ObservedObject private var service = OptimizerService.shared
     @ObservedObject private var loc = LocalizationManager.shared
     
     @State private var viewState = 0 // 0: Landing, 1: List, 2: Executing, 3: Results

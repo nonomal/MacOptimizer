@@ -51,11 +51,11 @@ struct PrivacyView: View {
         
         var title: String {
             switch self {
-            case .permissions: return LocalizationManager.shared.currentLanguage == .chinese ? "应用权限" : "Application Permissions"
-            case .recentItems: return LocalizationManager.shared.currentLanguage == .chinese ? "最近项目列表" : "Recent Items List"
-            case .wifi: return LocalizationManager.shared.currentLanguage == .chinese ? "Wi-Fi 网络" : "Wi-Fi Networks"
-            case .chat: return LocalizationManager.shared.currentLanguage == .chinese ? "聊天信息" : "Chat Data"
-            case .development: return LocalizationManager.shared.currentLanguage == .chinese ? "开发痕迹" : "Development Traces"
+            case .permissions: return LocalizationManager.shared.text("应用权限", "Application Permissions")
+            case .recentItems: return LocalizationManager.shared.text("最近项目列表", "Recent Items List")
+            case .wifi: return LocalizationManager.shared.text("Wi-Fi 网络", "Wi-Fi Networks")
+            case .chat: return LocalizationManager.shared.text("聊天信息", "Chat Data")
+            case .development: return LocalizationManager.shared.text("开发痕迹", "Development Traces")
             case .browser(let b): return b.rawValue
             }
         }

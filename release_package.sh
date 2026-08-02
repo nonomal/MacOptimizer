@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Mac优化大师 - 发布打包脚本 v3.0.0
+# Mac优化大师 - 发布打包脚本 v5.0
 # 
 # 功能:
 # 1. 分别编译 Intel (x86_64) 和 Apple Silicon (arm64) 版本
@@ -16,7 +16,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-VERSION="3.0.1"
+VERSION="5.0"
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}    Mac优化大师 (MacOptimizer) v${VERSION}${NC}"

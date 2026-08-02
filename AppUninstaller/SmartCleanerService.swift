@@ -29,6 +29,59 @@ enum MainCategory: String, CaseIterable, Identifiable {
         case .appUpdates: return "App Updates"
         }
     }
+
+    func localizedName(for language: AppLanguage) -> String {
+        switch language {
+        case .chinese:
+            return rawValue
+        case .traditionalChinese:
+            switch self {
+            case .systemJunk: return "系統垃圾"
+            case .duplicates: return "重複檔案"
+            case .similarPhotos: return "相似照片"
+            case .largeFiles: return "大型檔案"
+            case .virus: return "病毒威脅"
+            case .startupItems: return "啟動項目"
+            case .performanceApps: return "效能最佳化"
+            case .appUpdates: return "應用程式更新"
+            }
+        case .english:
+            return englishName
+        case .japanese:
+            switch self {
+            case .systemJunk: return "システムジャンク"
+            case .duplicates: return "重複ファイル"
+            case .similarPhotos: return "類似写真"
+            case .largeFiles: return "大容量ファイル"
+            case .virus: return "ウイルスの脅威"
+            case .startupItems: return "起動項目"
+            case .performanceApps: return "パフォーマンス"
+            case .appUpdates: return "アプリのアップデート"
+            }
+        case .korean:
+            switch self {
+            case .systemJunk: return "시스템 정크"
+            case .duplicates: return "중복 파일"
+            case .similarPhotos: return "유사한 사진"
+            case .largeFiles: return "대용량 파일"
+            case .virus: return "바이러스 위협"
+            case .startupItems: return "시작 항목"
+            case .performanceApps: return "성능 최적화"
+            case .appUpdates: return "앱 업데이트"
+            }
+        case .russian:
+            switch self {
+            case .systemJunk: return "Системный мусор"
+            case .duplicates: return "Дубликаты"
+            case .similarPhotos: return "Похожие фотографии"
+            case .largeFiles: return "Большие файлы"
+            case .virus: return "Вирусные угрозы"
+            case .startupItems: return "Объекты автозапуска"
+            case .performanceApps: return "Производительность"
+            case .appUpdates: return "Обновления приложений"
+            }
+        }
+    }
     
     var icon: String {
         switch self {
@@ -143,6 +196,87 @@ enum CleanerCategory: String, CaseIterable {
         case .appUpdates: return "App Updates"
         case .startupItems: return "Startup Items"
         case .performanceApps: return "Performance"
+        }
+    }
+
+    func localizedName(for language: AppLanguage) -> String {
+        switch language {
+        case .chinese:
+            return rawValue
+        case .traditionalChinese:
+            switch self {
+            case .systemJunk: return "系統垃圾"
+            case .systemCache: return "系統快取"
+            case .oldUpdates: return "下載與更新"
+            case .userCache: return "使用者快取"
+            case .trash: return "廢紙簍"
+            case .systemLogs: return "系統日誌"
+            case .userLogs: return "使用者日誌"
+            case .duplicates: return "重複檔案"
+            case .similarPhotos: return "相似照片"
+            case .localizations: return "語言資源"
+            case .largeFiles: return "大型檔案"
+            case .virus: return "病毒防護"
+            case .appUpdates: return "應用程式更新"
+            case .startupItems: return "啟動項目"
+            case .performanceApps: return "效能最佳化"
+            }
+        case .english:
+            return englishName
+        case .japanese:
+            switch self {
+            case .systemJunk: return "システムジャンク"
+            case .systemCache: return "システムキャッシュ"
+            case .oldUpdates: return "ダウンロードとアップデート"
+            case .userCache: return "ユーザーキャッシュ"
+            case .trash: return "ゴミ箱"
+            case .systemLogs: return "システムログ"
+            case .userLogs: return "ユーザーログ"
+            case .duplicates: return "重複ファイル"
+            case .similarPhotos: return "類似写真"
+            case .localizations: return "言語リソース"
+            case .largeFiles: return "大容量ファイル"
+            case .virus: return "ウイルス対策"
+            case .appUpdates: return "アプリのアップデート"
+            case .startupItems: return "起動項目"
+            case .performanceApps: return "パフォーマンス"
+            }
+        case .korean:
+            switch self {
+            case .systemJunk: return "시스템 정크"
+            case .systemCache: return "시스템 캐시"
+            case .oldUpdates: return "다운로드 및 업데이트"
+            case .userCache: return "사용자 캐시"
+            case .trash: return "휴지통"
+            case .systemLogs: return "시스템 로그"
+            case .userLogs: return "사용자 로그"
+            case .duplicates: return "중복 파일"
+            case .similarPhotos: return "유사한 사진"
+            case .localizations: return "언어 리소스"
+            case .largeFiles: return "대용량 파일"
+            case .virus: return "바이러스 보호"
+            case .appUpdates: return "앱 업데이트"
+            case .startupItems: return "시작 항목"
+            case .performanceApps: return "성능 최적화"
+            }
+        case .russian:
+            switch self {
+            case .systemJunk: return "Системный мусор"
+            case .systemCache: return "Системный кэш"
+            case .oldUpdates: return "Загрузки и обновления"
+            case .userCache: return "Пользовательский кэш"
+            case .trash: return "Корзина"
+            case .systemLogs: return "Системные журналы"
+            case .userLogs: return "Пользовательские журналы"
+            case .duplicates: return "Дубликаты"
+            case .similarPhotos: return "Похожие фотографии"
+            case .localizations: return "Языковые ресурсы"
+            case .largeFiles: return "Большие файлы"
+            case .virus: return "Защита от вирусов"
+            case .appUpdates: return "Обновления приложений"
+            case .startupItems: return "Объекты автозапуска"
+            case .performanceApps: return "Производительность"
+            }
         }
     }
     

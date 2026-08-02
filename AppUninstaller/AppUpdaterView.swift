@@ -309,7 +309,7 @@ class AppUpdaterService: ObservableObject {
                 // Check if it is a MAS app
                 if !app.app.isAppStore {
                      await MainActor.run {
-                        appUpdateStatuses[app.id] = .failed("非 App Store 版本，无法自动更新")
+                        appUpdateStatuses[app.id] = .failed(LocalizationManager.shared.text("非 App Store 版本，无法自动更新", "This is not an App Store version and cannot be updated automatically"))
                     }
                     continue
                 }
@@ -319,7 +319,7 @@ class AppUpdaterService: ObservableObject {
                 }
                 let (success, errorMsg) = await updateWithMas(masPath: masPath, appStoreId: appStoreId)
                 await MainActor.run {
-                    appUpdateStatuses[app.id] = success ? .completed : .failed(errorMsg ?? "更新失败")
+                    appUpdateStatuses[app.id] = success ? .completed : .failed(errorMsg ?? LocalizationManager.shared.text("更新失败", "Update Failed"))
                 }
             }
         }
@@ -352,11 +352,11 @@ class AppUpdaterService: ObservableObject {
             if task.terminationStatus != 0 {
                 let data = pipe.fileHandleForReading.readDataToEndOfFile()
                 var output = String(data: data, encoding: .utf8) ?? ""
-                if output.isEmpty { output = "未知错误 (Exit Code: \(task.terminationStatus))" }
+                if output.isEmpty { output = LocalizationManager.shared.text("未知错误（退出代码：\(task.terminationStatus)）", "Unknown error (exit code: \(task.terminationStatus))") }
                 
                 // Friendly error mapping
                 if output.contains("sudo: a password is required") || output.contains("sudo: a terminal is required") {
-                    return (false, "需要管理员权限，请前往 App Store 更新")
+                    return (false, LocalizationManager.shared.text("需要管理员权限，请前往 App Store 更新", "Administrator privileges are required. Update the app from the App Store."))
                 }
                 
                 // Clean up output (mas output can be verbose)
@@ -365,7 +365,7 @@ class AppUpdaterService: ObservableObject {
             
             return (true, nil)
         } catch {
-            return (false, "执行错误: \(error.localizedDescription)")
+            return (false, LocalizationManager.shared.text("执行错误：\(error.localizedDescription)", "Execution error: \(error.localizedDescription)"))
         }
     }
     
@@ -762,7 +762,14 @@ struct AppUpdaterView: View {
                                 
                                 // Version Info Line
                                 HStack(spacing: 12) {
-                                    Text(loc.currentLanguage == .chinese ? "版本 \(item.app.version ?? "?")" : "Version \(item.app.version ?? "?")")
+                                    Text(loc.text(
+                                        simplifiedChinese: "版本 \(item.app.version ?? "?")",
+                                        traditionalChinese: "版本 \(item.app.version ?? "?")",
+                                        english: "Version \(item.app.version ?? "?")",
+                                        japanese: "バージョン \(item.app.version ?? "?")",
+                                        korean: "버전 \(item.app.version ?? "?")",
+                                        russian: "Версия \(item.app.version ?? "?")"
+                                    ))
                                         .foregroundColor(.white.opacity(0.6))
                                     Image(systemName: "arrow.right")
                                         .font(.system(size: 10))

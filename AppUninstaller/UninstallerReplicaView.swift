@@ -72,7 +72,7 @@ struct UninstallerReplicaView: View {
             Text(confirmationMessage)
         }
         .alert(localized("操作完成", "Operation Complete"), isPresented: $showResult) {
-            Button("OK") {}
+            Button(localized("确定", "OK")) {}
         } message: {
             Text(resultMessage)
         }

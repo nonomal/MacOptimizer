@@ -3,12 +3,13 @@ import SwiftUI
 struct StorageDetailView: View {
     @ObservedObject var manager: MenuBarManager
     @ObservedObject var diskManager = DiskSpaceManager.shared
+    @ObservedObject private var loc = LocalizationManager.shared
     
     var body: some View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("储存空间")
+                Text(loc.text("储存空间", "Storage"))
                     .font(.headline)
                     .foregroundColor(.white)
                 
@@ -56,10 +57,10 @@ struct StorageDetailView: View {
                             Text(diskManager.formattedFree)
                                 .font(.system(size: 32, weight: .bold))
                                 .foregroundColor(.white)
-                            Text("可用空间")
+                            Text(loc.text("可用空间", "Available"))
                                 .font(.system(size: 12))
                                 .foregroundColor(.white.opacity(0.6))
-                            Text("总共 \(diskManager.formattedTotal)")
+                            Text(loc.text("总共 \(diskManager.formattedTotal)", "\(diskManager.formattedTotal) total"))
                                 .font(.system(size: 10))
                                 .foregroundColor(.white.opacity(0.4))
                         }
@@ -70,11 +71,11 @@ struct StorageDetailView: View {
                     VStack(spacing: 12) {
                         // Mock Categories for Visuals (since we don't scan full file types instantly in menu bar)
                         // In a real app we'd fetch these from a background service
-                        StorageCategoryRow(color: .blue, name: "应用程序", size: "35.09 GB")
-                        StorageCategoryRow(color: .cyan, name: "文稿", size: "12.4 GB")
-                        StorageCategoryRow(color: .purple, name: "系统数据", size: "89.2 GB")
-                        StorageCategoryRow(color: .pink, name: "照片", size: "5.1 GB")
-                        StorageCategoryRow(color: .gray, name: "其他", size: "10.2 GB")
+                        StorageCategoryRow(color: .blue, name: loc.text("应用程序", "Applications"), size: "35.09 GB")
+                        StorageCategoryRow(color: .cyan, name: loc.text("文稿", "Documents"), size: "12.4 GB")
+                        StorageCategoryRow(color: .purple, name: loc.text("系统数据", "System Data"), size: "89.2 GB")
+                        StorageCategoryRow(color: .pink, name: loc.text("照片", "Photos"), size: "5.1 GB")
+                        StorageCategoryRow(color: .gray, name: loc.text("其他", "Other"), size: "10.2 GB")
                     }
                     .padding(.horizontal, 20)
                     
@@ -83,7 +84,7 @@ struct StorageDetailView: View {
                         Button(action: {
                             manager.openMainApp()
                         }) {
-                            Text("清理垃圾")
+                            Text(loc.text("清理垃圾", "Clean Junk"))
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
@@ -96,7 +97,7 @@ struct StorageDetailView: View {
                         Button(action: {
                             manager.openMainApp()
                         }) {
-                            Text("管理大文件")
+                            Text(loc.text("管理大文件", "Manage Large Files"))
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)

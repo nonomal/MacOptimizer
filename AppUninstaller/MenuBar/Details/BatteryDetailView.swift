@@ -3,12 +3,13 @@ import SwiftUI
 struct BatteryDetailView: View {
     @ObservedObject var manager: MenuBarManager
     @ObservedObject var systemMonitor: SystemMonitorService
+    @ObservedObject private var loc = LocalizationManager.shared
     
     var body: some View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("电池")
+                Text(loc.text("电池", "Battery"))
                     .font(.headline)
                     .foregroundColor(.white)
                 Spacer()
@@ -40,7 +41,7 @@ struct BatteryDetailView: View {
                             Text("\(Int(systemMonitor.batteryLevel * 100))%")
                                 .font(.system(size: 48, weight: .bold))
                                 .foregroundColor(.white)
-                            Text(systemMonitor.isCharging ? "正在充电" : "剩余电量")
+                            Text(systemMonitor.isCharging ? loc.text("正在充电", "Charging") : loc.text("剩余电量", "Charge Remaining"))
                                 .font(.system(size: 12))
                                 .foregroundColor(.white.opacity(0.6))
                         }
@@ -50,10 +51,10 @@ struct BatteryDetailView: View {
                     
                     // Info Grid
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                        BatteryInfoCard(title: "健康度", value: systemMonitor.batteryHealth, icon: "heart.fill", color: .green)
-                        BatteryInfoCard(title: "循环次数", value: "\(systemMonitor.batteryCycleCount)", icon: "repeat", color: .blue)
-                        BatteryInfoCard(title: "状态", value: systemMonitor.batteryCondition, icon: "battery.100", color: .orange)
-                        BatteryInfoCard(title: "温度", value: "32°C", icon: "thermometer", color: .red) // Mock temp for now
+                        BatteryInfoCard(title: loc.text("健康度", "Health"), value: systemMonitor.batteryHealth, icon: "heart.fill", color: .green)
+                        BatteryInfoCard(title: loc.text("循环次数", "Cycle Count"), value: "\(systemMonitor.batteryCycleCount)", icon: "repeat", color: .blue)
+                        BatteryInfoCard(title: loc.text("状态", "Condition"), value: systemMonitor.batteryCondition, icon: "battery.100", color: .orange)
+                        BatteryInfoCard(title: loc.text("温度", "Temperature"), value: "32°C", icon: "thermometer", color: .red) // Mock temp for now
                     }
                     .padding(.horizontal, 20)
                     
@@ -61,7 +62,7 @@ struct BatteryDetailView: View {
                         HStack {
                             Image(systemName: "bolt.fill")
                                 .foregroundColor(.yellow)
-                            Text("电源适配器已连接")
+                            Text(loc.text("电源适配器已连接", "Power Adapter Connected"))
                                 .font(.system(size: 13))
                                 .foregroundColor(.white)
                         }

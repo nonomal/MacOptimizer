@@ -5,7 +5,7 @@ import AppKit
 /// three tasks mirror the installed reference; the company's four additional
 /// optimization tasks remain available below them.
 struct OptimizationReplicaView: View {
-    @StateObject private var service = OptimizerService()
+    @ObservedObject private var service = OptimizerService.shared
     @ObservedObject private var loc = LocalizationManager.shared
 
     @State private var screen: Screen = .intro
@@ -56,22 +56,22 @@ struct OptimizationReplicaView: View {
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.white)
 
-                    Text(localized("通过控制 Mac 上运行的应用，提高它的输出。", "Improve Mac performance by controlling running applications."))
+                    Text(localized("通过管理正在运行的应用来提升 Mac 性能。", "透過管理正在執行的應用程式來提升 Mac 效能。", "Improve Mac performance by controlling running applications.", "実行中のアプリを管理してMacのパフォーマンスを向上させます。", "실행 중인 앱을 관리하여 Mac 성능을 향상합니다.", "Повысьте производительность Mac, управляя запущенными приложениями."))
                         .font(.system(size: 13))
                         .foregroundColor(.white.opacity(0.80))
                         .padding(.top, 8)
 
                     introBenefit(
                         asset: "optimization_benefit_launch",
-                        title: localized("管理应用的启动代理", "Manage application launch agents"),
-                        detail: localized("控制您的 Mac 支持的应用。", "Control the helper apps on your Mac.")
+                        title: localized("管理应用启动代理", "管理應用程式啟動代理", "Manage application launch agents", "アプリの起動エージェントを管理", "앱 시작 에이전트 관리", "Управление агентами запуска"),
+                        detail: localized("管理 Mac 上的应用辅助程序。", "管理 Mac 上的應用程式輔助程式。", "Control the helper apps on your Mac.", "Mac上のアプリ補助プログラムを管理します。", "Mac의 앱 도우미 프로그램을 관리합니다.", "Управляйте вспомогательными программами на Mac.")
                     )
                     .padding(.top, 41)
 
                     introBenefit(
                         asset: "optimization_benefit_running",
-                        title: localized("控制正在运行的应用", "Control running applications"),
-                        detail: localized("管理所有登录项，仅运行真正需要的项目。", "Manage login items and run only what you need.")
+                        title: localized("控制正在运行的应用", "控制正在執行的應用程式", "Control running applications", "実行中のアプリを管理", "실행 중인 앱 관리", "Управление запущенными приложениями"),
+                        detail: localized("管理登录项，只运行真正需要的内容。", "管理登入項目，只執行真正需要的內容。", "Manage login items and run only what you need.", "ログイン項目を管理し、必要なものだけを実行します。", "로그인 항목을 관리하고 필요한 항목만 실행합니다.", "Управляйте объектами входа и запускайте только необходимое.")
                     )
                     .padding(.top, 56)
 
@@ -194,7 +194,7 @@ struct OptimizationReplicaView: View {
                     HStack(spacing: 7) {
                         Image(systemName: showAdditionalTasks ? "chevron.down" : "chevron.right")
                             .font(.system(size: 8, weight: .semibold))
-                        Text(localized("增强优化功能", "Additional optimization"))
+                        Text(localized("更多优化功能", "更多最佳化功能", "Additional optimization", "その他の最適化", "추가 최적화", "Дополнительная оптимизация"))
                             .font(.system(size: 10, weight: .medium))
                         Spacer()
                         Text("4")
@@ -239,7 +239,7 @@ struct OptimizationReplicaView: View {
                 Spacer(minLength: 4)
 
                 if selectedItemCount(for: task) > 0 {
-                    Text(localized("\(selectedItemCount(for: task)) 项", "\(selectedItemCount(for: task)) items"))
+                    Text(localized("\(selectedItemCount(for: task)) 项", "\(selectedItemCount(for: task)) 個項目", "\(selectedItemCount(for: task)) items", "\(selectedItemCount(for: task))項目", "\(selectedItemCount(for: task))개 항목", "Элементов: \(selectedItemCount(for: task))"))
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundColor(.white.opacity(0.78))
                 }
@@ -318,7 +318,7 @@ struct OptimizationReplicaView: View {
         switch service.selectedTask {
         case .heavyConsumers:
             if filteredHeavyProcesses.isEmpty {
-                emptyTaskLabel(localized("未发现占用较多资源的应用", "No heavy-consuming applications found"))
+                emptyTaskLabel(localized("未发现高资源占用应用", "未發現高資源佔用應用程式", "No heavy-consuming applications found", "高負荷のアプリは見つかりませんでした", "리소스를 과도하게 사용하는 앱이 없습니다", "Ресурсоёмкие приложения не найдены"))
             } else {
                 ForEach(filteredHeavyProcesses) { process in
                     processRow(process, source: .heavyConsumers)
@@ -326,7 +326,7 @@ struct OptimizationReplicaView: View {
             }
         case .launchAgents:
             if filteredLaunchAgents.isEmpty {
-                emptyTaskLabel(localized("未发现启动代理", "No launch agents found"))
+                emptyTaskLabel(localized("未发现启动代理", "未發現啟動代理程式", "No launch agents found", "起動エージェントは見つかりませんでした", "시작 에이전트가 없습니다", "Агенты запуска не найдены"))
             } else {
                 ForEach(filteredLaunchAgents) { agent in
                     launchAgentRow(agent)
@@ -334,7 +334,7 @@ struct OptimizationReplicaView: View {
             }
         case .hungApps:
             if filteredHungApps.isEmpty {
-                emptyTaskLabel(localized("未发现挂起的应用程序", "No hung applications found"))
+                emptyTaskLabel(localized("未发现无响应的应用", "未發現無回應的應用程式", "No hung applications found", "応答しないアプリは見つかりませんでした", "응답하지 않는 앱이 없습니다", "Зависшие приложения не найдены"))
             } else {
                 ForEach(filteredHungApps) { process in
                     processRow(process, source: .hungApps)
@@ -345,7 +345,7 @@ struct OptimizationReplicaView: View {
                 Image(systemName: service.selectedTask.icon)
                     .font(.system(size: 34, weight: .light))
                     .foregroundColor(.white.opacity(0.70))
-                Text(localized("选择左侧复选框后，点击底部“执行”运行此功能。", "Select this task, then click Run at the bottom."))
+                Text(localized("选择左侧任务，然后点击底部的“执行”。", "選擇左側工作，然後按一下底部的「執行」。", "Select this task, then click Run at the bottom.", "左側のタスクを選択し、下部の「実行」をクリックしてください。", "왼쪽에서 작업을 선택한 후 하단의 실행을 클릭하세요.", "Выберите задачу слева и нажмите «Запустить» внизу."))
                     .font(.system(size: 12))
                     .foregroundColor(.white.opacity(0.56))
                     .multilineTextAlignment(.center)
@@ -428,7 +428,7 @@ struct OptimizationReplicaView: View {
     private var runningView: some View {
         VStack(spacing: 20) {
             Spacer()
-            Text(localized("正在执行优化任务…", "Running optimization tasks…"))
+            Text(localized("正在执行优化任务…", "正在執行最佳化工作…", "Running optimization tasks…", "最適化タスクを実行中…", "최적화 작업 실행 중…", "Выполнение задач оптимизации…"))
                 .font(.system(size: 22, weight: .bold))
                 .foregroundColor(.white)
 
@@ -476,10 +476,10 @@ struct OptimizationReplicaView: View {
                 Circle().stroke(Color.cyan.opacity(0.70), lineWidth: 2).frame(width: 76, height: 76)
                 Image(systemName: "checkmark").font(.system(size: 32, weight: .bold)).foregroundColor(.white)
             }
-            Text(localized("优化完毕", "Optimization Complete"))
+            Text(localized("优化完成", "最佳化完成", "Optimization Complete", "最適化完了", "최적화 완료", "Оптимизация завершена"))
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.white)
-            Text(localized("已完成 \(service.completedTasks.count) 项优化任务。", "Completed \(service.completedTasks.count) optimization tasks."))
+            Text(localized("已完成 \(service.completedTasks.count) 项优化任务。", "已完成 \(service.completedTasks.count) 項最佳化工作。", "Completed \(service.completedTasks.count) optimization tasks.", "\(service.completedTasks.count)件の最適化タスクを完了しました。", "최적화 작업 \(service.completedTasks.count)개를 완료했습니다.", "Завершено задач оптимизации: \(service.completedTasks.count)."))
                 .font(.system(size: 12))
                 .foregroundColor(.white.opacity(0.62))
             Spacer()
@@ -619,9 +619,9 @@ struct OptimizationReplicaView: View {
 
     private var selectedCountLabel: String {
         if service.selectedTasks == [.heavyConsumers] {
-            return localized("\(selectedItemCount(for: .heavyConsumers)) 个应用程序", "\(selectedItemCount(for: .heavyConsumers)) applications")
+            return localized("\(selectedItemCount(for: .heavyConsumers)) 个应用", "\(selectedItemCount(for: .heavyConsumers)) 個應用程式", "\(selectedItemCount(for: .heavyConsumers)) applications", "\(selectedItemCount(for: .heavyConsumers))個のアプリ", "앱 \(selectedItemCount(for: .heavyConsumers))개", "Приложений: \(selectedItemCount(for: .heavyConsumers))")
         }
-        return localized("已选择 \(selectedCount) 项", "\(selectedCount) selected")
+        return localized("已选择 \(selectedCount) 项", "已選擇 \(selectedCount) 個項目", "\(selectedCount) selected", "\(selectedCount)項目を選択", "\(selectedCount)개 선택됨", "Выбрано: \(selectedCount)")
     }
 
     private var actionTitle: String {
@@ -629,9 +629,9 @@ struct OptimizationReplicaView: View {
             return localized("执行", "Run")
         }
         switch task {
-        case .heavyConsumers: return localized("关闭", "Quit")
+        case .heavyConsumers: return localized("退出", "結束", "Quit", "終了", "종료", "Завершить")
         case .launchAgents: return localized("移除", "Remove")
-        case .hungApps: return localized("重新启动", "Relaunch")
+        case .hungApps: return localized("重新启动", "重新啟動", "Relaunch", "再起動", "다시 실행", "Перезапустить")
         default: return localized("执行", "Run")
         }
     }
@@ -697,6 +697,10 @@ struct OptimizationReplicaView: View {
 
     private func localized(_ chinese: String, _ english: String) -> String {
         loc.text(chinese, english)
+    }
+
+    private func localized(_ simplifiedChinese: String, _ traditionalChinese: String, _ english: String, _ japanese: String, _ korean: String, _ russian: String) -> String {
+        loc.text(simplifiedChinese: simplifiedChinese, traditionalChinese: traditionalChinese, english: english, japanese: japanese, korean: korean, russian: russian)
     }
 }
 

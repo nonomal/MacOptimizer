@@ -7,6 +7,7 @@ struct CleanupDetailResultsView: View {
     let failedCount: Int
     let totalAttempted: Int
     let onDismiss: () -> Void
+    @ObservedObject private var loc = LocalizationManager.shared
     @State private var expandedFailedFile: UUID?
     @State private var showFailedFilesOnly = false
     
@@ -38,13 +39,13 @@ struct CleanupDetailResultsView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "chevron.left")
                                 .font(.system(size: 16, weight: .semibold))
-                            Text("返回")
+                            Text(loc.text("返回", "Back"))
                                 .font(.system(size: 14, weight: .medium))
                         }
                         .foregroundColor(.white)
                     }
                     Spacer()
-                    Text("清理结果")
+                    Text(loc.text("清理结果", "Cleanup Results"))
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.white)
                     Spacer()
@@ -63,11 +64,11 @@ struct CleanupDetailResultsView: View {
                         VStack(spacing: 16) {
                             // Title
                             VStack(spacing: 8) {
-                                Text("清理完成")
+                                Text(loc.text("清理完成", "Cleanup Complete"))
                                     .font(.system(size: 24, weight: .bold))
                                     .foregroundColor(.white)
                                 
-                                Text("已清理 \(cleanedCount) 个文件")
+                                Text(loc.text("已清理 \(cleanedCount) 个文件", "Cleaned \(cleanedCount) files"))
                                     .font(.system(size: 14, weight: .regular))
                                     .foregroundColor(.white.opacity(0.8))
                             }
@@ -78,7 +79,7 @@ struct CleanupDetailResultsView: View {
                                 CleanupStatCard(
                                     icon: "checkmark.circle.fill",
                                     title: formattedCleanedSize,
-                                    subtitle: "已成功清理",
+                                    subtitle: loc.text("已成功清理", "Successfully cleaned"),
                                     color: Color(red: 0.4, green: 0.9, blue: 0.6),
                                     progress: successRate
                                 )
@@ -87,7 +88,7 @@ struct CleanupDetailResultsView: View {
                                 CleanupStatCard(
                                     icon: "percent",
                                     title: String(format: "%.0f%%", successRate),
-                                    subtitle: "成功率",
+                                    subtitle: loc.text("成功率", "Success rate"),
                                     color: Color(red: 0.4, green: 0.8, blue: 1.0),
                                     progress: successRate
                                 )
@@ -96,8 +97,8 @@ struct CleanupDetailResultsView: View {
                                 if failedCount > 0 {
                                     CleanupStatCard(
                                         icon: "exclamationmark.circle.fill",
-                                        title: "\(failedCount) 个",
-                                        subtitle: "未能清理",
+                                        title: loc.text("\(failedCount) 个", "\(failedCount) items"),
+                                        subtitle: loc.text("未能清理", "Could not clean"),
                                         color: Color(red: 1.0, green: 0.5, blue: 0.6),
                                         progress: Double(failedCount) / Double(totalAttempted) * 100
                                     )
@@ -117,13 +118,13 @@ struct CleanupDetailResultsView: View {
                         if failedCount > 0 {
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack {
-                                    Text("未能清理的文件")
+                                    Text(loc.text("未能清理的文件", "Files Not Cleaned"))
                                         .font(.system(size: 16, weight: .semibold))
                                         .foregroundColor(.white)
                                     
                                     Spacer()
                                     
-                                    Text("\(failedCount) 个")
+                                    Text(loc.text("\(failedCount) 个", "\(failedCount) items"))
                                         .font(.system(size: 12, weight: .medium))
                                         .foregroundColor(.white.opacity(0.7))
                                 }
@@ -154,31 +155,31 @@ struct CleanupDetailResultsView: View {
                         
                         // Recommendations
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("建议")
+                            Text(loc.text("建议", "Recommendations"))
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(.white)
                             
                             VStack(spacing: 8) {
                                 RecommendationItem(
                                     icon: "checkmark.circle",
-                                    title: "定期清理",
-                                    description: "建议每周运行一次清理，保持系统最佳性能",
+                                    title: loc.text("定期清理", "Clean regularly"),
+                                    description: loc.text("建议每周运行一次清理，保持系统最佳性能", "Run cleanup weekly to keep your system performing at its best."),
                                     color: Color(red: 0.4, green: 0.9, blue: 0.6)
                                 )
                                 
                                 if failedCount > 0 {
                                     RecommendationItem(
                                         icon: "exclamationmark.circle",
-                                        title: "检查失败文件",
-                                        description: "某些文件可能被应用占用或权限不足，请稍后重试",
+                                        title: loc.text("检查失败文件", "Check failed files"),
+                                        description: loc.text("某些文件可能被应用占用或权限不足，请稍后重试", "Some files may be in use or require additional permissions. Try again later."),
                                         color: Color(red: 1.0, green: 0.5, blue: 0.6)
                                     )
                                 }
                                 
                                 RecommendationItem(
                                     icon: "arrow.clockwise.circle",
-                                    title: "运行深度扫描",
-                                    description: "深度扫描可以发现更多隐藏的垃圾文件",
+                                    title: loc.text("运行深度扫描", "Run a deep scan"),
+                                    description: loc.text("深度扫描可以发现更多隐藏的垃圾文件", "A deep scan can find more hidden junk files."),
                                     color: Color(red: 0.4, green: 0.8, blue: 1.0)
                                 )
                             }
@@ -200,7 +201,7 @@ struct CleanupDetailResultsView: View {
                 // Bottom Actions
                 VStack(spacing: 12) {
                     Button(action: onDismiss) {
-                        Text("返回首页")
+                        Text(loc.text("返回首页", "Back to Home"))
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -210,7 +211,7 @@ struct CleanupDetailResultsView: View {
                     }
                     
                     Button(action: {}) {
-                        Text("导出清理报告")
+                        Text(loc.text("导出清理报告", "Export Cleanup Report"))
                             .font(.system(size: 12, weight: .regular))
                             .foregroundColor(.white.opacity(0.6))
                     }
@@ -278,6 +279,7 @@ struct FailedFileRow: View {
     let file: FailedFileInfo
     let isExpanded: Bool
     let onTap: () -> Void
+    @ObservedObject private var loc = LocalizationManager.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -322,9 +324,9 @@ struct FailedFileRow: View {
                         .background(Color.white.opacity(0.1))
                     
                     VStack(alignment: .leading, spacing: 6) {
-                        DetailRow(label: "文件大小", value: file.formattedSize)
-                        DetailRow(label: "错误原因", value: file.errorReason)
-                        DetailRow(label: "文件路径", value: file.filePath)
+                        DetailRow(label: loc.text("文件大小", "File Size"), value: file.formattedSize)
+                        DetailRow(label: loc.text("错误原因", "Error Reason"), value: file.errorReason)
+                        DetailRow(label: loc.text("文件路径", "File Path"), value: file.filePath)
                     }
                     .padding(.top, 8)
                 }

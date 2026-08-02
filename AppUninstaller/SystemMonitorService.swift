@@ -40,7 +40,7 @@ class SystemMonitorService: ObservableObject {
     // Battery Monitoring
     @Published var batteryLevel: Double = 1.0
     @Published var isCharging: Bool = false
-    @Published var batteryState: String = "Unknown"
+    @Published var batteryState: String = "—"
     @Published var batteryTimeRemaining: String = ""
     
     private var timer: Timer?
@@ -74,8 +74,8 @@ class SystemMonitorService: ObservableObject {
     // WiFi Info
     @Published var wifiSSID: String = "Wi-Fi"
     @Published var wifiSecurity: String = "WPA2 Personal" // Default/Mock for now
-    @Published var wifiSignalStrength: String = "良好"
-    @Published var connectionDuration: String = "0小时 0分钟 0秒"
+    @Published var wifiSignalStrength: String = "—"
+    @Published var connectionDuration: String = "—"
     private var connectionStartTime: Date = Date()
     
     // Total Traffic
@@ -527,7 +527,14 @@ class SystemMonitorService: ObservableObject {
             } else {
                  Task {
                     await uiUpdater.batch {
-                        self.wifiSSID = "Wi-Fi Not Connected"
+                        self.wifiSSID = LocalizationManager.shared.text(
+                            simplifiedChinese: "Wi-Fi 未连接",
+                            traditionalChinese: "Wi-Fi 未連線",
+                            english: "Wi-Fi Not Connected",
+                            japanese: "Wi-Fi未接続",
+                            korean: "Wi-Fi 연결 안 됨",
+                            russian: "Wi-Fi не подключён"
+                        )
                     }
                 }
             }
@@ -542,11 +549,16 @@ class SystemMonitorService: ObservableObject {
         let minutes = (Int(duration) % 3600) / 60
         let seconds = Int(duration) % 60
         
-        let connectionDurationValue = String(format: "%d小时 %d分钟 %d秒", hours, minutes, seconds)
-        
         Task {
             await uiUpdater.batch {
-                self.connectionDuration = connectionDurationValue
+                self.connectionDuration = LocalizationManager.shared.text(
+                    simplifiedChinese: "\(hours)小时 \(minutes)分钟 \(seconds)秒",
+                    traditionalChinese: "\(hours)小時 \(minutes)分鐘 \(seconds)秒",
+                    english: "\(hours) hr \(minutes) min \(seconds) sec",
+                    japanese: "\(hours)時間 \(minutes)分 \(seconds)秒",
+                    korean: "\(hours)시간 \(minutes)분 \(seconds)초",
+                    russian: "\(hours) ч \(minutes) мин \(seconds) с"
+                )
             }
         }
     }
@@ -575,8 +587,9 @@ class SystemMonitorService: ObservableObject {
                     // Parse Percentage
                     var batteryLevelValue: Double = 1.0
                     var isChargingValue = false
-                    var batteryStateValue = "Unknown"
-                    var batteryTimeRemainingValue = ""
+                    var isActivelyCharging = false
+                    var remainingHours: Int?
+                    var remainingMinutes: Int?
                     
                     if let range = statusLine.range(of: "\\d+%", options: .regularExpression) {
                         let percentString = String(statusLine[range]).dropLast()
@@ -589,13 +602,10 @@ class SystemMonitorService: ObservableObject {
                     if output.contains("AC Power") {
                         isChargingValue = true
                         if statusLine.contains("charging") {
-                            batteryStateValue = "正在充电"
-                        } else {
-                            batteryStateValue = "已连接电源"
+                            isActivelyCharging = true
                         }
                     } else {
                         isChargingValue = false
-                        batteryStateValue = "使用电池"
 
                         if let range = statusLine.range(of: "\\d+:\\d+ remaining", options: .regularExpression) {
                             let duration = statusLine[range]
@@ -604,7 +614,8 @@ class SystemMonitorService: ObservableObject {
                             if duration.count == 2,
                                let hours = Int(duration[0]),
                                let minutes = Int(duration[1]) {
-                                batteryTimeRemainingValue = "剩余 \(hours)小时 \(minutes)分钟"
+                                remainingHours = hours
+                                remainingMinutes = minutes
                             }
                         }
                     }
@@ -612,10 +623,50 @@ class SystemMonitorService: ObservableObject {
                     // Batch battery status update
                     Task {
                         await self.uiUpdater.batch {
+                            let loc = LocalizationManager.shared
                             self.batteryLevel = batteryLevelValue
                             self.isCharging = isChargingValue
-                            self.batteryState = batteryStateValue
-                            self.batteryTimeRemaining = batteryTimeRemainingValue
+                            if isChargingValue {
+                                self.batteryState = isActivelyCharging
+                                    ? loc.text(
+                                        simplifiedChinese: "正在充电",
+                                        traditionalChinese: "正在充電",
+                                        english: "Charging",
+                                        japanese: "充電中",
+                                        korean: "충전 중",
+                                        russian: "Заряжается"
+                                    )
+                                    : loc.text(
+                                        simplifiedChinese: "已连接电源",
+                                        traditionalChinese: "已連接電源",
+                                        english: "Power Connected",
+                                        japanese: "電源に接続済み",
+                                        korean: "전원 연결됨",
+                                        russian: "Подключено питание"
+                                    )
+                                self.batteryTimeRemaining = ""
+                            } else {
+                                self.batteryState = loc.text(
+                                    simplifiedChinese: "使用电池",
+                                    traditionalChinese: "使用電池",
+                                    english: "On Battery",
+                                    japanese: "バッテリー使用中",
+                                    korean: "배터리 사용 중",
+                                    russian: "Питание от аккумулятора"
+                                )
+                                if let hours = remainingHours, let minutes = remainingMinutes {
+                                    self.batteryTimeRemaining = loc.text(
+                                        simplifiedChinese: "剩余 \(hours)小时 \(minutes)分钟",
+                                        traditionalChinese: "剩餘 \(hours)小時 \(minutes)分鐘",
+                                        english: "\(hours) hr \(minutes) min remaining",
+                                        japanese: "残り\(hours)時間\(minutes)分",
+                                        korean: "\(hours)시간 \(minutes)분 남음",
+                                        russian: "Осталось \(hours) ч \(minutes) мин"
+                                    )
+                                } else {
+                                    self.batteryTimeRemaining = ""
+                                }
+                            }
                         }
                     }
                 }
@@ -819,9 +870,9 @@ class SystemMonitorService: ObservableObject {
     @Published var memoryPressure: Double = 0.0 // Percentage
     @Published var memorySwapUsed: String = "0 B"
     @Published var memorySwapTotal: String = "0 B"
-    @Published var batteryHealth: String = "Good"
+    @Published var batteryHealth: String = "—"
     @Published var batteryCycleCount: Int = 0
-    @Published var batteryCondition: String = "Normal"
+    @Published var batteryCondition: String = "—"
     
     // ... existing extractPageCount ...
     private func extractPageCount(_ line: String) -> UInt64 {
@@ -984,7 +1035,45 @@ class SystemMonitorService: ObservableObject {
                      Task {
                          await self.uiUpdater.batch {
                              self.batteryCycleCount = cycleCount
-                             self.batteryCondition = condition
+                             let loc = LocalizationManager.shared
+                             switch condition.lowercased() {
+                             case "normal", "good":
+                                 self.batteryCondition = loc.text(
+                                     simplifiedChinese: "正常",
+                                     traditionalChinese: "正常",
+                                     english: "Normal",
+                                     japanese: "正常",
+                                     korean: "정상",
+                                     russian: "Нормальное"
+                                 )
+                             case "fair":
+                                 self.batteryCondition = loc.text(
+                                     simplifiedChinese: "一般",
+                                     traditionalChinese: "一般",
+                                     english: "Fair",
+                                     japanese: "普通",
+                                     korean: "보통",
+                                     russian: "Удовлетворительное"
+                                 )
+                             case "poor", "check battery", "service recommended", "replace soon", "replace now", "service battery":
+                                 self.batteryCondition = loc.text(
+                                     simplifiedChinese: "建议维修",
+                                     traditionalChinese: "建議維修",
+                                     english: "Service Recommended",
+                                     japanese: "修理サービス推奨",
+                                     korean: "서비스 권장",
+                                     russian: "Рекомендуется обслуживание"
+                                 )
+                             default:
+                                 self.batteryCondition = loc.text(
+                                     simplifiedChinese: "未知",
+                                     traditionalChinese: "未知",
+                                     english: "Unknown",
+                                     japanese: "不明",
+                                     korean: "알 수 없음",
+                                     russian: "Неизвестно"
+                                 )
+                             }
                              self.batteryHealth = "\(maxCapacity)%"
                          }
                      }

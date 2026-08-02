@@ -1126,7 +1126,7 @@ struct ConsoleJunkCleanView: View {
                     CleaningTaskRow(
                         icon: category.icon,
                         color: category.color,
-                        title: loc.currentLanguage == .chinese ? category.rawValue : category.englishName,
+                        title: category.localizedName(for: loc.currentLanguage),
                         status: getScanningStatus(for: category),
                         fileSize: ByteCountFormatter.string(fromByteCount: service.sizeFor(category: category), countStyle: .file)
                     )
@@ -1234,9 +1234,9 @@ struct ConsoleJunkCleanView: View {
     simplifiedChinese: "正在清理系统...",
     traditionalChinese: "正在清理系統...",
     english: "Cleaning System...",
-    japanese: "システムのクリーニング",
-    korean: "세척 시스템(cleaning system)",
-    russian: "Процедура уборки"
+    japanese: "システムをクリーニング中…",
+    korean: "시스템 정리 중…",
+    russian: "Очистка системы…"
 ))
                 .font(.system(size: 24, weight: .semibold))
                 .foregroundColor(.white)
@@ -1252,7 +1252,7 @@ struct ConsoleJunkCleanView: View {
                     CleaningTaskRow(
                         icon: category.icon,
                         color: category.color,
-                        title: loc.currentLanguage == .chinese ? category.rawValue : category.englishName,
+                        title: category.localizedName(for: loc.currentLanguage),
                         status: getCleaningStatus(for: category),
                         fileSize: ByteCountFormatter.string(fromByteCount: service.sizeFor(category: category), countStyle: .file)
                     )
@@ -1874,7 +1874,7 @@ struct ConsoleProtectionView: View {
                                                 .truncationMode(.middle)
                                         }
                                         Spacer()
-                                        Text(threat.type.rawValue)
+                                        Text(threat.type.localizedName)
                                             .font(.caption)
                                             .padding(4)
                                             .background(Color.red.opacity(0.2))

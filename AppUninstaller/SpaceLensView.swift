@@ -1224,7 +1224,7 @@ struct FileListRow: View {
                     .lineLimit(1)
 
                 if node.isDirectory {
-                    Text("\(node.itemCount) \(LocalizationManager.shared.currentLanguage == .chinese ? "项" : "items")")
+                    Text("\(node.itemCount) \(LocalizationManager.shared.text("项", "items"))")
                         .font(.system(size: 10))
                         .foregroundColor(.white.opacity(0.42))
                 }

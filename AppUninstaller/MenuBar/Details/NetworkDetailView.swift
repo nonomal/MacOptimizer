@@ -3,12 +3,13 @@ import SwiftUI
 struct NetworkDetailView: View {
     @ObservedObject var manager: MenuBarManager
     @ObservedObject var systemMonitor: SystemMonitorService
+    @ObservedObject private var loc = LocalizationManager.shared
     
     var body: some View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("Network")
+                Text(loc.text("网络", "Network"))
                     .font(.headline)
                     .foregroundColor(.white)
                 Spacer()
@@ -39,7 +40,7 @@ struct NetworkDetailView: View {
                                 Text(systemMonitor.wifiSSID)
                                     .font(.system(size: 16, weight: .bold))
                                     .foregroundColor(.white)
-                                Text("Wi-Fi 连接") // "Wi-Fi Connected"
+                                Text(loc.text("Wi-Fi 已连接", "Wi-Fi Connected"))
                                     .font(.system(size: 12))
                                     .foregroundColor(.white.opacity(0.7))
                             }
@@ -51,7 +52,7 @@ struct NetworkDetailView: View {
                                 .foregroundColor(.white)
                         }
                         
-                        Text("您的网络安全设置使用的是 \(systemMonitor.wifiSecurity)，其被评估为 良好。\n您可以继续使用此网络。")
+                        Text(loc.text("您的网络使用 \(systemMonitor.wifiSecurity) 安全设置，安全状况良好。\n您可以继续使用此网络。", "Your network uses \(systemMonitor.wifiSecurity) security and is rated as secure.\nYou can continue using this network."))
                             .font(.system(size: 13))
                             .foregroundColor(.white.opacity(0.8))
                             .lineSpacing(4)
@@ -63,7 +64,7 @@ struct NetworkDetailView: View {
                                 // Open Network Settings or similar
                             }) {
                                 HStack(spacing: 4) {
-                                    Text("了解更多")
+                                    Text(loc.text("了解更多", "Learn More"))
                                     Image(systemName: "arrow.up.right")
                                         .font(.system(size: 10))
                                 }
@@ -82,7 +83,7 @@ struct NetworkDetailView: View {
                     HStack(spacing: 12) {
                         // Download Card
                         TrafficCard(
-                            title: "下载",
+                            title: loc.text("下载", "Download"),
                             total: systemMonitor.totalDownload,
                             speed: systemMonitor.formatSpeed(systemMonitor.downloadSpeed),
                             history: systemMonitor.downloadSpeedHistory,
@@ -91,7 +92,7 @@ struct NetworkDetailView: View {
                         
                         // Upload Card
                         TrafficCard(
-                            title: "上传",
+                            title: loc.text("上传", "Upload"),
                             total: systemMonitor.totalUpload,
                             speed: systemMonitor.formatSpeed(systemMonitor.uploadSpeed),
                             history: systemMonitor.uploadSpeedHistory,
@@ -102,7 +103,7 @@ struct NetworkDetailView: View {
                     
                     // 3. Speed Test Section
                     VStack(spacing: 20) {
-                        Text("测试您的网络连接")
+                        Text(loc.text("测试您的网络连接", "Test Your Network Connection"))
                             .font(.headline)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -132,14 +133,14 @@ struct NetworkDetailView: View {
                                 // Center Content
                                 VStack {
                                     if systemMonitor.isTestingSpeed {
-                                        Text("Testing")
+                                        Text(loc.text("正在测试", "Testing"))
                                             .font(.headline)
                                             .foregroundColor(.cyan)
                                     } else if systemMonitor.speedTestResult > 0 {
                                         Image(systemName: "checkmark.circle.fill")
                                             .font(.system(size: 40))
                                             .foregroundColor(.green)
-                                        Text("完成")
+                                        Text(loc.text("完成", "Complete"))
                                             .font(.caption)
                                             .foregroundColor(.white)
                                     } else {
@@ -147,7 +148,7 @@ struct NetworkDetailView: View {
                                         Button(action: {
                                             systemMonitor.runSpeedTest()
                                         }) {
-                                           Text("开始")
+                                           Text(loc.text("开始", "Start"))
                                                 .font(.headline)
                                                 .foregroundColor(.white)
                                                 .padding(20)
@@ -164,7 +165,7 @@ struct NetworkDetailView: View {
                                     }) {
                                         VStack {
                                             Spacer()
-                                            Text("再测一次")
+                                            Text(loc.text("再测一次", "Test Again"))
                                                 .font(.system(size: 12))
                                                 .foregroundColor(.white.opacity(0.8))
                                                 .padding(.bottom, 30)
@@ -183,22 +184,22 @@ struct NetworkDetailView: View {
                                         .font(.system(size: 24, weight: .bold))
                                         .foregroundColor(.white)
                                     
-                                    Text("适合：")
+                                    Text(loc.text("适合：", "Suitable for:"))
                                         .font(.system(size: 12))
                                         .foregroundColor(.white.opacity(0.6))
                                     
                                     VStack(alignment: .leading, spacing: 4) {
-                                        SuitabilityRow(text: "网络游戏")
-                                        SuitabilityRow(text: "观看网络视频")
-                                        SuitabilityRow(text: "视频通话")
-                                        SuitabilityRow(text: "听网络音乐")
-                                        SuitabilityRow(text: "语音通话")
-                                        SuitabilityRow(text: "通信")
+                                        SuitabilityRow(text: loc.text("网络游戏", "Online gaming"))
+                                        SuitabilityRow(text: loc.text("观看网络视频", "Streaming video"))
+                                        SuitabilityRow(text: loc.text("视频通话", "Video calls"))
+                                        SuitabilityRow(text: loc.text("听网络音乐", "Streaming music"))
+                                        SuitabilityRow(text: loc.text("语音通话", "Voice calls"))
+                                        SuitabilityRow(text: loc.text("通信", "Messaging"))
                                     }
                                 }
                             } else {
                                 // Placeholder when no test result yet
-                                Text(systemMonitor.isTestingSpeed ? "正在测速..." : "点击开始测试")
+                                Text(systemMonitor.isTestingSpeed ? loc.text("正在测速...", "Testing speed...") : loc.text("点击开始测试", "Click to start the test"))
                                     .font(.system(size: 14))
                                     .foregroundColor(.white.opacity(0.5))
                             }

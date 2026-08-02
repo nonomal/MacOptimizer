@@ -5,6 +5,7 @@ struct MenuBarView: View {
     @EnvironmentObject private var systemMonitor: SystemMonitorService
     @ObservedObject private var diskManager = DiskSpaceManager.shared
     @ObservedObject private var protectionService = ProtectionService.shared
+    @ObservedObject private var loc = LocalizationManager.shared
 
     private let panelBackground = Color(red: 0.18, green: 0.09, blue: 0.30)
     private let cardBackground = Color.white.opacity(0.065)
@@ -46,7 +47,7 @@ struct MenuBarView: View {
 
     private var recommendations: some View {
         VStack(alignment: .leading, spacing: 9) {
-            Text("推荐")
+            Text(loc.text("推荐", "Recommendations"))
                 .font(.system(size: 16, weight: .bold))
                 .foregroundColor(.white)
                 .padding(.horizontal, 16)
@@ -55,8 +56,8 @@ struct MenuBarView: View {
                 HStack(spacing: 10) {
                     RecommendationCard(
                         icon: "arrow.up.app",
-                        title: "更新应用程序以获得新功能\n和更高的稳定性。",
-                        buttonTitle: "更新应用程序",
+                        title: loc.text("更新应用程序以获得新功能和更高的稳定性。", "Update apps for new features and improved stability."),
+                        buttonTitle: loc.text("更新应用程序", "Update Apps"),
                         isPrimary: true
                     ) {
                         manager.openMainApp(module: .updater)
@@ -64,16 +65,16 @@ struct MenuBarView: View {
 
                     RecommendationCard(
                         icon: "folder",
-                        title: "找出长久未打开过的大文件。",
-                        buttonTitle: "查看文件"
+                        title: loc.text("找出长久未打开过的大文件。", "Find large files you have not opened in a long time."),
+                        buttonTitle: loc.text("查看文件", "View Files")
                     ) {
                         manager.openMainApp(module: .largeFiles)
                     }
 
                     RecommendationCard(
                         icon: "arrow.clockwise.circle",
-                        title: "清除无用的系统文件，释放更多空间。",
-                        buttonTitle: "开始扫描"
+                        title: loc.text("清除无用的系统文件，释放更多空间。", "Remove unneeded system files and free up more space."),
+                        buttonTitle: loc.text("开始扫描", "Start Scan")
                     ) {
                         manager.openMainApp(module: .cleaner)
                     }
@@ -88,7 +89,7 @@ struct MenuBarView: View {
 
     private var overview: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Mac 概览")
+            Text(loc.text("Mac 概览", "Mac Overview"))
                 .font(.system(size: 16, weight: .bold))
                 .foregroundColor(.white)
                 .padding(.horizontal, 16)
@@ -130,7 +131,7 @@ struct MenuBarView: View {
                         .font(.system(size: 23))
                         .foregroundColor(protectionService.isMonitoring ? Color.green : Color.orange)
 
-                    Text("防护服务提供者：")
+                    Text(loc.text("防护服务提供者：", "Protection provider:"))
                         .font(.system(size: 13, weight: .semibold))
 
                     Image("malware_moonlock_logo_small")
@@ -142,24 +143,24 @@ struct MenuBarView: View {
 
                     Image(systemName: protectionService.isMonitoring ? "checkmark" : "exclamationmark")
                         .font(.system(size: 11, weight: .bold))
-                    Text(protectionService.isMonitoring ? "受保护" : "未开启")
+                    Text(protectionService.isMonitoring ? loc.text("受保护", "Protected") : loc.text("未开启", "Off"))
                         .font(.system(size: 12, weight: .semibold))
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(protectionService.isMonitoring ? "实时恶意软件监控开启" : "实时恶意软件监控未开启")
+                    Text(protectionService.isMonitoring ? loc.text("实时恶意软件监控已开启", "Real-time malware monitoring is on") : loc.text("实时恶意软件监控未开启", "Real-time malware monitoring is off"))
                         .font(.system(size: 13, weight: .semibold))
 
-                    Text("安全防护状态会在主应用中持续更新")
+                    Text(loc.text("安全防护状态会在主应用中持续更新", "Protection status is continuously updated in the main app"))
                         .font(.system(size: 11))
                         .foregroundColor(.white.opacity(0.68))
 
                     HStack {
-                        Text("打开防护模块查看扫描记录")
+                        Text(loc.text("打开防护模块查看扫描记录", "Open Protection to view scan history"))
                             .font(.system(size: 11))
                             .foregroundColor(.white.opacity(0.68))
                         Spacer()
-                        Text("马上检查")
+                        Text(loc.text("马上检查", "Check Now"))
                             .font(.system(size: 12, weight: .semibold))
                     }
                 }
@@ -188,7 +189,7 @@ struct MenuBarView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("mac")
                         .font(.system(size: 14, weight: .semibold))
-                    Text("可用：\(diskManager.formattedFree)")
+                    Text(loc.text("可用：\(diskManager.formattedFree)", "Available: \(diskManager.formattedFree)"))
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.yellow)
                 }
@@ -196,7 +197,7 @@ struct MenuBarView: View {
             }
             HStack {
                 Spacer()
-                Text("释放")
+                Text(loc.text("释放", "Free Up"))
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.white.opacity(0.72))
             }
@@ -210,9 +211,9 @@ struct MenuBarView: View {
                     .font(.system(size: 18))
                     .frame(width: 23)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("内存")
+                    Text(loc.text("内存", "Memory"))
                         .font(.system(size: 14, weight: .semibold))
-                    Text("可用：\(availableMemory)")
+                    Text(loc.text("可用：\(availableMemory)", "Available: \(availableMemory)"))
                         .font(.system(size: 11))
                         .foregroundColor(.white.opacity(0.68))
                 }
@@ -220,7 +221,7 @@ struct MenuBarView: View {
             }
             HStack {
                 Spacer()
-                Text("释放")
+                Text(loc.text("释放", "Free Up"))
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.white.opacity(0.72))
             }
@@ -234,7 +235,7 @@ struct MenuBarView: View {
                     .font(.system(size: 18))
                     .frame(width: 23)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("电池")
+                    Text(loc.text("电池", "Battery"))
                         .font(.system(size: 14, weight: .semibold))
                     Text(systemMonitor.batteryTimeRemaining.isEmpty
                          ? systemMonitor.batteryState
@@ -259,7 +260,7 @@ struct MenuBarView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("CPU")
                         .font(.system(size: 14, weight: .semibold))
-                    Text("加载：\(Int(systemMonitor.cpuUsage * 100))%")
+                    Text(loc.text("负载：\(Int(systemMonitor.cpuUsage * 100))%", "Load: \(Int(systemMonitor.cpuUsage * 100))%"))
                         .font(.system(size: 11))
                         .foregroundColor(.white.opacity(0.68))
                 }
@@ -288,7 +289,7 @@ struct MenuBarView: View {
 
             HStack {
                 Spacer()
-                Button("测试速度") {
+                Button(loc.text("测试速度", "Test Speed")) {
                     systemMonitor.runSpeedTest()
                 }
                 .buttonStyle(.plain)
@@ -300,9 +301,11 @@ struct MenuBarView: View {
 
     private var devicesCard: some View {
         MenuOverviewCard(action: {}) {
-            Text("已连接的设备")
+            Text(loc.text("已连接的设备", "Connected Devices"))
                 .font(.system(size: 13, weight: .semibold))
-            Text(connectedDeviceCount == 0 ? "尚未连接任何设备" : "已连接 \(connectedDeviceCount) 个设备")
+            Text(connectedDeviceCount == 0
+                ? loc.text("尚未连接任何设备", "No devices connected")
+                : loc.text("已连接 \(connectedDeviceCount) 个设备", "\(connectedDeviceCount) devices connected"))
                 .font(.system(size: 11))
                 .foregroundColor(.white.opacity(0.68))
             Spacer(minLength: 0)
@@ -317,7 +320,7 @@ struct MenuBarView: View {
 
             Spacer()
 
-            Button("打开 Mac优化大师") {
+            Button(loc.text("打开 Mac优化大师", "Open MacOptimizer")) {
                 manager.openMainApp()
             }
             .buttonStyle(.plain)
@@ -327,12 +330,12 @@ struct MenuBarView: View {
             Spacer()
 
             Menu {
-                Button("关于 Mac优化大师") { manager.openMainApp() }
-                Button("提供反馈...") { manager.openMainApp() }
+                Button(loc.text("关于 Mac优化大师", "About MacOptimizer")) { manager.openMainApp() }
+                Button(loc.text("提供反馈...", "Send Feedback...")) { manager.openMainApp() }
                 Divider()
-                Button("偏好设置...") { manager.openMainApp() }
+                Button(loc.text("偏好设置...", "Settings...")) { manager.openMainApp() }
                 Divider()
-                Button("退出") {
+                Button(loc.text("退出", "Quit")) {
                     UserDefaults.standard.set(true, forKey: "ForceQuitApp")
                     NSApplication.shared.terminate(nil)
                 }

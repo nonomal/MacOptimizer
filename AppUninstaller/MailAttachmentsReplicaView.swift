@@ -90,10 +90,10 @@ struct MailAttachmentsReplicaView: View {
             }
             wasScanning = scanning
         }
-        .alert(localized("部分邮件附件未能移除", "Some mail attachments could not be removed"), isPresented: $showCleaningFailure) {
+        .alert(localized("部分邮件附件未能移除", "部分郵件附件未能移除", "Some mail attachments could not be removed", "一部のメール添付ファイルを削除できませんでした", "일부 메일 첨부 파일을 제거하지 못했습니다", "Некоторые почтовые вложения не удалось удалить"), isPresented: $showCleaningFailure) {
             Button(localized("完成", "Done"), role: .cancel) {}
         } message: {
-            Text(localized("这些项目可能正在使用中，或当前账户没有访问权限。", "These items may be in use or inaccessible to the current account."))
+            Text(localized("这些项目可能正在使用中，或当前账户没有访问权限。", "這些項目可能正在使用中，或目前帳號沒有存取權限。", "These items may be in use or inaccessible to the current account.", "これらの項目は使用中か、現在のアカウントではアクセスできない可能性があります。", "이 항목은 사용 중이거나 현재 계정에서 접근할 수 없을 수 있습니다.", "Возможно, эти элементы используются или недоступны текущей учётной записи."))
         }
     }
 
@@ -124,22 +124,6 @@ struct MailAttachmentsReplicaView: View {
 
                     if showingDetails {
                         searchField
-                    } else if pageState == .initial {
-                        Button(action: {}) {
-                            HStack(spacing: 6) {
-                                Circle()
-                                    .fill(Color(red: 0.28, green: 0.82, blue: 0.95))
-                                    .frame(width: 5, height: 5)
-                                Text(localized("助手", "Assistant"))
-                                    .font(.system(size: 11, weight: .semibold))
-                            }
-                            .foregroundColor(.white.opacity(0.74))
-                            .padding(.horizontal, 17)
-                            .frame(height: 25)
-                            .background(Color.black.opacity(0.30), in: Capsule())
-                        }
-                        .buttonStyle(MailHeaderButtonStyle())
-                        .padding(.trailing, 12)
                     }
                 }
             }
@@ -187,22 +171,22 @@ struct MailAttachmentsReplicaView: View {
                         .font(.system(size: 26, weight: .bold))
                         .foregroundColor(.white.opacity(0.96))
 
-                    Text(localized("移除电子邮件下载和附件的本地副本。", "Remove local copies of email downloads and attachments."))
+                    Text(localized("移除电子邮件下载和附件的本地副本。", "移除電子郵件下載項目和附件的本機副本。", "Remove local copies of email downloads and attachments.", "メールのダウンロード項目と添付ファイルのローカルコピーを削除します。", "메일 다운로드 및 첨부 파일의 로컬 사본을 제거합니다.", "Удалите локальные копии загрузок и почтовых вложений."))
                         .font(.system(size: 13))
                         .foregroundColor(.white.opacity(0.62))
                         .padding(.top, 9)
 
                     mailBenefit(
                         image: "mail_benefit_disk",
-                        title: localized("节省本地磁盘空间", "Save local disk space"),
-                        description: localized("移除 Mac 上的电子邮件附件，因为通过收件箱仍可以访问它们。", "Remove email attachments from your Mac while keeping them available in your inbox.")
+                        title: localized("节省本地磁盘空间", "節省本機磁碟空間", "Save local disk space", "ディスク容量を節約", "로컬 디스크 공간 확보", "Экономия места на диске"),
+                        description: localized("移除 Mac 上的电子邮件附件，同时仍可在收件箱中访问它们。", "移除 Mac 上的電子郵件附件，同時仍可在收件匣中存取。", "Remove email attachments from your Mac while keeping them available in your inbox.", "Mac上のメール添付ファイルを削除しても、受信トレイから引き続きアクセスできます。", "Mac에서 메일 첨부 파일을 제거해도 받은 편지함에서 계속 사용할 수 있습니다.", "Удалите вложения с Mac — они останутся доступными во входящих письмах.")
                     )
                     .padding(.top, 39)
 
                     mailBenefit(
                         image: "mail_benefit_envelope",
-                        title: localized("优化本地邮件数据", "Optimize local mail data"),
-                        description: localized("您的邮件不会储存成千上百个公司徽标和其他小附件。", "Keep Mail from storing thousands of logos and other small attachments.")
+                        title: localized("优化本地邮件数据", "最佳化本機郵件資料", "Optimize local mail data", "ローカルメールデータを最適化", "로컬 메일 데이터 최적화", "Оптимизация локальных данных почты"),
+                        description: localized("避免邮件在本地储存大量徽标和其他小附件。", "避免郵件在本機儲存大量標誌和其他小附件。", "Keep Mail from storing thousands of logos and other small attachments.", "Mailが大量のロゴや小さな添付ファイルを保存しないようにします。", "Mail이 수많은 로고와 작은 첨부 파일을 저장하지 않도록 합니다.", "Не позволяйте Почте хранить тысячи логотипов и других небольших вложений.")
                     )
                     .padding(.top, 41)
                 }
@@ -245,7 +229,7 @@ struct MailAttachmentsReplicaView: View {
             mailImage(size: 285)
                 .modifier(MailStampMotion(active: true))
 
-            Text(localized("正在扫描邮件数据...", "Scanning mail data..."))
+            Text(localized("正在扫描邮件数据…", "正在掃描郵件資料…", "Scanning mail data…", "メールデータをスキャン中…", "메일 데이터 스캔 중…", "Сканирование данных почты…"))
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.white.opacity(0.96))
                 .padding(.top, 4)
@@ -286,7 +270,7 @@ struct MailAttachmentsReplicaView: View {
                     Text(localized("非常干净！", "Very clean!"))
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.white.opacity(0.96))
-                    Text(localized("邮件没有储存过多本地数据。", "Mail isn't storing too much local data."))
+                    Text(localized("邮件没有储存过多本地数据。", "郵件沒有儲存過多本機資料。", "Mail isn't storing too much local data.", "メールのローカルデータは多くありません。", "메일이 로컬에 과도한 데이터를 저장하고 있지 않습니다.", "Почта не занимает много места локальными данными."))
                         .font(.system(size: 12))
                         .foregroundColor(.white.opacity(0.52))
                 }
@@ -318,7 +302,7 @@ struct MailAttachmentsReplicaView: View {
                 .foregroundColor(Color(red: 0.42, green: 0.89, blue: 0.98))
                 .padding(.top, 15)
 
-                Text(localized("可恢复的本地邮件附件", "recoverable local mail attachments"))
+                Text(localized("可恢复的本地邮件附件", "可復原的本機郵件附件", "recoverable local mail attachments", "削除可能なローカルメール添付ファイル", "정리 가능한 로컬 메일 첨부 파일", "локальные почтовые вложения, которые можно удалить"))
                     .font(.system(size: 12))
                     .foregroundColor(.white.opacity(0.48))
                     .padding(.top, 2)
@@ -337,7 +321,7 @@ struct MailAttachmentsReplicaView: View {
                 .buttonStyle(MailHeaderButtonStyle())
                 .padding(.top, 21)
 
-                Text(localized("共发现 ", "Found ") + formatBytes(totalSize))
+                Text(localized("共发现 ", "共找到 ", "Found ", "検出：", "발견: ", "Найдено: ") + formatBytes(totalSize))
                     .font(.system(size: 11))
                     .foregroundColor(.white.opacity(0.38))
                     .padding(.top, 14)
@@ -359,10 +343,10 @@ struct MailAttachmentsReplicaView: View {
                 Image(systemName: "externaldrive.badge.exclamationmark")
                     .font(.system(size: 32, weight: .light))
                     .foregroundColor(.white.opacity(0.78))
-                Text(localized("授权全部磁盘访问以继续", "Grant Full Disk Access to continue"))
+                Text(localized("授权完全磁盘访问以继续", "授予完整磁碟存取權限以繼續", "Grant Full Disk Access to continue", "続行するにはフルディスクアクセスを許可してください", "계속하려면 전체 디스크 접근 권한을 허용하세요", "Предоставьте полный доступ к диску"))
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(.white.opacity(0.96))
-                Text(localized("Mac优化大师需要全权访问您的磁盘才能查找邮件附件。", "Mac Optimizer needs Full Disk Access to find mail attachments."))
+                Text(localized("Mac优化大师需要完全磁盘访问权限才能查找邮件附件。", "Mac最佳化大師需要完整磁碟存取權限才能尋找郵件附件。", "MacOptimizer needs Full Disk Access to find mail attachments.", "メール添付ファイルを検索するには、Macオプティマイザーにフルディスクアクセスが必要です。", "메일 첨부 파일을 찾으려면 Mac 최적화 도구에 전체 디스크 접근 권한이 필요합니다.", "Для поиска почтовых вложений MacOptimizer требуется полный доступ к диску."))
                     .font(.system(size: 12))
                     .foregroundColor(.white.opacity(0.52))
                     .fixedSize(horizontal: false, vertical: true)
@@ -575,7 +559,7 @@ struct MailAttachmentsReplicaView: View {
             mailImage(size: 285)
                 .modifier(MailStampMotion(active: true))
 
-            Text(localized("正在清理邮件附件...", "Cleaning mail attachments..."))
+            Text(localized("正在清理邮件附件…", "正在清理郵件附件…", "Cleaning mail attachments…", "メール添付ファイルをクリーニング中…", "메일 첨부 파일 정리 중…", "Очистка почтовых вложений…"))
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.white.opacity(0.96))
                 .padding(.top, 4)
@@ -602,10 +586,10 @@ struct MailAttachmentsReplicaView: View {
                     .foregroundColor(Color(red: 0.39, green: 0.88, blue: 0.65))
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(localized("清理完成！", "Cleanup complete!"))
+                    Text(localized("清理完成！", "清理完成！", "Cleanup complete!", "クリーニング完了！", "정리 완료!", "Очистка завершена!"))
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.white.opacity(0.96))
-                    Text(localized("已释放 ", "Freed ") + formatBytes(cleanedAmount))
+                    Text(localized("已释放 ", "已釋放 ", "Freed ", "解放した容量：", "확보한 공간: ", "Освобождено: ") + formatBytes(cleanedAmount))
                         .font(.system(size: 12))
                         .foregroundColor(.white.opacity(0.52))
                 }
@@ -769,18 +753,30 @@ struct MailAttachmentsReplicaView: View {
         switch source {
         case .mail:
             return localized(
-                "您的所有电子邮件附件都储存在 Mac 上，即使被移除也可以通过邮件来访问。Mac优化大师可以清理可恢复的附件，但会保留已经修改的附件。",
-                "Your email attachments are stored on your Mac and remain available through Mail. Recoverable copies can be removed while modified attachments are kept."
+                "您的电子邮件附件储存在 Mac 上，即使移除本地副本，仍可通过邮件访问。Mac优化大师会清理可恢复的副本，并保留已修改的附件。",
+                "您的電子郵件附件儲存在 Mac 上，即使移除本機副本，仍可透過郵件存取。Mac最佳化大師會清理可復原的副本，並保留已修改的附件。",
+                "Your email attachments are stored on your Mac and remain available through Mail. Recoverable copies can be removed while modified attachments are kept.",
+                "メール添付ファイルはMacに保存されています。ローカルコピーを削除してもMailから引き続きアクセスでき、変更済みの添付ファイルは保持されます。",
+                "메일 첨부 파일은 Mac에 저장됩니다. 로컬 사본을 제거해도 Mail에서 계속 사용할 수 있으며 수정된 첨부 파일은 유지됩니다.",
+                "Почтовые вложения хранятся на Mac и остаются доступными через Почту. Восстанавливаемые копии можно удалить, а изменённые вложения сохранятся."
             )
         case .outlook:
             return localized(
-                "Outlook 将所有电子邮件附件和下载都储存在本地。您可以移除这些副本，因为它们仍在线上收件箱中。",
-                "Outlook stores attachments and downloads locally. These copies can be removed because they remain in your online inbox."
+                "Outlook 会在本地储存附件和下载内容。您可以移除这些副本，因为它们仍保留在线上收件箱中。",
+                "Outlook 會在本機儲存附件和下載內容。您可以移除這些副本，因為它們仍保留在線上收件匣中。",
+                "Outlook stores attachments and downloads locally. These copies can be removed because they remain in your online inbox.",
+                "Outlookは添付ファイルとダウンロード項目をローカルに保存します。オンラインの受信トレイに残るため、これらのコピーは削除できます。",
+                "Outlook은 첨부 파일과 다운로드를 로컬에 저장합니다. 온라인 받은 편지함에 남아 있으므로 이 사본을 제거할 수 있습니다.",
+                "Outlook сохраняет вложения и загрузки локально. Эти копии можно удалить: они останутся в онлайн-почте."
             )
         case .spark:
             return localized(
-                "Spark 应用程序将所有电子邮件附件和下载储存在本地。您可以移除这些副本，因为它们仍在线上收件箱中。",
-                "Spark stores attachments and downloads locally. These copies can be removed because they remain in your online inbox."
+                "Spark 会在本地储存附件和下载内容。您可以移除这些副本，因为它们仍保留在线上收件箱中。",
+                "Spark 會在本機儲存附件和下載內容。您可以移除這些副本，因為它們仍保留在線上收件匣中。",
+                "Spark stores attachments and downloads locally. These copies can be removed because they remain in your online inbox.",
+                "Sparkは添付ファイルとダウンロード項目をローカルに保存します。オンラインの受信トレイに残るため、これらのコピーは削除できます。",
+                "Spark는 첨부 파일과 다운로드를 로컬에 저장합니다. 온라인 받은 편지함에 남아 있으므로 이 사본을 제거할 수 있습니다.",
+                "Spark сохраняет вложения и загрузки локально. Эти копии можно удалить: они останутся в онлайн-почте."
             )
         }
     }
@@ -899,6 +895,24 @@ struct MailAttachmentsReplicaView: View {
 
     private func localized(_ chinese: String, _ english: String) -> String {
         loc.text(chinese, english)
+    }
+
+    private func localized(
+        _ simplifiedChinese: String,
+        _ traditionalChinese: String,
+        _ english: String,
+        _ japanese: String,
+        _ korean: String,
+        _ russian: String
+    ) -> String {
+        loc.text(
+            simplifiedChinese: simplifiedChinese,
+            traditionalChinese: traditionalChinese,
+            english: english,
+            japanese: japanese,
+            korean: korean,
+            russian: russian
+        )
     }
 }
 

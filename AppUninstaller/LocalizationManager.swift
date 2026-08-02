@@ -1,6 +1,97 @@
 import SwiftUI
 import AppKit
 
+private struct DynamicPhraseTemplate {
+    private enum Segment {
+        case literal(String)
+        case token(String)
+    }
+
+    let regex: NSRegularExpression
+    let sourceTokens: [String]
+    let translations: [AppLanguage: String]
+
+    init?(source: String, translations: [AppLanguage: String]) {
+        let segments = Self.segments(in: source)
+        let tokens = segments.compactMap { segment -> String? in
+            if case let .token(token) = segment { return token }
+            return nil
+        }
+        guard !tokens.isEmpty else { return nil }
+
+        let pattern = "^" + segments.map { segment in
+            switch segment {
+            case let .literal(value):
+                return NSRegularExpression.escapedPattern(for: value)
+            case .token:
+                return "(.*?)"
+            }
+        }.joined() + "$"
+
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]) else {
+            return nil
+        }
+        self.regex = regex
+        self.sourceTokens = tokens
+        self.translations = translations
+    }
+
+    func render(actualEnglish: String, language: AppLanguage) -> String? {
+        guard let template = translations[language] else { return nil }
+        let fullRange = NSRange(actualEnglish.startIndex..<actualEnglish.endIndex, in: actualEnglish)
+        guard let match = regex.firstMatch(in: actualEnglish, range: fullRange),
+              match.range == fullRange else { return nil }
+
+        var capturedByToken: [String: String] = [:]
+        for (index, token) in sourceTokens.enumerated() {
+            let range = match.range(at: index + 1)
+            guard let swiftRange = Range(range, in: actualEnglish) else { return nil }
+            capturedByToken[token] = String(actualEnglish[swiftRange])
+        }
+
+        return Self.segments(in: template).map { segment in
+            switch segment {
+            case let .literal(value): return value
+            case let .token(token): return capturedByToken[token] ?? token
+            }
+        }.joined()
+    }
+
+    private static func segments(in template: String) -> [Segment] {
+        var result: [Segment] = []
+        var cursor = template.startIndex
+
+        while let opening = template.range(of: "\\(", range: cursor..<template.endIndex) {
+            if cursor < opening.lowerBound {
+                result.append(.literal(String(template[cursor..<opening.lowerBound])))
+            }
+
+            var index = opening.upperBound
+            var depth = 1
+            while index < template.endIndex, depth > 0 {
+                let character = template[index]
+                if character == "(" { depth += 1 }
+                if character == ")" { depth -= 1 }
+                index = template.index(after: index)
+            }
+
+            guard depth == 0 else {
+                result.append(.literal(String(template[opening.lowerBound...])))
+                cursor = template.endIndex
+                break
+            }
+
+            result.append(.token(String(template[opening.lowerBound..<index])))
+            cursor = index
+        }
+
+        if cursor < template.endIndex {
+            result.append(.literal(String(template[cursor...])))
+        }
+        return result
+    }
+}
+
 // MARK: - 语言枚举
 enum AppLanguage: String, CaseIterable, Identifiable {
     case chinese = "zh-Hans"
@@ -84,6 +175,9 @@ class LocalizationManager: ObservableObject {
         UserDefaults.standard.set([language.rawValue], forKey: "AppleLanguages")
         AppMenuLocalizer.apply(language)
         objectWillChange.send()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            AppMenuLocalizer.apply(language)
+        }
     }
     
     func toggleLanguage() {
@@ -99,12 +193,15 @@ class LocalizationManager: ObservableObject {
             return simplifiedChinese
         case .traditionalChinese:
             return phraseTranslations[english]?[.traditionalChinese]
+                ?? dynamicTranslation(for: english, language: .traditionalChinese)
                 ?? simplifiedChinese.applyingTransform(StringTransform("Hans-Hant"), reverse: false)
                 ?? simplifiedChinese
         case .english:
             return english
         case .japanese, .korean, .russian:
-            return phraseTranslations[english]?[currentLanguage] ?? english
+            return phraseTranslations[english]?[currentLanguage]
+                ?? dynamicTranslation(for: english, language: currentLanguage)
+                ?? english
         }
     }
 
@@ -135,6 +232,18 @@ class LocalizationManager: ObservableObject {
     }
 
     private let phraseTranslations: [String: [AppLanguage: String]] = ConsolePhraseTranslations.values
+    private lazy var dynamicPhraseTranslations: [DynamicPhraseTemplate] = phraseTranslations.compactMap {
+        DynamicPhraseTemplate(source: $0.key, translations: $0.value)
+    }
+
+    private func dynamicTranslation(for english: String, language: AppLanguage) -> String? {
+        for template in dynamicPhraseTranslations {
+            if let rendered = template.render(actualEnglish: english, language: language) {
+                return rendered
+            }
+        }
+        return nil
+    }
     
     // MARK: - 翻译字典
     private let translations: [String: [AppLanguage: String]] = [
@@ -277,7 +386,7 @@ class LocalizationManager: ObservableObject {
         "resolve_finder_errors_desc": [.chinese: "轻松移除被正在运行的进程锁定的项目，且不会出现任何“访达”错误。", .english: "Easily remove items locked by running processes without Finder errors."],
         "select_files": [.chinese: "选择文件...", .english: "Select Files..."],
         "restart": [.chinese: "重新开始", .english: "Restart"],
-        "assistant": [.chinese: "助手", .english: "Assistant"],
+        "assistant": [.chinese: "Mac 优化智能体", .english: "Mac Optimization Agent"],
         "shred": [.chinese: "轧碎", .english: "Shred"],
         "remove_now": [.chinese: "立即移除", .english: "Remove Now"],
         "cleaning_system": [.chinese: "正在清理系统...", .english: "Cleaning System..."],

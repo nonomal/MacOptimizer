@@ -10,7 +10,7 @@ struct ConsoleSidebar: View {
     simplifiedChinese: "控制台",
     traditionalChinese: "主控台",
     english: "Console",
-    japanese: "ゲーム機:",
+    japanese: "コンソール",
     korean: "콘솔",
     russian: "Консоль"
 ))
@@ -48,9 +48,9 @@ struct ConsoleSidebar: View {
     simplifiedChinese: "进程管理",
     traditionalChinese: "行程管理",
     english: "Process Manager",
-    japanese: "プロセスマネージャー",
-    korean: "진행관리자",
-    russian: "Менеджер по технологиям"
+    japanese: "プロセス管理",
+    korean: "프로세스 관리",
+    russian: "Управление процессами"
 ), icon: "waveform.path.ecg", isSelected: selection == .processManager) {
                     selection = .processManager
                 }
@@ -70,9 +70,9 @@ struct ConsoleSidebar: View {
     simplifiedChinese: "端口管理",
     traditionalChinese: "連接埠管理",
     english: "Port Manager",
-    japanese: "港湾管理者",
-    korean: "포트 관리자",
-    russian: "Менеджер порта"
+    japanese: "ポート管理",
+    korean: "포트 관리",
+    russian: "Управление портами"
 ), icon: "network", isSelected: selection == .portManager) {
                     selection = .portManager
                 }
@@ -81,8 +81,8 @@ struct ConsoleSidebar: View {
     simplifiedChinese: "安全中心",
     traditionalChinese: "安全中心",
     english: "Safety Center",
-    japanese: "セーフティセンター",
-    korean: "CCTV 안전센터",
+    japanese: "セキュリティセンター",
+    korean: "보안 센터",
     russian: "Центр безопасности"
 ), icon: "shield.checkerboard", isSelected: selection == .protection) {
                     selection = .protection

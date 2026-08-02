@@ -5,6 +5,7 @@ struct CleanupResultsView: View {
     let cleanedCount: Int
     let recommendations: [CleanupRecommendation]
     let onDismiss: () -> Void
+    @ObservedObject private var loc = LocalizationManager.shared
     
     var formattedSize: String {
         ByteCountFormatter.string(fromByteCount: cleanedSize, countStyle: .file)
@@ -30,13 +31,13 @@ struct CleanupResultsView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "chevron.left")
                                 .font(.system(size: 16, weight: .semibold))
-                            Text("返回")
+                            Text(loc.text("返回", "Back"))
                                 .font(.system(size: 14, weight: .medium))
                         }
                         .foregroundColor(.white)
                     }
                     Spacer()
-                    Text("清理完成")
+                    Text(loc.text("清理完成", "Cleanup Complete"))
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.white)
                     Spacer()
@@ -74,11 +75,11 @@ struct CleanupResultsView: View {
                     VStack(spacing: 20) {
                         // Title
                         VStack(spacing: 8) {
-                            Text("做得不错！")
+                            Text(loc.text("做得不错！", "Great job!"))
                                 .font(.system(size: 28, weight: .bold))
                                 .foregroundColor(.white)
                             
-                            Text("您的 Mac 状态良好。")
+                            Text(loc.text("您的 Mac 状态良好。", "Your Mac is in good shape."))
                                 .font(.system(size: 14, weight: .regular))
                                 .foregroundColor(.white.opacity(0.8))
                         }
@@ -88,21 +89,21 @@ struct CleanupResultsView: View {
                             ResultCard(
                                 icon: "2",
                                 title: formattedSize,
-                                subtitle: "不需要的垃圾已清除",
+                                subtitle: loc.text("不需要的垃圾已清除", "Unneeded junk has been removed"),
                                 color: Color(red: 0.4, green: 0.8, blue: 1.0)
                             )
                             
                             ResultCard(
                                 icon: "fingerprint",
-                                title: "建议执行深度扫描",
-                                subtitle: "深度扫描可能会发现更多垃圾文件。建议每周执行一次。",
+                                title: loc.text("建议执行深度扫描", "A deep scan is recommended"),
+                                subtitle: loc.text("深度扫描可能会发现更多垃圾文件。建议每周执行一次。", "A deep scan may find more junk files. Run it once a week."),
                                 color: Color(red: 0.4, green: 0.9, blue: 0.6)
                             )
                             
                             ResultCard(
                                 icon: "checkmark.circle",
-                                title: "\(cleanedCount) 个任务",
-                                subtitle: "Mac 的性能已得到优化",
+                                title: loc.text("\(cleanedCount) 个任务", "\(cleanedCount) tasks"),
+                                subtitle: loc.text("Mac 的性能已得到优化", "Your Mac's performance has been optimized"),
                                 color: Color(red: 1.0, green: 0.5, blue: 0.6)
                             )
                         }
@@ -115,7 +116,7 @@ struct CleanupResultsView: View {
                 // Bottom action
                 VStack(spacing: 12) {
                     Button(action: onDismiss) {
-                        Text("返回首页")
+                        Text(loc.text("返回首页", "Back to Home"))
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -124,7 +125,7 @@ struct CleanupResultsView: View {
                             .cornerRadius(8)
                     }
                     
-                    Text("查看详情日志")
+                    Text(loc.text("查看详情日志", "View Detailed Log"))
                         .font(.system(size: 12, weight: .regular))
                         .foregroundColor(.white.opacity(0.6))
                 }

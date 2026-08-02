@@ -4,6 +4,7 @@ import SwiftUI
 /// 用户可以管理忽略列表和监控偏好
 struct MemoryMonitorSettingsView: View {
     @ObservedObject var systemMonitor: SystemMonitorService
+    @ObservedObject private var loc = LocalizationManager.shared
     @State private var ignoredApps: [String] = []
     @State private var showingClearConfirmation = false
     
@@ -15,7 +16,7 @@ struct MemoryMonitorSettingsView: View {
                     .font(.system(size: 22))
                     .foregroundColor(.blue)
                 
-                Text("内存监控设置")
+                Text(loc.text("内存监控设置", "Memory Monitor Settings"))
                     .font(.system(size: 18, weight: .bold))
                 
                 Spacer()
@@ -25,10 +26,10 @@ struct MemoryMonitorSettingsView: View {
             
             // 说明
             VStack(alignment: .leading, spacing: 8) {
-                Text("自动监控")
+                Text(loc.text("自动监控", "Automatic Monitoring"))
                     .font(.system(size: 14, weight: .semibold))
                 
-                Text("系统会自动检测内存占用超过 1 GB 的应用，并在菜单栏弹出提醒。")
+                Text(loc.text("系统会自动检测内存占用超过 1 GB 的应用，并在菜单栏弹出提醒。", "The system automatically detects apps using more than 1 GB of memory and shows an alert in the menu bar."))
                     .font(.system(size: 12))
                     .foregroundColor(.secondary)
             }
@@ -38,13 +39,13 @@ struct MemoryMonitorSettingsView: View {
             // 忽略列表
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("已忽略的应用")
+                    Text(loc.text("已忽略的应用", "Ignored Apps"))
                         .font(.system(size: 14, weight: .semibold))
                     
                     Spacer()
                     
                     if !ignoredApps.isEmpty {
-                        Button("清除全部") {
+                        Button(loc.text("清除全部", "Clear All")) {
                             showingClearConfirmation = true
                         }
                         .buttonStyle(.plain)
@@ -61,7 +62,7 @@ struct MemoryMonitorSettingsView: View {
                                 .font(.system(size: 32))
                                 .foregroundColor(.green.opacity(0.6))
                             
-                            Text("没有忽略的应用")
+                            Text(loc.text("没有忽略的应用", "No Ignored Apps"))
                                 .font(.system(size: 13))
                                 .foregroundColor(.secondary)
                         }
@@ -107,7 +108,7 @@ struct MemoryMonitorSettingsView: View {
                 Image(systemName: "info.circle")
                     .foregroundColor(.blue)
                 
-                Text("选择「忽略此应用」后，该应用不会再触发内存警告。")
+                Text(loc.text("选择“忽略此应用”后，该应用不会再触发内存警告。", "After choosing “Ignore This App,” that app will no longer trigger memory alerts."))
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
             }
@@ -120,13 +121,13 @@ struct MemoryMonitorSettingsView: View {
         .onAppear {
             loadIgnoredApps()
         }
-        .alert("确认清除", isPresented: $showingClearConfirmation) {
-            Button("取消", role: .cancel) { }
-            Button("清除全部", role: .destructive) {
+        .alert(loc.text("确认清除", "Confirm Clear"), isPresented: $showingClearConfirmation) {
+            Button(loc.text("取消", "Cancel"), role: .cancel) { }
+            Button(loc.text("清除全部", "Clear All"), role: .destructive) {
                 clearAllApps()
             }
         } message: {
-            Text("确定要清除所有已忽略的应用吗？清除后，这些应用如果占用大量内存，将会再次触发警告。")
+            Text(loc.text("确定要清除所有已忽略的应用吗？清除后，如果这些应用占用大量内存，将再次触发警告。", "Clear all ignored apps? If they use a large amount of memory, they will trigger alerts again."))
         }
     }
     

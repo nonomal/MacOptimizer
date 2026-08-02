@@ -105,7 +105,7 @@ struct JunkCleanerView: View {
                 showCleaningFinished = true
             }
         } message: {
-            Text(loc.text("部分文件因权限不足无法删除。", "Some files could not be deleted due to insufficient permissions."))
+            Text(loc.text(simplifiedChinese: "部分文件因权限不足无法删除。", traditionalChinese: "部分檔案因權限不足而無法刪除。", english: "Some files could not be deleted due to insufficient permissions.", japanese: "権限が不足しているため、一部のファイルを削除できませんでした。", korean: "권한이 부족하여 일부 파일을 삭제하지 못했습니다.", russian: "Некоторые файлы не удалось удалить из-за недостаточных прав."))
         }
         // 监听扫描完成并播放提示音
         .onReceive(cleaner.$isScanning) { isScanning in
@@ -215,7 +215,7 @@ struct JunkCleanerView: View {
                     showCleaningFinished = false
                     showingDetails = true
                 }) {
-                    Text(loc.text("查看剩余", "Review")) // Shortened
+                    Text(loc.text(simplifiedChinese: "查看剩余", traditionalChinese: "查看剩餘項目", english: "Review", japanese: "確認", korean: "검토", russian: "Проверить"))
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.white)
                         .frame(width: 60, height: 60)
@@ -249,8 +249,8 @@ struct JunkCleanerView: View {
     simplifiedChinese: "清理",
     traditionalChinese: "清理",
     english: "Clean",
-    japanese: "洗う",
-    korean: "지우기",
+    japanese: "クリーンアップ",
+    korean: "정리",
     russian: "Очистить"
 ))
                                  .font(.system(size: 12, weight: .semibold, design: .rounded))
@@ -274,7 +274,7 @@ struct JunkCleanerView: View {
                 showCleaningFinished = false
                 showingDetails = true
             }) {
-                Text(loc.text("查看剩余", "Review"))
+                Text(loc.text(simplifiedChinese: "查看剩余", traditionalChinese: "查看剩餘項目", english: "Review", japanese: "確認", korean: "검토", russian: "Проверить"))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.white)
                     .frame(width: 60, height: 60)
@@ -300,7 +300,7 @@ struct JunkCleanerView: View {
                         .font(.system(size: 32, weight: .bold))
                         .foregroundColor(.white)
                     
-                    Text(loc.text("清理您的系统来获得最大的性能和释放自由空间。", "Clean up your system to maximize performance and free up space."))
+                    Text(loc.text(simplifiedChinese: "清理系统垃圾，释放空间并保持 Mac 流畅运行。", traditionalChinese: "清理系統垃圾、釋放空間並保持 Mac 流暢運作。", english: "Clean system junk, free up space, and keep your Mac running smoothly.", japanese: "システムジャンクを削除して空き容量を増やし、Macを快適に保ちます。", korean: "시스템 정크를 정리하여 공간을 확보하고 Mac을 원활하게 유지하세요.", russian: "Удалите системный мусор, освободите место и поддерживайте быструю работу Mac."))
                         .font(.system(size: 14))
                         .foregroundColor(.white.opacity(0.8))
                         .fixedSize(horizontal: false, vertical: true)
@@ -324,7 +324,7 @@ struct JunkCleanerView: View {
                             Text(loc.text("优化系统", "Optimize System"))
                                 .font(.system(size: 14, weight: .bold))
                                 .foregroundColor(.white)
-                            Text(loc.text("移除临时文件以释放空间，提升 Mac 的性能。", "Remove temporary files to free up space, improve Mac performance."))
+                            Text(loc.text(simplifiedChinese: "移除临时文件以释放空间，提升 Mac 性能。", traditionalChinese: "移除暫存檔案以釋放空間並提升 Mac 效能。", english: "Remove temporary files to free up space and improve Mac performance.", japanese: "一時ファイルを削除して空き容量を増やし、Macのパフォーマンスを向上させます。", korean: "임시 파일을 제거하여 공간을 확보하고 Mac 성능을 향상합니다.", russian: "Удалите временные файлы, чтобы освободить место и повысить производительность Mac."))
                                 .font(.system(size: 12))
                                 .foregroundColor(.white.opacity(0.6))
                                 .fixedSize(horizontal: false, vertical: true)
@@ -344,10 +344,10 @@ struct JunkCleanerView: View {
                             )
                         
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(loc.text("解决所有类型的错误", "Fix all types of errors"))
+                            Text(loc.text(simplifiedChinese: "修复各类错误", traditionalChinese: "修復各類錯誤", english: "Fix All Types of Errors", japanese: "さまざまなエラーを修復", korean: "다양한 오류 수정", russian: "Исправление различных ошибок"))
                                 .font(.system(size: 14, weight: .bold))
                                 .foregroundColor(.white)
-                            Text(loc.text("删除各种可能会导致应用程序反应异常的破损项目。", "Delete various broken items that may cause application anomalies."))
+                            Text(loc.text(simplifiedChinese: "移除可能导致应用异常的损坏项目。", traditionalChinese: "移除可能導致應用程式異常的損壞項目。", english: "Remove broken items that may cause applications to behave unexpectedly.", japanese: "アプリの不具合につながる可能性がある破損項目を削除します。", korean: "앱 오작동을 유발할 수 있는 손상된 항목을 제거합니다.", russian: "Удалите повреждённые элементы, которые могут вызывать сбои приложений."))
                                 .font(.system(size: 12))
                                 .foregroundColor(.white.opacity(0.6))
                                 .fixedSize(horizontal: false, vertical: true)
@@ -404,7 +404,7 @@ struct JunkCleanerView: View {
             .padding(.bottom, 40)
             
             // Status Text
-            Text(loc.text("正在分析系统...", "Analyzing System..."))
+            Text(loc.text(simplifiedChinese: "正在分析系统…", traditionalChinese: "正在分析系統…", english: "Analyzing System…", japanese: "システムを解析中…", korean: "시스템 분석 중…", russian: "Анализ системы…"))
                 .font(.title2)
                 .foregroundColor(.white)
                 .padding(.bottom, 8)
@@ -448,16 +448,16 @@ struct JunkCleanerView: View {
                     .foregroundColor(.white.opacity(0.8))
                 Spacer()
                 // Assistant Pill
-                Button(action: { /* Help */ }) {
+                Button(action: { AIAssistantCoordinator.shared.open(currentModule: .cleaner) }) {
                     HStack(spacing: 6) {
                         Circle().fill(Color(hex: "40C4FF")).frame(width: 6, height: 6)
                         Text(loc.text(
-    simplifiedChinese: "助手",
-    traditionalChinese: "助理",
-    english: "Assistant",
-    japanese: "アシスタント",
-    korean: "협조자",
-    russian: "Ассистент"
+    simplifiedChinese: "Mac 优化智能体",
+    traditionalChinese: "Mac 最佳化智慧代理",
+    english: "Mac Optimization Agent",
+    japanese: "Mac最適化エージェント",
+    korean: "Mac 최적화 에이전트",
+    russian: "Агент оптимизации Mac"
 ))
                     }
                     .font(.system(size: 12))
@@ -506,7 +506,7 @@ struct JunkCleanerView: View {
                             ProgressView()
                                 .scaleEffect(0.55)
                                 .tint(.white)
-                            Text(loc.text("正在判断哪些项目适合清理", "Checking what is safe to clean"))
+                            Text(loc.text(simplifiedChinese: "正在判断可安全清理的项目", traditionalChinese: "正在判斷可安全清理的項目", english: "Checking what is safe to clean", japanese: "安全にクリーニングできる項目を確認中", korean: "안전하게 정리할 수 있는 항목 확인 중", russian: "Проверка элементов, которые можно безопасно очистить"))
                                 .font(.system(size: 12))
                                 .foregroundColor(.white.opacity(0.6))
                         }
@@ -522,7 +522,7 @@ struct JunkCleanerView: View {
                         ForEach(selectedCategories, id: \.self) { category in
                             HStack(spacing: 6) {
                                 Text("•")
-                                Text(category.rawValue)
+                                Text(category.localizedName)
                             }
                             .font(.system(size: 14))
                             .foregroundColor(.white.opacity(0.8))
@@ -543,7 +543,7 @@ struct JunkCleanerView: View {
                         }
                         .buttonStyle(.plain)
                         
-                        Text(loc.text("共发现 \(ByteCountFormatter.string(fromByteCount: cleaner.totalSize, countStyle: .file))", "Found \(ByteCountFormatter.string(fromByteCount: cleaner.totalSize, countStyle: .file))"))
+                        Text(loc.text(simplifiedChinese: "共发现 \(ByteCountFormatter.string(fromByteCount: cleaner.totalSize, countStyle: .file))", traditionalChinese: "共找到 \(ByteCountFormatter.string(fromByteCount: cleaner.totalSize, countStyle: .file))", english: "Found \(ByteCountFormatter.string(fromByteCount: cleaner.totalSize, countStyle: .file))", japanese: "検出：\(ByteCountFormatter.string(fromByteCount: cleaner.totalSize, countStyle: .file))", korean: "발견: \(ByteCountFormatter.string(fromByteCount: cleaner.totalSize, countStyle: .file))", russian: "Найдено: \(ByteCountFormatter.string(fromByteCount: cleaner.totalSize, countStyle: .file))"))
                             .font(.system(size: 13))
                             .foregroundColor(.white.opacity(0.5))
                     }
@@ -790,16 +790,16 @@ struct JunkCleanerView: View {
                     Spacer()
                     
                     // 助手按钮占位
-                    Button(action: {}) {
+                    Button(action: { AIAssistantCoordinator.shared.open(currentModule: .cleaner) }) {
                         HStack(spacing: 6) {
                             Circle().fill(Color(hex: "40C4FF")).frame(width: 6, height: 6)
                             Text(loc.text(
-    simplifiedChinese: "助手",
-    traditionalChinese: "助理",
-    english: "Assistant",
-    japanese: "アシスタント",
-    korean: "협조자",
-    russian: "Ассистент"
+    simplifiedChinese: "Mac 优化智能体",
+    traditionalChinese: "Mac 最佳化智慧代理",
+    english: "Mac Optimization Agent",
+    japanese: "Mac最適化エージェント",
+    korean: "Mac 최적화 에이전트",
+    russian: "Агент оптимизации Mac"
 ))
                         }
                         .font(.system(size: 12))
@@ -844,18 +844,18 @@ struct JunkCleanerView: View {
                                 .font(.system(size: 36, weight: .light))
                                 .foregroundColor(Color(hex: "40C4FF"))
                             
-                            Text(loc.text("已清理", "Cleaned"))
+                            Text(loc.text(simplifiedChinese: "已清理", traditionalChinese: "已清理", english: "Cleaned", japanese: "クリーニング済み", korean: "정리됨", russian: "Очищено"))
                                 .font(.system(size: 14))
                                 .foregroundColor(.white.opacity(0.6))
                         }
                         
                         // 磁盘剩余空间信息
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(loc.text("您现在启动磁盘中有 \(DiskSpaceManager.shared.formattedFree) 可用空间。", "You now have \(DiskSpaceManager.shared.formattedFree) available on your startup disk."))
+                            Text(loc.text(simplifiedChinese: "启动磁盘现在有 \(DiskSpaceManager.shared.formattedFree) 可用空间。", traditionalChinese: "啟動磁碟現在有 \(DiskSpaceManager.shared.formattedFree) 可用空間。", english: "You now have \(DiskSpaceManager.shared.formattedFree) available on your startup disk.", japanese: "起動ディスクの空き容量は\(DiskSpaceManager.shared.formattedFree)です。", korean: "시동 디스크에서 \(DiskSpaceManager.shared.formattedFree)를 사용할 수 있습니다.", russian: "На загрузочном диске доступно \(DiskSpaceManager.shared.formattedFree)."))
                                 .font(.system(size: 14))
                                 .foregroundColor(.white.opacity(0.7))
                             
-                            Text(loc.text("通过检查其余项目，恢复更多空间。", "Check remaining items to recover more space."))
+                            Text(loc.text(simplifiedChinese: "检查剩余项目可释放更多空间。", traditionalChinese: "檢查剩餘項目可釋放更多空間。", english: "Check remaining items to recover more space.", japanese: "残りの項目を確認すると、さらに空き容量を増やせます。", korean: "남은 항목을 확인하면 더 많은 공간을 확보할 수 있습니다.", russian: "Проверьте оставшиеся элементы, чтобы освободить ещё больше места."))
                                 .font(.system(size: 14))
                                 .foregroundColor(.white.opacity(0.5))
                         }
@@ -881,7 +881,7 @@ struct JunkCleanerView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "exclamationmark.triangle")
                                 .font(.system(size: 12))
-                            Text(loc.text("查看日志", "View Log"))
+                            Text(loc.text(simplifiedChinese: "查看日志", traditionalChinese: "查看日誌", english: "View Log", japanese: "ログを表示", korean: "로그 보기", russian: "Просмотреть журнал"))
                                 .font(.system(size: 13))
                         }
                         .foregroundColor(.yellow.opacity(0.8))
@@ -953,7 +953,7 @@ struct JunkSidebarView: View {
                 Spacer()
                 
                 HStack(spacing: 4) {
-                    Text(loc.text("排序方式按 大小", "Sort by Size"))
+                    Text(loc.text(simplifiedChinese: "按大小排序", traditionalChinese: "依大小排序", english: "Sort by Size", japanese: "サイズ順", korean: "크기순", russian: "По размеру"))
                         .font(.system(size: 13))
                         .foregroundColor(.white.opacity(0.6))
                     Image(systemName: "chevron.down")
@@ -1005,11 +1005,11 @@ struct JunkDetailContentView: View {
                 
                 // Content Header
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(type.rawValue)
+                    Text(type.localizedName)
                         .font(.system(size: 24, weight: .bold)) // Larger Title
                         .foregroundColor(.white)
                     
-                    Text(type.description)
+                    Text(type.localizedDescription)
                         .font(.system(size: 14))
                         .foregroundColor(.white.opacity(0.8)) // Brighter description
                         .lineSpacing(4)
@@ -1019,7 +1019,7 @@ struct JunkDetailContentView: View {
                             ProgressView()
                                 .scaleEffect(0.55)
                                 .tint(.white)
-                            Text(loc.text("正在生成清理建议...", "Generating cleanup advice..."))
+                            Text(loc.text(simplifiedChinese: "正在生成清理建议…", traditionalChinese: "正在產生清理建議…", english: "Generating cleanup advice…", japanese: "クリーニングの推奨項目を作成中…", korean: "정리 권장 사항 생성 중…", russian: "Подготовка рекомендаций по очистке…"))
                                 .font(.system(size: 12))
                                 .foregroundColor(.white.opacity(0.6))
                         }
@@ -1031,7 +1031,7 @@ struct JunkDetailContentView: View {
                 // Sort by Size (Right Aligned)
                  HStack {
                      Spacer()
-                     Text(loc.text("排序方式按 大小", "Sort by Size"))
+                     Text(loc.text(simplifiedChinese: "按大小排序", traditionalChinese: "依大小排序", english: "Sort by Size", japanese: "サイズ順", korean: "크기순", russian: "По размеру"))
                          .font(.system(size: 13))
                          .foregroundColor(.white.opacity(0.6))
                      Image(systemName: "triangle.fill")
@@ -1054,7 +1054,7 @@ struct JunkDetailContentView: View {
             } else {
                 // Empty State
                 Spacer()
-                Text(loc.text("选择左侧类别查看详情", "Select a category to view details"))
+                Text(loc.text(simplifiedChinese: "选择左侧类别查看详情", traditionalChinese: "選擇左側類別以查看詳情", english: "Select a category to view details", japanese: "左側のカテゴリを選択して詳細を表示", korean: "왼쪽에서 카테고리를 선택하여 상세 정보 보기", russian: "Выберите категорию слева для просмотра подробностей"))
                     .foregroundColor(.white.opacity(0.6))
                 Spacer()
             }
@@ -1194,7 +1194,7 @@ struct JunkCategoryRow: View {
                 }
                 .padding(.leading, 8)
                 
-                Text(type.rawValue)
+                Text(type.localizedName)
                     .foregroundColor(.white)
                     .font(.system(size: 14))
                     .padding(.leading, 4)
@@ -1228,7 +1228,7 @@ struct JunkCategoryRow: View {
                 cleaner.objectWillChange.send()
             } label: {
                 Label(
-                    loc.text("全选 \"\(type.rawValue)\"", "Select All \"\(type.rawValue)\""),
+                    loc.text(simplifiedChinese: "全选“\(type.localizedName)”", traditionalChinese: "全選「\(type.localizedName)」", english: "Select All \"\(type.localizedName)\"", japanese: "「\(type.localizedName)」をすべて選択", korean: "\(type.localizedName) 전체 선택", russian: "Выбрать всё: \(type.localizedName)"),
                     systemImage: "checkmark.circle.fill"
                 )
             }
@@ -1240,7 +1240,7 @@ struct JunkCategoryRow: View {
                 cleaner.objectWillChange.send()
             } label: {
                 Label(
-                    loc.text("取消全选 \"\(type.rawValue)\"", "Deselect All \"\(type.rawValue)\""),
+                    loc.text(simplifiedChinese: "取消全选“\(type.localizedName)”", traditionalChinese: "取消全選「\(type.localizedName)」", english: "Deselect All \"\(type.localizedName)\"", japanese: "「\(type.localizedName)」の選択をすべて解除", korean: "\(type.localizedName) 전체 선택 해제", russian: "Снять выбор: \(type.localizedName)"),
                     systemImage: "circle"
                 )
             }
@@ -1487,7 +1487,7 @@ struct CleaningCategoryRow: View {
             }
             
             // 分类名称
-            Text(category.rawValue)
+            Text(category.localizedName)
                 .font(.system(size: 15, weight: .medium))
                 .foregroundColor(.white)
             

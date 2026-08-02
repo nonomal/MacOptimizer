@@ -73,9 +73,9 @@ struct DeepCleanView: View {
     simplifiedChinese: "开始清理",
     traditionalChinese: "開始清理",
     english: "Start Cleaning",
-    japanese: "清掃を開始",
-    korean: "청소 시작",
-    russian: "Начало уборки"
+    japanese: "クリーニングを開始",
+    korean: "정리 시작",
+    russian: "Начать очистку"
 ), role: .destructive) {
                 Task { @MainActor in
                     let result = await scanner.cleanSelected()
@@ -88,9 +88,9 @@ struct DeepCleanView: View {
     simplifiedChinese: "确定要清理选中的 \(scanner.selectedCount) 个项目吗？总大小 \(ByteCountFormatter.string(fromByteCount: scanner.selectedSize, countStyle: .file))",
     traditionalChinese: "確定要清理選取的\(scanner.selectedCount)個項目嗎？總大小\(ByteCountFormatter.string(fromByteCount: scanner.selectedSize, countStyle: .file))",
     english: "Are you sure you want to clean \(scanner.selectedCount) selected items? Total size: \(ByteCountFormatter.string(fromByteCount: scanner.selectedSize, countStyle: .file))",
-    japanese: "\(scanner.selectedCount) 選択したアイテムをクリーニングしてもよろしいですか？合計サイズ： \(ByteCountFormatter.string(fromByteCount: scanner.selectedSize, countStyle: .file))",
-    korean: "\(scanner.selectedCount) 선택한 품목을 청소하시겠습니까? 총 크기: \(ByteCountFormatter.string(fromByteCount: scanner.selectedSize, countStyle: .file))",
-    russian: "Вы уверены, что хотите очистить \(scanner.selectedCount) выбранные элементы? Общий размер: \(ByteCountFormatter.string(fromByteCount: scanner.selectedSize, countStyle: .file))"
+    japanese: "選択した\(scanner.selectedCount)項目をクリーニングしますか？合計サイズ：\(ByteCountFormatter.string(fromByteCount: scanner.selectedSize, countStyle: .file))",
+    korean: "선택한 항목 \(scanner.selectedCount)개를 정리하시겠습니까? 전체 크기: \(ByteCountFormatter.string(fromByteCount: scanner.selectedSize, countStyle: .file))",
+    russian: "Очистить выбранные элементы (\(scanner.selectedCount))? Общий размер: \(ByteCountFormatter.string(fromByteCount: scanner.selectedSize, countStyle: .file))"
 ))
         }
     }
@@ -150,8 +150,8 @@ struct DeepCleanView: View {
     simplifiedChinese: "清理",
     traditionalChinese: "清理",
     english: "Clean",
-    japanese: "洗う",
-    korean: "지우기",
+    japanese: "クリーンアップ",
+    korean: "정리",
     russian: "Очистить"
 ),
                     colors: [Color(hex: "34C759"), Color(hex: "248A3D")],
@@ -245,7 +245,7 @@ struct DeepCleanView: View {
     english: "Full Scan",
     japanese: "フルスキャン",
     korean: "전체 스캔",
-    russian: "Full Scan"
+    russian: "Полное сканирование"
 ))
                             .font(.system(size: 20, weight: .heavy))
                     }
@@ -256,9 +256,9 @@ struct DeepCleanView: View {
     simplifiedChinese: "扫描整个 Mac 的大文件、垃圾文件、缓存、日志及应用残留。\n上次扫描时间：从未",
     traditionalChinese: "掃描整個Mac 的大檔案、垃圾檔案、快取、日誌及應用殘留。\n上次掃描時間：從未",
     english: "Scan your entire Mac for large files, junk, caches, logs, and leftovers.\nLast scan: Never",
-    japanese: "Mac全体をスキャンして、大きなファイル、ジャンク、キャッシュ、ログ、残り物を探します。\n前回のスキャン：なし",
-    korean: "Mac 전체에서 대용량 파일, 정크, 캐시, 로그 및 남은 파일을 검사합니다.\n마지막 스캔: 없음",
-    russian: "Сканируйте весь Mac на наличие больших файлов, ненужных файлов, кэшей, журналов и остатков.\nПоследнее сканирование: Никогда"
+    japanese: "Mac全体をスキャンして、大容量ファイル、ジャンク、キャッシュ、ログ、アプリの残存ファイルを検出します。\n前回のスキャン：なし",
+    korean: "Mac 전체에서 대용량 파일, 정크, 캐시, 로그 및 앱 잔여 파일을 검사합니다.\n마지막 스캔: 없음",
+    russian: "Проверяет весь Mac на большие файлы, мусор, кэш, журналы и остатки приложений.\nПоследнее сканирование: никогда"
 ))
                     .font(.system(size: 13))
                     .foregroundColor(.white.opacity(0.7))
@@ -272,8 +272,8 @@ struct DeepCleanView: View {
     simplifiedChinese: "查找大文件",
     traditionalChinese: "查找大文件",
     english: "Find Large Files",
-    japanese: "巨大化ファイル",
-    korean: "대용량 파일",
+    japanese: "大容量ファイルを検索",
+    korean: "대용량 파일 찾기",
     russian: "Найти большие файлы"
 ),
                         desc: loc.text(
@@ -292,9 +292,9 @@ struct DeepCleanView: View {
     simplifiedChinese: "清理系统垃圾",
     traditionalChinese: "清理系統垃圾",
     english: "Clean System Junk",
-    japanese: "クリーンなシステムのジャンク",
-    korean: "시스템을 청소하십시오.",
-    russian: "чистая установка"
+    japanese: "システムジャンクを削除",
+    korean: "시스템 정크 정리",
+    russian: "Очистить системный мусор"
 ),
                         desc: loc.text(
     simplifiedChinese: "移除缓存、日志和临时文件释放空间。",
@@ -312,9 +312,9 @@ struct DeepCleanView: View {
     simplifiedChinese: "检测应用残留",
     traditionalChinese: "檢測應用殘留",
     english: "Detect App Residuals",
-    japanese: "アプリの残留物を検出する",
-    korean: "앱 잔여 감지",
-    russian: "Обнаружение остатков приложения"
+    japanese: "アプリの残存ファイルを検出",
+    korean: "앱 잔여 파일 찾기",
+    russian: "Найти остатки приложений"
 ),
                         desc: loc.text(
     simplifiedChinese: "查找已卸载应用遗留的文件和数据。",
@@ -542,9 +542,9 @@ struct DeepCleanView: View {
     simplifiedChinese: "\(itemCount) 项",
     traditionalChinese: "\(itemCount)項",
     english: "\(itemCount) items",
-    japanese: "項目",
+    japanese: "\(itemCount)項目",
     korean: "\(itemCount) 항목",
-    russian: "\(itemCount) items"
+    russian: "Элементов: \(itemCount)"
 ))
                             .font(.system(size: 14))
                             .foregroundColor(.white.opacity(0.85))
@@ -554,7 +554,7 @@ struct DeepCleanView: View {
     simplifiedChinese: "扫描中...",
     traditionalChinese: "掃描中...",
     english: "Scanning...",
-    japanese: "実行中…",
+    japanese: "スキャン中…",
     korean: "스캔 중...",
     russian: "Сканирование..."
 ))
@@ -716,9 +716,9 @@ struct DeepCleanView: View {
     simplifiedChinese: "\(items.count) 项",
     traditionalChinese: "\(items.count)項",
     english: "\(items.count) items",
-    japanese: "項目",
+    japanese: "\(items.count)項目",
     korean: "\(items.count) 항목",
-    russian: "\(items.count) items"
+    russian: "Элементов: \(items.count)"
 ))
                                 .font(.system(size: 14))
                                 .foregroundColor(.white.opacity(0.85))
@@ -805,9 +805,9 @@ struct DeepCleanView: View {
     simplifiedChinese: "正在清理系统...",
     traditionalChinese: "正在清理系統...",
     english: "Cleaning System...",
-    japanese: "システムのクリーニング",
-    korean: "세척 시스템(cleaning system)",
-    russian: "Процедура уборки"
+    japanese: "システムをクリーニング中…",
+    korean: "시스템 정리 중…",
+    russian: "Очистка системы…"
 ))
                             .font(.system(size: 32, weight: .bold))
                             .foregroundColor(.white)
@@ -937,7 +937,7 @@ struct DeepCleanView: View {
     traditionalChinese: "深度清理",
     english: "Deep Clean",
     japanese: "ディープクリーン",
-    korean: "철저한 세척",
+    korean: "심층 정리",
     russian: "Глубокая очистка"
 ),
                             subtitle: loc.text(
@@ -959,25 +959,25 @@ struct DeepCleanView: View {
     simplifiedChinese: "清理项目",
     traditionalChinese: "清理項目",
     english: "Items Cleaned",
-    japanese: "掃除されたアイテム",
-    korean: "청소한 물품",
-    russian: "Элементы очищены"
+    japanese: "クリーニングした項目",
+    korean: "정리한 항목",
+    russian: "Очищено элементов"
 ),
                                 subtitle: loc.text(
     simplifiedChinese: "已成功清理",
     traditionalChinese: "已成功清理",
     english: "Successfully cleaned",
-    japanese: "正常にクリーニングされました",
-    korean: "성공적으로 청소 완료",
-    russian: "успешно очищен!"
+    japanese: "正常にクリーニングしました",
+    korean: "정리를 완료했습니다",
+    russian: "Успешно очищено"
 ),
                                 stat: "\(result.count) " + (loc.text(
     simplifiedChinese: "个项目",
     traditionalChinese: "個項目",
     english: "items",
-    japanese: "項目数",
-    korean: "아이템",
-    russian: "Объявления"
+    japanese: "項目",
+    korean: "개 항목",
+    russian: "элементов"
 ))
                             )
                         }
@@ -1060,7 +1060,14 @@ struct DeepCleanDetailView: View {
                     Image(systemName: "arrow.left")
                         .font(.system(size: 48))
                         .foregroundColor(.secondaryText.opacity(0.5))
-                    Text(loc.text("选择左侧分类查看详情", "Select a category to view details"))
+                    Text(loc.text(
+                        simplifiedChinese: "选择左侧分类查看详情",
+                        traditionalChinese: "選擇左側分類以查看詳情",
+                        english: "Select a category to view details",
+                        japanese: "左側のカテゴリを選択して詳細を表示",
+                        korean: "왼쪽에서 카테고리를 선택하여 상세 정보 보기",
+                        russian: "Выберите категорию слева для просмотра подробностей"
+                    ))
                         .font(.title3)
                         .foregroundColor(.secondaryText)
                     Spacer()
@@ -1088,7 +1095,14 @@ struct DeepCleanDetailView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 14, weight: .semibold))
-                        Text(loc.text("返回概要", "Back to Overview"))
+                        Text(loc.text(
+                            simplifiedChinese: "返回概要",
+                            traditionalChinese: "返回摘要",
+                            english: "Back to Overview",
+                            japanese: "概要に戻る",
+                            korean: "개요로 돌아가기",
+                            russian: "Вернуться к обзору"
+                        ))
                             .font(.system(size: 15, weight: .medium))
                     }
                     .foregroundColor(.white)
@@ -1253,7 +1267,14 @@ struct DeepCleanDetailView: View {
                 // 修改：只计算选中项的大小和数量
                 let selectedItems = items.filter { $0.isSelected }
                 let totalSize = selectedItems.reduce(0) { $0 + $1.size }
-                Text("\(selectedItems.count) \(loc.text("个选定项目", "selected items")), \(ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file))")
+                Text(loc.text(
+                    simplifiedChinese: "已选择 \(selectedItems.count) 个项目，\(ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file))",
+                    traditionalChinese: "已選擇 \(selectedItems.count) 個項目，\(ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file))",
+                    english: "\(selectedItems.count) selected items, \(ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file))",
+                    japanese: "選択済み：\(selectedItems.count)項目、\(ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file))",
+                    korean: "선택한 항목 \(selectedItems.count)개, \(ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file))",
+                    russian: "Выбрано: \(selectedItems.count), \(ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file))"
+                ))
                     .font(.system(size: 12))
                     .foregroundColor(.secondaryText)
             }
@@ -1269,7 +1290,14 @@ struct DeepCleanDetailView: View {
                     Image(systemName: "checkmark.circle")
                         .font(.system(size: 60))
                         .foregroundColor(.green)
-                    Text(loc.text("该分类暂无项目", "No items in this category"))
+                    Text(loc.text(
+                        simplifiedChinese: "该分类暂无项目",
+                        traditionalChinese: "此分類目前沒有項目",
+                        english: "No items in this category",
+                        japanese: "このカテゴリに項目はありません",
+                        korean: "이 카테고리에 항목이 없습니다",
+                        russian: "В этой категории нет элементов"
+                    ))
                         .font(.title3)
                         .foregroundColor(.secondaryText)
                     Spacer()

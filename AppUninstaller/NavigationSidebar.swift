@@ -19,6 +19,49 @@ enum SidebarSection: String, CaseIterable {
         case .files: return "Files"
         }
     }
+
+    func localizedTitle(for language: AppLanguage) -> String {
+        switch language {
+        case .chinese: return rawValue
+        case .traditionalChinese:
+            switch self {
+            case .main: return ""
+            case .cleanup: return "清理"
+            case .protection: return "保護"
+            case .speed: return "速度"
+            case .apps: return "應用程式"
+            case .files: return "檔案"
+            }
+        case .english: return englishTitle
+        case .japanese:
+            switch self {
+            case .main: return ""
+            case .cleanup: return "クリーンアップ"
+            case .protection: return "保護"
+            case .speed: return "高速化"
+            case .apps: return "アプリケーション"
+            case .files: return "ファイル"
+            }
+        case .korean:
+            switch self {
+            case .main: return ""
+            case .cleanup: return "정리"
+            case .protection: return "보호"
+            case .speed: return "속도"
+            case .apps: return "애플리케이션"
+            case .files: return "파일"
+            }
+        case .russian:
+            switch self {
+            case .main: return ""
+            case .cleanup: return "Очистка"
+            case .protection: return "Защита"
+            case .speed: return "Ускорение"
+            case .apps: return "Приложения"
+            case .files: return "Файлы"
+            }
+        }
+    }
     
     var modules: [AppModule] {
         switch self {
@@ -105,7 +148,7 @@ struct NavigationSidebar: View {
                     ForEach(SidebarSection.allCases, id: \.self) { section in
                         // 分组标题
                         if !section.rawValue.isEmpty {
-                            Text(localization.currentLanguage == .chinese ? section.rawValue : section.englishTitle)
+                            Text(section.localizedTitle(for: localization.currentLanguage))
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(.white.opacity(0.4))
                                 .textCase(.uppercase)
@@ -163,7 +206,7 @@ struct NavigationSidebar: View {
                 }
                 
                 HStack(spacing: 6) {
-                    Text("v4.0.7")
+                    Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "5.0")")
                         .font(.system(size: 10))
                         .foregroundColor(.white.opacity(0.3))
                     Text("Pro Version")

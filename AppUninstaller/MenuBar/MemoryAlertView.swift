@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MemoryAlertView: View {
     @ObservedObject var systemMonitor: SystemMonitorService
+    @ObservedObject private var loc = LocalizationManager.shared
     var openAppAction: () -> Void
     
     var body: some View {
@@ -15,11 +16,11 @@ struct MemoryAlertView: View {
             VStack(alignment: .leading, spacing: 16) {
                 // Header
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("内存占用过高")
+                    Text(loc.text("内存占用过高", "High Memory Usage"))
                         .font(.system(size: 15, weight: .bold))
                         .foregroundColor(Color.black.opacity(0.85))
                     
-                    Text("Mac优化大师 发现您 Mac 的物理内存和虚拟内存占用率过高。让我们为您修复此问题！")
+                    Text(loc.text("Mac优化大师发现您的 Mac 物理内存和虚拟内存占用率过高。让我们为您解决这个问题！", "MacOptimizer detected high physical and virtual memory usage on your Mac. Let's fix it."))
                         .font(.system(size: 13))
                         .foregroundColor(Color.black.opacity(0.65))
                         .fixedSize(horizontal: false, vertical: true)
@@ -33,7 +34,7 @@ struct MemoryAlertView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "arrow.right.circle.fill")
                             .font(.system(size: 14))
-                        Text("启动 Mac优化大师")
+                        Text(loc.text("启动 Mac优化大师", "Open MacOptimizer"))
                             .font(.system(size: 13, weight: .bold))
                     }
                     .foregroundColor(Color.black)
@@ -80,7 +81,7 @@ struct MemoryAlertView: View {
                                     .font(.system(size: 13, weight: .semibold))
                                     .foregroundColor(Color.black.opacity(0.85))
                                 Spacer()
-                                Text(systemMonitor.memoryUsage > 0.9 ? "快满了" : "正常")
+                                Text(systemMonitor.memoryUsage > 0.9 ? loc.text("快满了", "Almost Full") : loc.text("正常", "Normal"))
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(Color(hex: "FF6B6B"))
                             }
@@ -111,19 +112,19 @@ struct MemoryAlertView: View {
                 // Footer Actions
                 HStack {
                     Menu {
-                        Button("10 分钟后提醒") {
+                        Button(loc.text("10 分钟后提醒", "Remind Me in 10 Minutes")) {
                             systemMonitor.ignoreCurrentHighMemoryApp() // Simplified for now
                         }
-                        Button("1 小时后提醒") {
+                        Button(loc.text("1 小时后提醒", "Remind Me in 1 Hour")) {
                              systemMonitor.ignoreCurrentHighMemoryApp()
                         }
                         Divider()
-                        Button("从不提醒") {
+                        Button(loc.text("从不提醒", "Never Remind Me")) {
                              systemMonitor.ignoreCurrentHighMemoryApp()
                         }
                     } label: {
                         HStack(spacing: 2) {
-                            Text("忽略")
+                            Text(loc.text("忽略", "Ignore"))
                             Image(systemName: "chevron.down")
                                 .font(.system(size: 8, weight: .bold))
                         }
@@ -144,7 +145,7 @@ struct MemoryAlertView: View {
                             systemMonitor.terminateHighMemoryApp()
                         }
                     }) {
-                        Text("释放")
+                        Text(loc.text("释放", "Free Up"))
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(Color.black.opacity(0.8))
                             .padding(.horizontal, 20)

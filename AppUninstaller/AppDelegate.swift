@@ -24,6 +24,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
             window.center()
             AppMenuLocalizer.apply(LocalizationManager.shared.currentLanguage)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                AppMenuLocalizer.apply(LocalizationManager.shared.currentLanguage)
+            }
         }
     }
     

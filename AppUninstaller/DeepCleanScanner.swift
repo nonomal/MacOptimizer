@@ -36,12 +36,13 @@ enum DeepCleanCategory: String, CaseIterable, Sendable {
     case appResiduals = "App Residue"
     
     var localizedName: String {
+        let loc = LocalizationManager.shared
         switch self {
-        case .largeFiles: return LocalizationManager.shared.currentLanguage == .chinese ? "大文件" : "Large Files"
-        case .junkFiles: return LocalizationManager.shared.currentLanguage == .chinese ? "系统垃圾" : "System Junk"
-        case .systemLogs: return LocalizationManager.shared.currentLanguage == .chinese ? "日志文件" : "Log Files"
-        case .systemCaches: return LocalizationManager.shared.currentLanguage == .chinese ? "缓存文件" : "Cache Files"
-        case .appResiduals: return LocalizationManager.shared.currentLanguage == .chinese ? "应用残留" : "App Residue"
+        case .largeFiles: return loc.text(simplifiedChinese: "大文件", traditionalChinese: "大型檔案", english: "Large Files", japanese: "大容量ファイル", korean: "대용량 파일", russian: "Большие файлы")
+        case .junkFiles: return loc.text(simplifiedChinese: "系统垃圾", traditionalChinese: "系統垃圾", english: "System Junk", japanese: "システムジャンク", korean: "시스템 정크", russian: "Системный мусор")
+        case .systemLogs: return loc.text(simplifiedChinese: "日志文件", traditionalChinese: "日誌檔案", english: "Log Files", japanese: "ログファイル", korean: "로그 파일", russian: "Файлы журналов")
+        case .systemCaches: return loc.text(simplifiedChinese: "缓存文件", traditionalChinese: "快取檔案", english: "Cache Files", japanese: "キャッシュファイル", korean: "캐시 파일", russian: "Файлы кэша")
+        case .appResiduals: return loc.text(simplifiedChinese: "应用残留", traditionalChinese: "應用程式殘留", english: "App Residue", japanese: "アプリの残存ファイル", korean: "앱 잔여 파일", russian: "Остатки приложений")
         }
     }
     
@@ -124,7 +125,14 @@ class DeepCleanScanner: ObservableObject {
         await MainActor.run {
             self.reset()
             self.isScanning = true
-            self.scanStatus = LocalizationManager.shared.currentLanguage == .chinese ? "准备扫描..." : "Preparing..."
+            self.scanStatus = LocalizationManager.shared.text(
+                simplifiedChinese: "正在准备…",
+                traditionalChinese: "正在準備…",
+                english: "Preparing…",
+                japanese: "準備中…",
+                korean: "준비 중…",
+                russian: "Подготовка…"
+            )
             self.scanProgress = 0.0
         }
         
@@ -175,19 +183,26 @@ class DeepCleanScanner: ObservableObject {
         
         await MainActor.run {
             self.isScanning = false
-            self.scanStatus = LocalizationManager.shared.currentLanguage == .chinese ? "扫描完成" : "Scan Complete"
+            self.scanStatus = LocalizationManager.shared.text(
+                simplifiedChinese: "扫描完成",
+                traditionalChinese: "掃描完成",
+                english: "Scan Complete",
+                japanese: "スキャン完了",
+                korean: "스캔 완료",
+                russian: "Сканирование завершено"
+            )
             self.scanProgress = 1.0
         }
     }
     
     private func statusText(for category: DeepCleanCategory) -> String {
-        let isChinese = LocalizationManager.shared.currentLanguage == .chinese
+        let loc = LocalizationManager.shared
         switch category {
-        case .largeFiles: return isChinese ? "正在扫描大文件..." : "Scanning Large Files..."
-        case .junkFiles: return isChinese ? "正在扫描系统垃圾..." : "Scanning System Junk..."
-        case .systemLogs: return isChinese ? "正在扫描日志..." : "Scanning Logs..."
-        case .systemCaches: return isChinese ? "正在扫描缓存..." : "Scanning Caches..."
-        case .appResiduals: return isChinese ? "正在扫描应用残留..." : "Scanning App Residue..."
+        case .largeFiles: return loc.text(simplifiedChinese: "正在扫描大文件…", traditionalChinese: "正在掃描大型檔案…", english: "Scanning Large Files…", japanese: "大容量ファイルをスキャン中…", korean: "대용량 파일 스캔 중…", russian: "Сканирование больших файлов…")
+        case .junkFiles: return loc.text(simplifiedChinese: "正在扫描系统垃圾…", traditionalChinese: "正在掃描系統垃圾…", english: "Scanning System Junk…", japanese: "システムジャンクをスキャン中…", korean: "시스템 정크 스캔 중…", russian: "Сканирование системного мусора…")
+        case .systemLogs: return loc.text(simplifiedChinese: "正在扫描日志…", traditionalChinese: "正在掃描日誌…", english: "Scanning Logs…", japanese: "ログをスキャン中…", korean: "로그 스캔 중…", russian: "Сканирование журналов…")
+        case .systemCaches: return loc.text(simplifiedChinese: "正在扫描缓存…", traditionalChinese: "正在掃描快取…", english: "Scanning Caches…", japanese: "キャッシュをスキャン中…", korean: "캐시 스캔 중…", russian: "Сканирование кэша…")
+        case .appResiduals: return loc.text(simplifiedChinese: "正在扫描应用残留…", traditionalChinese: "正在掃描應用程式殘留…", english: "Scanning App Residue…", japanese: "アプリの残存ファイルをスキャン中…", korean: "앱 잔여 파일 스캔 중…", russian: "Сканирование остатков приложений…")
         }
     }
     
@@ -235,7 +250,14 @@ class DeepCleanScanner: ObservableObject {
         
         await MainActor.run {
             self.isCleaning = true
-            self.scanStatus = LocalizationManager.shared.currentLanguage == .chinese ? "准备清理..." : "Preparing Cleanup..."
+            self.scanStatus = LocalizationManager.shared.text(
+                simplifiedChinese: "正在准备清理…",
+                traditionalChinese: "正在準備清理…",
+                english: "Preparing Cleanup…",
+                japanese: "クリーニングの準備中…",
+                korean: "정리 준비 중…",
+                russian: "Подготовка к очистке…"
+            )
             self.cleaningProgress = 0
             self.cleanedCategories = []
         }
@@ -268,9 +290,22 @@ class DeepCleanScanner: ObservableObject {
              await MainActor.run {
                 self.cleaningCurrentCategory = category
                 self.currentCategory = category
-                self.scanStatus = LocalizationManager.shared.currentLanguage == .chinese ? 
-                    "正在清理 \(category.localizedName)..." : "Cleaning \(category.localizedName)..."
-                self.cleaningDescription = LocalizationManager.shared.currentLanguage == .chinese ? "正在清理..." : "Cleaning..."
+                self.scanStatus = LocalizationManager.shared.text(
+                    simplifiedChinese: "正在清理\(category.localizedName)…",
+                    traditionalChinese: "正在清理\(category.localizedName)…",
+                    english: "Cleaning \(category.localizedName)…",
+                    japanese: "\(category.localizedName)をクリーニング中…",
+                    korean: "\(category.localizedName) 정리 중…",
+                    russian: "Очистка: \(category.localizedName)…"
+                )
+                self.cleaningDescription = LocalizationManager.shared.text(
+                    simplifiedChinese: "正在清理…",
+                    traditionalChinese: "正在清理…",
+                    english: "Cleaning…",
+                    japanese: "クリーニング中…",
+                    korean: "정리 중…",
+                    russian: "Очистка…"
+                )
             }
             
             let categoryItems = items.filter { $0.category == category && $0.isSelected }
@@ -329,7 +364,14 @@ class DeepCleanScanner: ObservableObject {
             self.cleaningProgress = 1.0
             self.cleaningCurrentCategory = nil
             self.currentCleaningItem = ""
-            self.scanStatus = LocalizationManager.shared.currentLanguage == .chinese ? "清理完成" : "Cleanup Complete"
+            self.scanStatus = LocalizationManager.shared.text(
+                simplifiedChinese: "清理完成",
+                traditionalChinese: "清理完成",
+                english: "Cleanup Complete",
+                japanese: "クリーニング完了",
+                korean: "정리 완료",
+                russian: "Очистка завершена"
+            )
             print("[DeepClean] 📢 已将 isCleaning 设置为 false，应该触发页面切换")
         }
         
@@ -488,7 +530,7 @@ class DeepCleanScanner: ObservableObject {
                         if size > 1024 * 1024 { // > 1MB
                              return DeepCleanItem(
                                 url: cacheUrl,
-                                name: app.name + " " + (LocalizationManager.shared.currentLanguage == .chinese ? "缓存" : "Cache"),
+                                name: self.localizedCacheName(for: app.name),
                                 size: size,
                                 category: .systemCaches,
                                 appIcon: app.icon,
@@ -543,8 +585,8 @@ class DeepCleanScanner: ObservableObject {
              let size = await calculateSizeAsync(at: dir)
              if size > 1024 {
                 var displayName = dir.lastPathComponent
-                if dir.path.contains("Chrome") { displayName = "Chrome Cache" }
-                else if dir.path.contains("Firefox") { displayName = "Firefox Cache" }
+                if dir.path.contains("Chrome") { displayName = localizedCacheName(for: "Chrome") }
+                else if dir.path.contains("Firefox") { displayName = localizedCacheName(for: "Firefox") }
                 
                  items.append(DeepCleanItem(
                     url: dir,
@@ -816,7 +858,7 @@ class DeepCleanScanner: ObservableObject {
         if trashSize > 0 {
             items.append(DeepCleanItem(
                 url: trash,
-                name: LocalizationManager.shared.currentLanguage == .chinese ? "废纸篓" : "Trash",
+                name: LocalizationManager.shared.text(simplifiedChinese: "废纸篓", traditionalChinese: "垃圾桶", english: "Trash", japanese: "ゴミ箱", korean: "휴지통", russian: "Корзина"),
                 size: trashSize,
                 category: .junkFiles
             ))
@@ -845,7 +887,7 @@ class DeepCleanScanner: ObservableObject {
             if size > 0 {
                 items.append(DeepCleanItem(
                     url: iosBackups,
-                    name: LocalizationManager.shared.currentLanguage == .chinese ? "iOS 设备备份" : "iOS Backups",
+                    name: LocalizationManager.shared.text(simplifiedChinese: "iOS 设备备份", traditionalChinese: "iOS 裝置備份", english: "iOS Backups", japanese: "iOSデバイスのバックアップ", korean: "iOS 기기 백업", russian: "Резервные копии iOS"),
                     size: size,
                     category: .junkFiles
                 ))
@@ -860,7 +902,7 @@ class DeepCleanScanner: ObservableObject {
             if size > 0 {
                 items.append(DeepCleanItem(
                     url: mailDownloads,
-                    name: LocalizationManager.shared.currentLanguage == .chinese ? "邮件附件" : "Mail Attachments",
+                    name: LocalizationManager.shared.text(simplifiedChinese: "邮件附件", traditionalChinese: "郵件附件", english: "Mail Attachments", japanese: "メール添付ファイル", korean: "메일 첨부 파일", russian: "Почтовые вложения"),
                     size: size,
                     category: .junkFiles
                 ))
@@ -930,10 +972,10 @@ class DeepCleanScanner: ObservableObject {
         
         // 6. 浏览器缓存 (Browser Caches)
         let browserCaches: [(name: String, path: String)] = [
-            ("Safari 缓存", "Library/Caches/com.apple.Safari"),
-            ("Chrome 缓存", "Library/Caches/Google/Chrome"),
-            ("Firefox 缓存", "Library/Caches/Firefox"),
-            ("Edge 缓存", "Library/Caches/com.microsoft.Edge")
+            ("Safari", "Library/Caches/com.apple.Safari"),
+            ("Chrome", "Library/Caches/Google/Chrome"),
+            ("Firefox", "Library/Caches/Firefox"),
+            ("Edge", "Library/Caches/com.microsoft.Edge")
         ]
         
         for (name, relativePath) in browserCaches {
@@ -944,7 +986,7 @@ class DeepCleanScanner: ObservableObject {
                 if size > 0 {
                     items.append(DeepCleanItem(
                         url: cachePath,
-                        name: LocalizationManager.shared.currentLanguage == .chinese ? name : name.replacingOccurrences(of: " 缓存", with: " Cache"),
+                        name: localizedCacheName(for: name),
                         size: size,
                         category: .junkFiles
                     ))
@@ -953,6 +995,17 @@ class DeepCleanScanner: ObservableObject {
         }
         
         return items
+    }
+
+    private func localizedCacheName(for applicationName: String) -> String {
+        LocalizationManager.shared.text(
+            simplifiedChinese: "\(applicationName) 缓存",
+            traditionalChinese: "\(applicationName) 快取",
+            english: "\(applicationName) Cache",
+            japanese: "\(applicationName) キャッシュ",
+            korean: "\(applicationName) 캐시",
+            russian: "Кэш \(applicationName)"
+        )
     }
     
     // MARK: - App Helpers

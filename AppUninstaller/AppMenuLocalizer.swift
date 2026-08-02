@@ -8,10 +8,21 @@ enum AppMenuLocalizer {
         guard let mainMenu = NSApp.mainMenu else { return }
 
         let topLevelTitles = localizedTopLevelTitles(language)
+        if !mainMenu.items.isEmpty { setTopLevelTitle(language.productName, item: mainMenu.items[0]) }
+        if mainMenu.items.count > 1 { setTopLevelTitle(topLevelTitles.file, item: mainMenu.items[1]) }
+        if mainMenu.items.count > 2 { setTopLevelTitle(topLevelTitles.edit, item: mainMenu.items[2]) }
+        if mainMenu.items.count > 3 { setTopLevelTitle(topLevelTitles.view, item: mainMenu.items[3]) }
+        if let languageIndex = mainMenu.items.firstIndex(where: { item in
+            item.submenu?.items.contains(where: { AppLanguage.allCases.map(\.displayName).contains($0.title) }) == true
+        }) {
+            if mainMenu.items.indices.contains(languageIndex + 1) { setTopLevelTitle(topLevelTitles.window, item: mainMenu.items[languageIndex + 1]) }
+            if mainMenu.items.indices.contains(languageIndex + 2) { setTopLevelTitle(topLevelTitles.help, item: mainMenu.items[languageIndex + 2]) }
+        }
+
         for item in mainMenu.items {
             let current = item.title
             if isApplicationMenuTitle(current) {
-                item.title = language.productName
+                setTopLevelTitle(language.productName, item: item)
             } else if matches(current, ["文件", "檔案", "File", "ファイル", "파일", "Файл"]) {
                 item.title = topLevelTitles.file
             } else if matches(current, ["编辑", "編輯", "Edit", "編集", "편집", "Правка"]) {
@@ -24,6 +35,11 @@ enum AppMenuLocalizer {
                 item.title = topLevelTitles.help
             }
             localize(menu: item.submenu, language: language)
+        }
+
+        let settingsTitle = t(language, "设置", "設定", "Settings", "設定", "설정", "Настройки")
+        for window in NSApp.windows where window.identifier?.rawValue == "com_apple_SwiftUI_Settings_window" {
+            window.title = "\(language.productName) — \(settingsTitle)"
         }
     }
 
@@ -91,5 +107,10 @@ enum AppMenuLocalizer {
 
     private static func isApplicationMenuTitle(_ title: String) -> Bool {
         ["Mac优化大师", "Mac最佳化大師", "MacOptimizer", "Macオプティマイザー", "Mac 최적화 도구"].contains(title)
+    }
+
+    private static func setTopLevelTitle(_ title: String, item: NSMenuItem) {
+        item.title = title
+        item.submenu?.title = title
     }
 }

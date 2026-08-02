@@ -11,6 +11,7 @@ class ScanServiceManager: ObservableObject {
     let largeFileScanner = LargeFileScanner()
     let deepCleanScanner = DeepCleanScanner()
     let smartCleanerService = SmartCleanerService()
+    let appScanner = AppScanner()
     let trashScanner = TrashScanner()  // 废纸篓扫描器 - 防止切换界面时扫描中断
     let malwareScanner = MalwareScanner()
     let privacyScanner = PrivacyScannerService()

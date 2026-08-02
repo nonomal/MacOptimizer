@@ -28,8 +28,8 @@ struct AppUninstallerView: View {
         
         var title: String {
             switch self {
-            case .all: return LocalizationManager.shared.currentLanguage == .chinese ? "所有应用程序" : "All Applications"
-            case .leftovers: return LocalizationManager.shared.currentLanguage == .chinese ? "残留项" : "Leftovers"
+            case .all: return LocalizationManager.shared.text("所有应用程序", "All Applications")
+            case .leftovers: return LocalizationManager.shared.text("残留项", "Leftovers")
             case .appStore: return "App Store"
             case .vendor(let name): return name
             }
@@ -391,13 +391,25 @@ struct AppUninstallerView: View {
     korean: "제거 완료",
     russian: "Удаление завершено"
 ), isPresented: $showingResults) {
-            Button("OK") {
+            Button(loc.text(
+                simplifiedChinese: "确定",
+                traditionalChinese: "確定",
+                english: "OK",
+                japanese: "OK",
+                korean: "확인",
+                russian: "ОК"
+            )) {
                 showingResults = false
             }
         } message: {
-            Text(loc.currentLanguage == .chinese ?
-                 "成功删除 \(totalSuccessCount) 个项目，释放空间 \(ByteCountFormatter.string(fromByteCount: totalRemovedSize, countStyle: .file))\(totalFailedCount > 0 ? "，\(totalFailedCount) 个项目删除失败" : "")" :
-                 "Successfully removed \(totalSuccessCount) items, freed \(ByteCountFormatter.string(fromByteCount: totalRemovedSize, countStyle: .file))\(totalFailedCount > 0 ? ", \(totalFailedCount) items failed" : "")")
+            Text(loc.text(
+                simplifiedChinese: "成功删除 \(totalSuccessCount) 个项目，释放空间 \(ByteCountFormatter.string(fromByteCount: totalRemovedSize, countStyle: .file))\(totalFailedCount > 0 ? "，\(totalFailedCount) 个项目删除失败" : "")",
+                traditionalChinese: "已成功刪除 \(totalSuccessCount) 個項目，釋放 \(ByteCountFormatter.string(fromByteCount: totalRemovedSize, countStyle: .file))\(totalFailedCount > 0 ? "；\(totalFailedCount) 個項目刪除失敗" : "")",
+                english: "Successfully removed \(totalSuccessCount) items and freed \(ByteCountFormatter.string(fromByteCount: totalRemovedSize, countStyle: .file))\(totalFailedCount > 0 ? "; \(totalFailedCount) items failed" : "")",
+                japanese: "\(totalSuccessCount)項目を削除し、\(ByteCountFormatter.string(fromByteCount: totalRemovedSize, countStyle: .file))を解放しました\(totalFailedCount > 0 ? "。\(totalFailedCount)項目を削除できませんでした" : "")",
+                korean: "항목 \(totalSuccessCount)개를 삭제하고 \(ByteCountFormatter.string(fromByteCount: totalRemovedSize, countStyle: .file))의 공간을 확보했습니다\(totalFailedCount > 0 ? ". \(totalFailedCount)개 항목을 삭제하지 못했습니다" : "")",
+                russian: "Удалено объектов: \(totalSuccessCount). Освобождено \(ByteCountFormatter.string(fromByteCount: totalRemovedSize, countStyle: .file))\(totalFailedCount > 0 ? ". Не удалось удалить: \(totalFailedCount)" : "")"
+            ))
         }
     }
     

@@ -353,7 +353,7 @@ struct LargeFileView: View {
                 Spacer()
                 
                 // Placeholder for symmetry
-                Text("Start Over")
+                Text(loc.text("重新开始", "Start Over"))
                     .opacity(0)
             }
             .padding(.horizontal, 24)

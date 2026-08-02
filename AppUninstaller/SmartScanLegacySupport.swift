@@ -175,7 +175,7 @@ struct AllCategoriesDetailSheet: View {
                 Spacer()
                 
                 // Placeholder for balance
-                HStack(spacing: 4) { Image(systemName: "chevron.left"); Text("Back") }
+                HStack(spacing: 4) { Image(systemName: "chevron.left"); Text(loc.text("返回", "Back")) }
                     .opacity(0)
             }
             .padding(.horizontal, 20)
@@ -291,7 +291,7 @@ struct AllCategoriesDetailSheet: View {
         VStack(alignment: .leading, spacing: 0) {
             // 标题区域
             HStack {
-                Text(loc.currentLanguage == .chinese ? category.rawValue : category.englishName)
+                Text(category.localizedName(for: loc.currentLanguage))
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
                 
@@ -381,7 +381,7 @@ struct AllCategoriesDetailSheet: View {
         VStack(alignment: .leading, spacing: 0) {
             // 标题
             VStack(alignment: .leading, spacing: 4) {
-                Text(loc.currentLanguage == .chinese ? category.rawValue : category.englishName)
+                Text(category.localizedName(for: loc.currentLanguage))
                     .font(.system(size: 18, weight: .bold)) // Reduced from Title
                     .foregroundColor(.white)
                 
@@ -475,7 +475,7 @@ struct AllCategoriesDetailSheet: View {
                                 
                                 Spacer()
                                 
-                                Text(threat.type.rawValue)
+                                Text(threat.type.localizedName)
                                     .font(.caption)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)
@@ -768,24 +768,22 @@ struct FileItemRow: View {
                 toggleSelection()
             }
             .confirmationDialog(
-                LocalizationManager.shared.currentLanguage == .chinese ? "确认删除" : "Confirm Delete",
+                LocalizationManager.shared.text("确认删除", "Confirm Delete"),
                 isPresented: $showDeleteConfirmation
             ) {
                 Button(
-                    LocalizationManager.shared.currentLanguage == .chinese ? "删除" : "Delete",
+                    LocalizationManager.shared.text("删除", "Delete"),
                     role: .destructive
                 ) {
                     deleteSingleFile()
                 }
                 Button(
-                    LocalizationManager.shared.currentLanguage == .chinese ? "取消" : "Cancel",
+                    LocalizationManager.shared.text("取消", "Cancel"),
                     role: .cancel
                 ) {}
             } message: {
                 let fileName = file.name
-                Text(LocalizationManager.shared.currentLanguage == .chinese ?
-                     "确定要删除\"\(fileName)\"吗？此操作无法撤销。" :
-                     "Are you sure you want to delete \"\(fileName)\"? This action cannot be undone.")
+                Text(LocalizationManager.shared.text("确定要删除\"\(fileName)\"吗？此操作无法撤销。", "Are you sure you want to delete \"\(fileName)\"? This action cannot be undone."))
             }
             .scanResultContextMenu(
                 isSelected: file.isSelected,

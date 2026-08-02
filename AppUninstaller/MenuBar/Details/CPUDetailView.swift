@@ -3,6 +3,7 @@ import SwiftUI
 struct CPUDetailView: View {
     @ObservedObject var manager: MenuBarManager
     @ObservedObject var systemMonitor: SystemMonitorService
+    @ObservedObject private var loc = LocalizationManager.shared
     
     var body: some View {
         VStack(spacing: 0) {
@@ -27,7 +28,7 @@ struct CPUDetailView: View {
                 VStack(spacing: 24) {
                     // Load Graph (Simple Bar/Line visualization state)
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("系统负载")
+                        Text(loc.text("系统负载", "System Load"))
                             .font(.system(size: 12))
                             .foregroundColor(.white.opacity(0.6))
                         
@@ -40,7 +41,7 @@ struct CPUDetailView: View {
                         }
                         .frame(height: 100)
                         
-                        Text("\(Int(systemMonitor.cpuUsage * 100))% 总占用")
+                        Text(loc.text("总占用 \(Int(systemMonitor.cpuUsage * 100))%", "\(Int(systemMonitor.cpuUsage * 100))% total usage"))
                             .font(.headline)
                             .foregroundColor(.white)
                     }
@@ -52,7 +53,7 @@ struct CPUDetailView: View {
                      // Uptime
                     HStack {
                         VStack(alignment: .leading) {
-                            Text("正常运行时间")
+                            Text(loc.text("正常运行时间", "Uptime"))
                                 .font(.caption)
                                 .foregroundColor(.white.opacity(0.6))
                             Text(formatUptime(systemMonitor.systemUptime))
@@ -67,7 +68,7 @@ struct CPUDetailView: View {
                     
 // Top Processes
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("占用率排行")
+                        Text(loc.text("占用率排行", "Top Consumers"))
                             .font(.headline)
                             .foregroundColor(.white)
                             .padding(.horizontal, 20)
@@ -90,7 +91,7 @@ struct CPUDetailView: View {
     func formatUptime(_ interval: TimeInterval) -> String {
         let hours = Int(interval) / 3600
         let minutes = (Int(interval) % 3600) / 60
-        return "\(hours) 小时 \(minutes) 分钟"
+        return loc.text("\(hours) 小时 \(minutes) 分钟", "\(hours) hr \(minutes) min")
     }
 }
 
@@ -125,7 +126,7 @@ struct ProcessRow: View {
             Button(action: {
                 // Terminate/Kill Action
             }) {
-                Text("关闭")
+                Text(LocalizationManager.shared.text("关闭", "Quit"))
                     .font(.system(size: 13))
                     .foregroundColor(.white.opacity(0.8))
             }

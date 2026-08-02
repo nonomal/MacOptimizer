@@ -3,12 +3,13 @@ import SwiftUI
 struct MemoryDetailView: View {
     @ObservedObject var manager: MenuBarManager
     @ObservedObject var systemMonitor: SystemMonitorService
+    @ObservedObject private var loc = LocalizationManager.shared
     
     var body: some View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("内存")
+                Text(loc.text("内存", "Memory"))
                     .font(.headline)
                     .foregroundColor(.white)
                 Spacer()
@@ -68,10 +69,10 @@ struct MemoryDetailView: View {
                                 Text(formatSimpleGB(available))
                                     .font(.system(size: 32, weight: .bold))
                                     .foregroundColor(.white)
-                                Text("可用空间")
+                                Text(loc.text("可用空间", "Available"))
                                     .font(.system(size: 12))
                                     .foregroundColor(.white.opacity(0.6))
-                                Text("(总共 \(systemMonitor.memoryTotalString))")
+                                Text(loc.text("（共 \(systemMonitor.memoryTotalString)）", "(\(systemMonitor.memoryTotalString) total)"))
                                     .font(.system(size: 10))
                                     .foregroundColor(.white.opacity(0.4))
                             }
@@ -79,9 +80,9 @@ struct MemoryDetailView: View {
                         
                         // Legend
                         VStack(alignment: .leading, spacing: 12) {
-                            MemoryLegendItem(color: Color(hex: "00C7BE"), label: "活跃内存", value: formatGB(systemMonitor.memoryApp))
-                            MemoryLegendItem(color: Color(hex: "6A85FC"), label: "联动内存", value: formatGB(systemMonitor.memoryWired))
-                            MemoryLegendItem(color: Color(hex: "A358DF"), label: "被压缩", value: formatGB(systemMonitor.memoryCompressed))
+                            MemoryLegendItem(color: Color(hex: "00C7BE"), label: loc.text("活跃内存", "App Memory"), value: formatGB(systemMonitor.memoryApp))
+                            MemoryLegendItem(color: Color(hex: "6A85FC"), label: loc.text("联动内存", "Wired Memory"), value: formatGB(systemMonitor.memoryWired))
+                            MemoryLegendItem(color: Color(hex: "A358DF"), label: loc.text("已压缩", "Compressed"), value: formatGB(systemMonitor.memoryCompressed))
                         }
                     }
                     .padding(.top, 10)
@@ -90,25 +91,25 @@ struct MemoryDetailView: View {
                     HStack(spacing: 12) {
                         // Pressure Card
                         MemoryInfoCard(
-                            title: "压力",
+                            title: loc.text("压力", "Pressure"),
                             value: String(format: "%.0f%%", systemMonitor.memoryPressure * 100),
-                            desc: "Mac 现在可以随时处理更多任务。",
-                            linkText: "了解更多"
+                            desc: loc.text("Mac 现在可以随时处理更多任务。", "Your Mac is ready to handle more tasks."),
+                            linkText: loc.text("了解更多", "Learn More")
                         )
                         
                         // Swap Card
                         MemoryInfoCard(
-                            title: "交换文件",
+                            title: loc.text("交换文件", "Swap Used"),
                             value: systemMonitor.memorySwapUsed, // e.g. "2.4 GB"
-                            desc: "驱动器上的空间可以帮助您优化 Mac 的内存性能。",
-                            linkText: "了解更多"
+                            desc: loc.text("驱动器上的空间可以帮助优化 Mac 的内存性能。", "Drive space can help optimize your Mac's memory performance."),
+                            linkText: loc.text("了解更多", "Learn More")
                         )
                     }
                     .padding(.horizontal, 16)
                     
                     // 3. Top Consumers Header
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("占用率排行")
+                        Text(loc.text("占用率排行", "Top Consumers"))
                             .font(.headline)
                             .foregroundColor(.white)
                             .padding(.horizontal, 20)
@@ -116,11 +117,11 @@ struct MemoryDetailView: View {
                         VStack(spacing: 2) {
                            // Header Row
                             HStack {
-                                Text("进程名称")
+                                Text(loc.text("进程名称", "Process Name"))
                                     .font(.system(size: 12))
                                     .foregroundColor(.white.opacity(0.5))
                                 Spacer()
-                                Text("占用率")
+                                Text(loc.text("占用率", "Usage"))
                                     .font(.system(size: 12))
                                     .foregroundColor(.white.opacity(0.5))
                                     .frame(width: 60, alignment: .trailing)
@@ -260,7 +261,7 @@ struct MemoryAppRowPro: View {
             Button(action: {
                 // Action
             }) {
-                Text("关闭")
+                Text(LocalizationManager.shared.text("关闭", "Quit"))
                     .font(.system(size: 12))
                     .foregroundColor(.white.opacity(0.8))
                     .frame(width: 40)
