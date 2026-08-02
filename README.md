@@ -23,6 +23,8 @@
 
 MacOptimizer is a system optimization tool designed specifically for macOS, featuring a modern SwiftUI interface with eight core functional modules:
 
+特别推出AI影视与设计平台，专注于AI短剧，AI设计智能体平台。体验地址：https://zaomeng.art
+
 ### 🌐 Multi-Language Support (New!)
 - **Chinese & English** - Switch between languages with one click
 - **Persistent Settings** - Language preference is saved automatically
@@ -94,27 +96,14 @@ MacOptimizer is a system optimization tool designed specifically for macOS, feat
 ---
 
 ## 📸 Screenshots
+<img width="2180" height="1344" alt="image" src="https://github.com/user-attachments/assets/c25c15ae-079e-4054-b3f6-3593e40182f5" />
 
+<img width="2180" height="1344" alt="image" src="https://github.com/user-attachments/assets/482c74a8-be5f-4569-87a3-36291da5e615" />
 
-![alt text](image.png)
-![alt text](image-15.png)
-![alt text](image-16.png)
-![alt text](image-1.png)
+<img width="2180" height="1344" alt="image" src="https://github.com/user-attachments/assets/faf31feb-840f-404f-a8a8-3a8c55f0ca45" />
 
-![alt text](image-2.png)
+<img width="2180" height="1344" alt="image" src="https://github.com/user-attachments/assets/5da494f5-e26d-481b-8226-863e97489f4f" />
 
-![alt text](image-3.png)
-![alt text](image-4.png)
-![alt text](image-5.png)
-![alt text](image-6.png)
-![alt text](image-7.png)
-![alt text](image-8.png)
-![alt text](image-9.png)
-![alt text](image-10.png)
-![alt text](image-11.png)
-![alt text](image-12.png)
-![alt text](image-13.png)
-![alt text](image-14.png)
 
 ---
 
